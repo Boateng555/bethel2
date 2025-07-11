@@ -1,0 +1,22 @@
+<div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition">
+    {% if event.card_image %}
+        <div class="h-40 bg-cover bg-center" style="background-image: url('{{ event.card_image.url }}');"></div>
+    {% else %}
+        <div class="h-40 bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
+            <i class="fas fa-calendar text-white text-6xl"></i>
+        </div>
+    {% endif %}
+    <div class="p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ event.title }}</h3>
+        <p class="text-gray-600 mb-2">
+            {% if event.start_date %}
+                {{ event.start_date|date:"F j, Y" }}
+            {% endif %}
+        </p>
+        {% if church %}
+            <a href="{% url 'church_event_detail' church.id event.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold">Learn More →</a>
+        {% else %}
+            <a href="{% url 'event_detail' event.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold">Learn More →</a>
+        {% endif %}
+    </div>
+</div> 

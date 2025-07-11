@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bethel Prayer Ministry International{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px -3px rgba(30,58,138,0.1);
+            min-width: 12rem;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .dropdown-container:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-menu a {
+            display: block;
+            padding: 0.25rem 0;
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .dropdown-menu a:hover {
+            color: #e6eefe;
+        }
+        
+        .dropdown-menu .all-link {
+            font-weight: 600;
+            border-bottom: 1px solid #ffffff;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .dropdown-menu .divider {
+            border-top: 1px solid #ffffff;
+            margin: 0.25rem 0;
+            padding-top: 0.25rem;
+        }
+        
+        .dropdown-menu .no-items {
+            color: #e6eefe;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-deep-blue text-white font-sans">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+        <div class="flex items-center space-x-4">
+            {% if is_church_site and church %}
+                <a href="{% url 'church_home' church.id %}" class="flex flex-col items-center">
+                    <span class="text-sm font-semibold mt-1">{{ church.name }}</span>
+                </a>
+            {% else %}
+                <a href="/" class="flex flex-col items-center">
+                    <span class="text-sm font-semibold mt-1">Bethel Prayer Ministry International</span>
+                </a>
+            {% endif %}
+        </div>
+        <!-- Desktop Nav (hidden on mobile) -->
+        <nav class="hidden md:flex space-x-6 text-sm">
+            {% if is_church_site and church %}
+                <!-- Church-specific navigation -->
+                <a href="{% url 'church_home' church.id %}" class="hover:text-white transition-colors">Home</a>
+                <a href="{% url 'church_about' church.id %}" class="hover:text-white transition-colors">About Us</a>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'church_ministries' church.id %}" class="all-link">All Ministries</a>
+                        {% for ministry in all_ministries %}
+                        <a href="{% url 'church_ministry_detail' church.id ministry.id %}" class="text-sm">{{ ministry.name }}</a>
+                        {% empty %}
+                        <span class="no-items">No ministries available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Events ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'church_events' church.id %}" class="all-link">All Events</a>
+                        <a href="{% url 'church_calendar' church.id %}" class="text-sm">Calendar</a>
+                        {% for event in all_events %}
+                        <a href="{% url 'church_event_detail' church.id event.id %}" class="text-sm">{{ event.title }}</a>
+                        {% empty %}
+                        <span class="no-items">No events available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="{% url 'church_sermons' church.id %}" class="hover:text-white transition-colors">Sermons</a>
+                {% if church.shop_url %}
+                    <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
+                {% else %}
+                    <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                {% endif %}
+                <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Donate</a>
+                <a href="/churches/" class="hover:text-white transition-colors">Find Other Churches</a>
+                <a href="/" class="hover:text-white transition-colors">Global Site</a>
+                <a href="/local-admin/" class="hover:text-white transition-colors">Admin</a>
+            {% else %}
+                <!-- Global navigation -->
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Church ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/churches/" class="block py-1 hover:text-[#1e3a8a]">Find Churches</a>
+                        <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
+                    </div>
+                </div>
+                <a href="/about" class="hover:text-white transition-colors">About Us</a>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/ministries/" class="all-link">All Ministries</a>
+                        {% for ministry in all_ministries %}
+                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                        {% empty %}
+                        <span class="no-items">No ministries available</span>
+                        {% endfor %}
+                        <div class="divider">
+                            <a href="/volunteer" class="text-sm">Volunteer</a>
+                            <a href="/serve" class="text-sm">Serve</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Events ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/events/" class="all-link">All Events</a>
+                        <a href="/events/calendar/" class="text-sm">Calendar</a>
+                        {% for event in all_events %}
+                        <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
+                        {% empty %}
+                        <span class="no-items">No events available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="/sermon" class="hover:text-white transition-colors">Sermon</a>
+                <a href="/resources" class="hover:text-white transition-colors">Resources</a>
+                <a href="{% url 'testimonies' %}" class="hover:text-white transition-colors">Testimonies</a>
+                <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
+                <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+            {% endif %}
+        </nav>
+        <!-- Mobile Hamburger Button -->
+        <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+    
+    <!-- Mobile Menu (separate from header) -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
+        {% if is_church_site and church %}
+            <!-- Church-specific mobile navigation -->
+            <a href="{% url 'church_home' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
+            <a href="{% url 'church_events' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
+            <a href="{% url 'church_calendar' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
+            <a href="{% url 'church_ministries' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
+            {% if church.shop_url %}
+                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+            {% else %}
+                <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+            {% endif %}
+            <a href="{% url 'church_donation' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Donate</a>
+            <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Other Churches</a>
+            <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
+            <a href="/local-admin/" class="hover:text-[#1e3a8a] w-full text-center py-2">Admin Login</a>
+        {% else %}
+            <!-- Global mobile navigation -->
+            <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
+            <a href="/about" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
+            <a href="/leadership" class="hover:text-[#1e3a8a] w-full text-center py-2">Leadership</a>
+            <a href="/resources" class="hover:text-[#1e3a8a] w-full text-center py-2">Resources</a>
+            <a href="{% url 'testimonies' %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Testimonies</a>
+            <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Churches</a>
+            <a href="/events/" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
+            <a href="/events/calendar/" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
+            <a href="/ministries/" class="hover:text-[#1e3a8a] w-full text-center py-2">Get Involved</a>
+            <a href="/sermon" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermon</a>
+            <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+            <a href="/donation" class="hover:text-[#1e3a8a] w-full text-center py-2">Donation</a>
+        {% endif %}
+        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-[#1e3a8a] text-white{% elif message.tags == 'error' %}bg-[#1e3a8a] text-white{% else %}bg-[#1e3a8a] text-white{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen bg-gray-50">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light border-top">
+        <div class="container text-center">
+            <span class="text-muted">
+                &copy; {{ year|default:2025 }} Bethel &mdash;
+                <a href="/about/">About</a> |
+                <a href="/leadership/">Leadership</a> |
+                <a href="/resources/">Resources</a> |
+                <a href="{% url 'testimonies' %}">Testimonies</a> |
+                <a href="/privacy/">Privacy Policy</a> |
+                <a href="/terms/">Terms of Service</a> |
+                <a href="/cookies/">Cookie Policy</a>
+            </span>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+        });
+
+        mobileMenuClose.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html> 

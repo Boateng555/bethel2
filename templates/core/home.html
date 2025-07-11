@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bethel - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Enhanced dropdown styles */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            color: #1e3a8a;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 12rem;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .dropdown-container:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-menu a {
+            display: block;
+            padding: 0.25rem 0;
+            color: #1e3a8a;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .dropdown-menu a:hover {
+            color: #1e3a8a;
+        }
+        
+        .dropdown-menu .all-link {
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .dropdown-menu .divider {
+            border-top: 1px solid #e5e7eb;
+            margin: 0.25rem 0;
+            padding-top: 0.25rem;
+        }
+        
+        .dropdown-menu .no-items {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+    <style>
+      @media (max-width: 640px) {
+        section.relative.w-full.h-screen.overflow-hidden {
+          height: 50vh !important;
+          min-height: unset !important;
+          max-height: 60vh !important;
+        }
+        #hero-media-container,
+        .hero-swiper,
+        .hero-swiper .swiper-wrapper,
+        .hero-swiper .swiper-slide,
+        .hero-swiper img,
+        .hero-swiper video {
+          height: 100% !important;
+          min-height: unset !important;
+          max-height: 60vh !important;
+        }
+        .max-w-5xl.mx-auto.px-6.py-32.flex.flex-col.items-center.text-center {
+          padding-top: 2rem !important;
+          padding-bottom: 2rem !important;
+        }
+        .text-5xl.md\:text-7xl.font-bold.mb-6.text-white.drop-shadow-lg {
+          font-size: 2rem !important;
+          margin-bottom: 1rem !important;
+        }
+        .text-xl.md\:text-2xl.mb-8.text-white.drop-shadow-lg.max-w-3xl {
+          font-size: 1rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+        .flex.flex-col.sm\:flex-row.gap-4 {
+          flex-direction: column !important;
+          gap: 0.75rem !important;
+        }
+        .flex.flex-col.sm\:flex-row.gap-4 a {
+          width: 100% !important;
+          font-size: 1rem !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        .latest-sermons-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 2rem !important;
+        }
+        /* Ensure content doesn't interfere with swipe navigation */
+        .relative.z-10 {
+          z-index: 10 !important; /* Lower than swipe area */
+        }
+      }
+    </style>
+</head>
+<body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+        <div class="flex items-center space-x-4">
+            <span class="text-2xl font-bold font-serif">Bethel Prayer Ministry</span>
+        </div>
+        <!-- Desktop Nav (hidden on mobile) -->
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <div class="dropdown-container">
+                <button class="hover:text-white transition-colors">Church ▾</button>
+                <div class="dropdown-menu">
+                    <a href="/churches/" class="block py-1 hover:text-[#1e3a8a]">Find Churches</a>
+                    <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
+                </div>
+            </div>
+            <a href="/about" class="hover:text-white transition-colors">About Us</a>
+            <div class="dropdown-container">
+                <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                <div class="dropdown-menu">
+                    <a href="/ministries/" class="all-link">All Ministries</a>
+                    {% for ministry in all_ministries %}
+                    <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                    {% empty %}
+                    <span class="no-items">No ministries available</span>
+                    {% endfor %}
+                    <div class="divider">
+                        <a href="/volunteer" class="text-sm">Volunteer</a>
+                        <a href="/serve" class="text-sm">Serve</a>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <button class="hover:text-white transition-colors">Events ▾</button>
+                <div class="dropdown-menu">
+                    <a href="/events/" class="all-link">All Events</a>
+                    {% for event in all_events %}
+                    <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
+                    {% empty %}
+                    <span class="no-items">No events available</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/sermon" class="hover:text-white transition-colors">Sermon</a>
+            <a href="/resources" class="hover:text-white transition-colors">Resources</a>
+            <!-- <a href="/testimonies" class="hover:text-white transition-colors">Testimonies</a> -->
+            <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
+            <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+            <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+        </nav>
+        <!-- Mobile Hamburger Button -->
+        <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+    
+    <!-- Mobile Menu (separate from header) -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
+        <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
+        <a href="/about" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
+        <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Churches</a>
+        <a href="/events/" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
+        <a href="/events/calendar/" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
+        <a href="/ministries/" class="hover:text-[#1e3a8a] w-full text-center py-2">Get Involved</a>
+        <a href="/sermon" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermon</a>
+        <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+        <a href="/donation" class="hover:text-[#1e3a8a] w-full text-center py-2">Donation</a>
+        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-[#1e3a8a] text-white{% elif message.tags == 'error' %}bg-[#1e3a8a] text-white{% else %}bg-[#1e3a8a] text-white{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Location Detection Banner -->
+    {% if is_global_site and user_country %}
+    <div class="bg-[#1e3a8a] text-white py-4 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                </svg>
+                <div>
+                    <p class="font-semibold">We detected you're in <strong>{{ user_country }}</strong>{% if user_city %}, {{ user_city }}{% endif %}</p>
+                    {% if nearest_church %}
+                    <p class="text-sm opacity-90">There's a Bethel church near you!</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                {% if nearest_church %}
+                <a href="/church/{{ nearest_church.id }}/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-center">
+                    Visit Local Church
+                </a>
+                {% endif %}
+                <a href="/?global=true" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-6 py-2 rounded-lg font-semibold transition duration-300 text-center">
+                    Stay on Global Site
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. Hero Section -->
+    <section class="relative w-full h-screen overflow-hidden">
+        {% if hero %}
+            <div id="hero-media-container" class="absolute inset-0 w-full h-full">
+                {% if hero.hero_media.all %}
+                <!-- Swiper Carousel -->
+                <div class="swiper hero-swiper h-full">
+                    <div class="swiper-wrapper h-full">
+                        {% for media in hero.hero_media.all|dictsort:'order' %}
+                            {% if media.image %}
+                            <div class="swiper-slide h-full">
+                                <img src="{{ media.image.url }}" alt="Hero Media" class="w-full h-full object-cover" />
+                            </div>
+                            {% endif %}
+                            {% if media.video %}
+                            <div class="swiper-slide h-full">
+                                <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                                    <source src="{{ media.video.url }}" type="video/mp4" />
+                                </video>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <!-- Add Pagination -->
+                    <div class="swiper-pagination"></div>
+                </div>
+                {% elif hero.background_video %}
+                    <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
+                        <source src="{{ hero.background_video.url }}" type="video/mp4" />
+                    </video>
+                {% elif hero.background_image %}
+                    <img src="{{ hero.background_image.url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                {% else %}
+                    <div class="absolute inset-0 bg-gray-500"></div>
+                {% endif %}
+            </div>
+            <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+            <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+                    {{ hero.title }}
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">
+                    {{ hero.subtitle }}
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                        {{ hero.primary_button_text }}
+                    </a>
+                    <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
+                        {{ hero.secondary_button_text }}
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <!-- Fallback hero without hero content -->
+            <div class="absolute inset-0 bg-gray-500"></div>
+            <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white">
+                    Welcome to Bethel
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl">
+                    Join us in worship and community as we grow together in faith.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="/visit" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                        Plan Your Visit
+                    </a>
+                    <a href="/watch" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
+                        Watch Online
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- 2. Featured Events -->
+    <section class="py-16 bg-very-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Upcoming Events</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+                {% for event in upcoming_events %}
+                    {% include 'core/_event_card.html' with event=event %}
+                {% empty %}
+                <div class="col-span-3 text-center text-gray-600">
+                    <p>No upcoming events at the moment. Check back soon!</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-8">
+                <a href="/events/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    View All Events
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Ministries -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Our Ministries</h2>
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for ministry in ministries %}
+                    {% include 'core/_ministry_card.html' with ministry=ministry %}
+                {% empty %}
+                <div class="col-span-3 text-center text-gray-600">
+                    <p>Ministry information coming soon!</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-8">
+                <a href="/ministries/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    View All Ministries
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Latest Sermons -->
+    <section class="py-16 bg-very-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Latest Sermons</h2>
+            <div class="latest-sermons-grid grid grid-cols-2 md:grid-cols-3 gap-8">
+                {% for sermon in sermons %}
+                    {% include 'core/_sermon_card.html' with sermon=sermon %}
+                {% empty %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">No Sermons Yet</h3>
+                        <p class="text-gray-600 mb-4">Check back soon for inspiring messages from our pastors.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-8">
+                <a href="/sermon" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    View All Sermons
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Latest News -->
+    <section class="py-16 bg-[#f1f5fd]">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-12 text-[#1e3a8a]">Latest News</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                {% for news_item in news %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    {% if news_item.image %}
+                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-48 object-cover">
+                    {% endif %}
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ news_item.title }}</h3>
+                        <div class="text-gray-600 mb-4">{{ news_item.content|truncatewords:20|safe }}</div>
+                        <span class="text-[#1e3a8a] font-semibold">{{ news_item.date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-3 text-center text-[#1e3a8a]">
+                    <p>No news articles at the moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Recent Testimonies -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-8 text-deep-blue">Recent Testimonies</h2>
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                {% for testimony in recent_testimonies %}
+                <div class="bg-very-white rounded-lg p-6 shadow text-left flex flex-col justify-between h-full">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ testimony.title }}</h3>
+                        <p class="italic text-gray-700 mb-4">"{{ testimony.content|truncatewords:25 }}"</p>
+                    </div>
+                    <div class="mt-auto">
+                        <span class="font-medium text-[#1e3a8a]">— {{ testimony.get_display_name }}</span>
+                        <span class="text-gray-500 text-sm ml-2">{{ testimony.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-3 text-center text-gray-600">
+                    <p>No testimonies yet. <a href="{% url 'testimonies' %}" class="text-[#1e3a8a] underline">Share yours!</a></p>
+                </div>
+                {% endfor %}
+            </div>
+            <a href="{% url 'testimonies' %}" class="inline-block bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Read More Testimonies</a>
+        </div>
+    </section>
+
+    <!-- 7. Newsletter Signup -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-6 text-white">Stay Connected</h2>
+            <p class="text-xl mb-8 text-very-white">Get the latest updates, events, and inspiring content delivered to your inbox.</p>
+            <form method="post" action="/newsletter-signup/" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                {% csrf_token %}
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Enter your email" 
+                    required
+                    class="flex-1 px-4 py-3 rounded-lg border-0 focus:ring-2 focus:ring-white focus:outline-none text-gray-900 placeholder-gray-500"
+                >
+                <button type="submit" class="bg-deep-blue hover:bg-[#1e3a8a] text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                    Subscribe
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 8. Footer -->
+    <footer class="bg-deep-blue text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Bethel</h3>
+                    <p class="text-very-white">Building lives, transforming communities through the love of Christ.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-very-white">
+                        <li><a href="/about" class="hover:text-white">About Us</a></li>
+                        <li><a href="/services" class="hover:text-white">Services</a></li>
+                        <li><a href="/events" class="hover:text-white">Events</a></li>
+                        <li><a href="/contact" class="hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Connect</h4>
+                    <ul class="space-y-2 text-very-white">
+                        <li><a href="{% url 'donation' %}" class="hover:text-white">Give</a></li>
+                        <li><a href="/volunteer" class="hover:text-white">Volunteer</a></li>
+                        <li><a href="/prayer" class="hover:text-white">Prayer Requests</a></li>
+                        <li><a href="/resources" class="hover:text-white">Resources</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Contact Info</h4>
+                    <div class="text-very-white space-y-2">
+                        <p>123 Church Street</p>
+                        <p>City, State 12345</p>
+                        <p>Phone: (555) 123-4567</p>
+                        <p>Email: info@bethel.com</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-white mt-8 pt-8 text-center text-very-white">
+                <p>&copy; 2024 Bethel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('mobile-menu-button');
+            const menu = document.getElementById('mobile-menu');
+            const closeBtn = document.getElementById('mobile-menu-close');
+            
+            console.log('Mobile menu elements:', { menuBtn, menu, closeBtn }); // Debug
+            
+            // Open menu
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Menu button clicked'); // Debug
+                    menu.classList.remove('hidden');
+                });
+            }
+            
+            // Close menu
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Close button clicked'); // Debug
+                    menu.classList.add('hidden');
+                });
+            }
+            
+            // Close menu when clicking a link
+            if (menu) {
+                menu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        menu.classList.add('hidden');
+                    });
+                });
+            }
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (menu && !menu.contains(e.target) && e.target !== menuBtn && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+            
+            // Close menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+    <!-- Swiper.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script>
+        // Initialize Swiper for hero carousel with swipe navigation
+        new Swiper('.hero-swiper', {
+            loop: true,
+            autoplay: { delay: 5000, disableOnInteraction: false },
+            pagination: { el: '.swiper-pagination', clickable: true },
+            // Enable touch/swipe navigation
+            allowTouchMove: true,
+            touchRatio: 1,
+            touchAngle: 45,
+            grabCursor: true,
+            // Hide navigation arrows since we're using swipe
+            navigation: false,
+        });
+    </script>
+</body>
+</html> 

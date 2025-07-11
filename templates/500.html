@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error - Bethel Prayer Ministry International</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'medium-blue': '#3b82f6',
+                        'light-blue': '#60a5fa',
+                        'very-light-blue': '#dbeafe',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-deep-blue text-white font-sans min-h-screen">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+        <div class="flex items-center space-x-4">
+            <a href="/" class="flex flex-col items-center">
+                <span class="text-sm font-semibold mt-1">Bethel Prayer Ministry International</span>
+            </a>
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <a href="/" class="hover:text-light-blue transition-colors">Home</a>
+            <a href="/churches/" class="hover:text-light-blue transition-colors">Find Churches</a>
+            <a href="/about" class="hover:text-light-blue transition-colors">About Us</a>
+            <a href="/events/" class="hover:text-light-blue transition-colors">Events</a>
+            <a href="/ministries/" class="hover:text-light-blue transition-colors">Ministries</a>
+            <a href="/donation" class="hover:text-light-blue transition-colors">Donate</a>
+        </nav>
+    </header>
+
+    <!-- Error Content -->
+    <main class="flex-1 flex items-center justify-center py-16 px-4">
+        <div class="max-w-2xl mx-auto text-center">
+            <!-- Error Icon -->
+            <div class="mb-8">
+                <div class="w-32 h-32 mx-auto bg-white bg-opacity-10 rounded-full flex items-center justify-center">
+                    <svg class="w-16 h-16 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <h1 class="text-6xl font-bold text-red-400 mb-4">500</h1>
+            <h2 class="text-3xl font-semibold mb-4">Server Error</h2>
+            <p class="text-xl text-gray-300 mb-8">
+                Something went wrong on our end. We're working to fix this issue.
+            </p>
+
+            <!-- Helpful Links -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Try these options:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Go to Homepage
+                    </a>
+                    <a href="javascript:location.reload()" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Refresh Page
+                    </a>
+                    <a href="/churches/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Find Churches
+                    </a>
+                    <a href="/events/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Browse Events
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="text-gray-300">
+                <p class="mb-2">If this problem persists, please contact us:</p>
+                <p class="text-sm">Email: <a href="mailto:info@bethelprayer.org" class="text-light-blue hover:underline">info@bethelprayer.org</a></p>
+                <p class="text-sm mt-1">We apologize for the inconvenience.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-deep-blue border-t border-blue-700 py-8 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="text-gray-300">&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html> 

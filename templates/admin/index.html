@@ -1,0 +1,210 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    body {
+        background: #f7f9fb;
+    }
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px 20px 20px;
+    }
+    .welcome-card {
+        background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+        color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(30,58,138,0.08);
+        padding: 32px 32px 24px 32px;
+        margin-bottom: 32px;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+    }
+    .welcome-card small {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin-top: 10px;
+        color: #dbeafe;
+    }
+    .stat-cards {
+        display: flex;
+        gap: 32px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        flex: 1 1 200px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(30,58,138,0.07);
+        padding: 32px 0 24px 0;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 500;
+        min-width: 200px;
+        margin-bottom: 0;
+        border-left: 4px solid #2563eb;
+        transition: box-shadow 0.2s, transform 0.2s;
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        box-shadow: 0 6px 24px rgba(30,58,138,0.15);
+        transform: translateY(-2px) scale(1.03);
+        background: #f0f7ff;
+    }
+    .stat-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .stat-card .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2563eb;
+        margin-bottom: 8px;
+    }
+    .main-cards {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+    .apps-card, .actions-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(30,58,138,0.07);
+        padding: 0 0 24px 0;
+        flex: 2 1 500px;
+        min-width: 350px;
+        margin-bottom: 0;
+    }
+    .actions-card {
+        flex: 1 1 300px;
+        margin-left: 0;
+    }
+    .apps-card h2, .actions-card h2 {
+        background: #e0e7ef;
+        color: #2563eb;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0 0 16px 0;
+        padding: 16px 24px;
+        border-radius: 12px 12px 0 0;
+    }
+    .app-list {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .app-list th, .app-list td {
+        padding: 12px 24px;
+        font-size: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .app-list th {
+        color: #2563eb;
+        background: #f1f5f9;
+        font-weight: 600;
+    }
+    .app-list td {
+        color: #374151;
+    }
+    .app-list tr:last-child td {
+        border-bottom: none;
+    }
+    .app-list a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+        margin-right: 8px;
+    }
+    .app-list a:hover {
+        text-decoration: underline;
+        color: #1e40af;
+    }
+    .actions-card ul {
+        list-style: none;
+        padding: 0 24px;
+        margin: 0;
+    }
+    .actions-card li {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 1rem;
+    }
+    .actions-card li:last-child {
+        border-bottom: none;
+    }
+    .actions-card a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .actions-card a:hover {
+        text-decoration: underline;
+        color: #1e40af;
+    }
+    @media (max-width: 900px) {
+        .stat-cards, .main-cards {
+            flex-direction: column;
+            gap: 20px;
+        }
+        .apps-card, .actions-card {
+            min-width: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="welcome-card">
+        Welcome to Bethel Admin
+        <small>Manage your church platform, content, and global features</small>
+    </div>
+    <div class="stat-cards">
+        <a href="/admin/core/churchapplication/" class="stat-card-link"><div class="stat-card">
+            <div class="stat-number">{{ app_list|length }}</div>
+            Applications
+        </div></a>
+        <a href="/admin/auth/user/" class="stat-card-link"><div class="stat-card">
+            <div class="stat-number">{{ user_count|default:"0" }}</div>
+            Users
+        </div></a>
+        <a href="/admin/core/news/" class="stat-card-link"><div class="stat-card">
+            <div class="stat-number">{{ content_count|default:"0" }}</div>
+            Content Items
+        </div></a>
+    </div>
+    <div class="main-cards">
+        <div class="apps-card">
+            <h2>CORE</h2>
+            <table class="app-list">
+                <tbody>
+                {% for app in app_list %}
+                    {% for model in app.models %}
+                    <tr>
+                        <td>{{ model.name }}</td>
+                        <td><a href="{{ model.add_url }}">+ Add</a></td>
+                        <td><a href="{{ model.admin_url }}">✏️ Change</a></td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="actions-card">
+            <h2>Recent actions</h2>
+            <ul>
+                {% for action in recent_actions %}
+                <li>{{ action }}</li>
+                {% empty %}
+                <li>No recent actions.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %} 

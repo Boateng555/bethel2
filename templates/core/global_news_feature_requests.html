@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Pending Global News Feature Requests</h1>
+    {% if pending_news %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">News</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Church</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for news in pending_news %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ news.title }}</div>
+                        <div class="text-xs text-gray-500">{{ news.excerpt|truncatewords:10 }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ news.church.name }}</div>
+                        <div class="text-xs text-gray-500">{{ news.church.city }}, {{ news.church.country }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ news.date|date:"M d, Y" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <form method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="news_id" value="{{ news.id }}">
+                            <button name="action" value="approve" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-3 py-1 rounded mr-2">Approve</button>
+                            <button name="action" value="reject" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-3 py-1 rounded">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow p-6 text-center">
+        <h2 class="text-xl font-semibold text-gray-700">No pending requests</h2>
+        <p class="text-gray-500 mt-2">All news global feature requests have been reviewed.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

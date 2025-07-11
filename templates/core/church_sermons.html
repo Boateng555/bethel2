@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ church.name }} - Sermons{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-[#0d1320] py-16 text-center">
+  <h1 class="text-5xl font-extrabold text-white mb-4">Sermons at {{ church.name }}</h1>
+  <p class="text-xl text-white">Listen to inspiring messages and teachings from our pastors</p>
+</div>
+
+<!-- Filter/Search Bar -->
+<style>
+  @media (max-width: 640px) {
+    .church-sermons-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 2rem !important;
+    }
+  }
+</style>
+<div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6 mt-8 mb-8">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Keyword:</label>
+      <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" style="::placeholder{color:#6b7280;}" placeholder="Search by keyword" name="keyword" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Preacher:</label>
+      <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" style="::placeholder{color:#6b7280;}" placeholder="Preacher" name="preacher" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Date:</label>
+      <input type="date" class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" style="::placeholder{color:#6b7280;}" name="date" />
+    </div>
+    <div class="col-span-1 md:col-span-3 flex gap-4 mt-2">
+      <button type="submit" class="bg-[#1e3a8a] text-white px-6 py-2 rounded font-semibold">Apply Filter</button>
+      <a href="" class="bg-gray-500 text-white px-6 py-2 rounded font-semibold">Clear Filter</a>
+    </div>
+  </form>
+</div>
+<!-- Sermons Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h2 class="text-3xl font-bold mb-8 text-deep-blue">Latest Sermons</h2>
+    <div class="church-sermons-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for sermon in sermons %}
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            {% if sermon.thumbnail %}
+            <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-48 object-cover">
+            {% else %}
+            <div class="w-full h-48 bg-[#f1f5fd] flex items-center justify-center">
+                <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            {% endif %}
+            <div class="p-6">
+                <h3 class="text-xl font-semibold mb-2 text-gray-900">{{ sermon.title }}</h3>
+                <p class="text-gray-600 mb-4">{{ sermon.description|truncatewords:30 }}</p>
+                <div class="space-y-2 mb-4">
+                    <p class="text-sm text-gray-500"><strong>Preacher:</strong> <span class="font-bold text-gray-900">{{ sermon.preacher }}</span></p>
+                    <p class="text-sm text-gray-500"><strong>Date:</strong> <span class="font-bold">{{ sermon.date|date:'M d, Y' }}</span></p>
+                    {% if sermon.scripture_reference %}
+                    <p class="text-sm text-gray-500"><strong>Scripture:</strong> {{ sermon.scripture_reference }}</p>
+                    {% endif %}
+                    {% if sermon.duration %}
+                    <p class="text-sm text-gray-500"><strong>Duration:</strong> {{ sermon.duration }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex space-x-2">
+                    {% if sermon.video_file %}
+                    <a href="{{ sermon.video_file.url }}" target="_blank" class="bg-[#8b5cf6] text-white px-4 py-2 rounded font-semibold text-sm">Watch</a>
+                    {% endif %}
+                    {% if sermon.link %}
+                    <a href="{{ sermon.link }}" target="_blank" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-4 py-2 rounded text-sm font-semibold transition-colors">View Link</a>
+                    {% endif %}
+                    {% if not sermon.audio_file and not sermon.video_file and not sermon.link %}
+                    <span class="text-gray-400 text-sm">Media coming soon</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No Sermons Yet</h3>
+            <p class="text-gray-500">Check back soon for sermons from {{ church.name }}.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<!-- Never Miss a Sermon Section -->
+<div class="bg-gray-50 py-12 mt-16">
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <h3 class="text-lg font-semibold mb-2">Never Miss a Sermon</h3>
+    <p class="mb-4">Subscribe to our podcast or YouTube channel</p>
+    <div class="flex justify-center gap-4">
+      <a href="#" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-semibold"><i class="fab fa-youtube"></i> YouTube</a>
+      <a href="#" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-semibold"><i class="fas fa-podcast"></i> Podcast</a>
+    </div>
+  </div>
+</div>
+{% endblock %} 

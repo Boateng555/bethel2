@@ -1,0 +1,240 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8 flex items-center space-x-6">
+        <a href="{% url 'local_admin_church_settings' %}" class="group">
+        {% if church.logo %}
+            <img src="{{ church.logo.url }}" alt="{{ church.name }} Logo" class="w-20 h-20 rounded-full object-cover border-4 border-[#1e3a8a] bg-white transition-transform group-hover:scale-105 group-hover:ring-4 group-hover:ring-[#1e3a8a] cursor-pointer" />
+        {% else %}
+            <div class="w-20 h-20 flex items-center justify-center rounded-full bg-[#1e3a8a] text-white text-3xl font-bold border-4 border-[#1e3a8a] transition-transform group-hover:scale-105 group-hover:ring-4 group-hover:ring-[#1e3a8a] cursor-pointer">
+                {{ church.name|slice:":2"|upper }}
+            </div>
+        {% endif %}
+        </a>
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Church Admin Dashboard</h1>
+            <p class="text-gray-600 mt-2">Welcome back, {{ church_admin.user.get_full_name|default:church_admin.user.username }}!</p>
+            <p class="text-gray-600">Managing: <strong>{{ church.name }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-[#e0e7ff] text-[#1e3a8a] shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Events</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ events_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-[#d1fae5] text-[#047857] shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Ministries</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ ministries_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-[#fef9c3] text-[#b45309] shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">News</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ news_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-[#ede9fe] text-[#7c3aed] shadow">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Sermons</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ sermons_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <a href="{% url 'local_admin_events' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#e0e7ff] text-[#1e3a8a] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Manage Events</h3>
+                <p class="text-sm text-gray-600">Create and manage church events</p>
+            </div>
+        </a>
+        <a href="{% url 'local_admin_ministries' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#d1fae5] text-[#047857] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Manage Ministries</h3>
+                <p class="text-sm text-gray-600">Organize church ministries</p>
+            </div>
+        </a>
+        <a href="{% url 'local_admin_news' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#fef9c3] text-[#b45309] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Manage News</h3>
+                <p class="text-sm text-gray-600">Post church announcements</p>
+            </div>
+        </a>
+        <a href="{% url 'local_admin_sermons' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#ede9fe] text-[#7c3aed] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Manage Sermons</h3>
+                <p class="text-sm text-gray-600">Upload and organize sermons</p>
+            </div>
+        </a>
+        <a href="{% url 'local_admin_donations' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#fee2e2] text-[#b91c1c] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Donation Methods</h3>
+                <p class="text-sm text-gray-600">Configure giving options</p>
+            </div>
+        </a>
+        <a href="{% url 'local_admin_church_settings' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-3 rounded-full bg-[#f3f4f6] text-[#374151] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Church Settings</h3>
+                <p class="text-sm text-gray-600">Configure shop URL and contact info</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Events -->
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center"><svg class="w-5 h-5 mr-2 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Recent Events</h3>
+            {% if recent_events %}
+                <div class="space-y-3">
+                    {% for event in recent_events %}
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ event.title }}</p>
+                            <p class="text-xs text-gray-500">{{ event.start_date|date:"M d, Y" }}</p>
+                        </div>
+                        <a href="{% url 'church_event_detail' church.id event.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'local_admin_events' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium">View all events →</a>
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">No events yet</p>
+                <a href="{% url 'local_admin_events' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium mt-2 inline-block">Create your first event →</a>
+            {% endif %}
+        </div>
+        <!-- Recent News -->
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center"><svg class="w-5 h-5 mr-2 text-[#b45309]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>Recent News</h3>
+            {% if recent_news %}
+                <div class="space-y-3">
+                    {% for news in recent_news %}
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ news.title }}</p>
+                            <p class="text-xs text-gray-500">{{ news.date|date:"M d, Y" }}</p>
+                        </div>
+                        <a href="{% url 'church_news' church.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'local_admin_news' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium">View all news →</a>
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">No news yet</p>
+                <a href="{% url 'local_admin_news' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium mt-2 inline-block">Create your first news post →</a>
+            {% endif %}
+        </div>
+        <!-- Recent Sermons -->
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center"><svg class="w-5 h-5 mr-2 text-[#7c3aed]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Recent Sermons</h3>
+            {% if recent_sermons %}
+                <div class="space-y-3">
+                    {% for sermon in recent_sermons %}
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ sermon.title }}</p>
+                            <p class="text-xs text-gray-500">{{ sermon.date|date:"M d, Y" }}</p>
+                        </div>
+                        <a href="{% url 'church_sermons' church.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'local_admin_sermons' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium">View all sermons →</a>
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">No sermons yet</p>
+                <a href="{% url 'local_admin_sermons' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium mt-2 inline-block">Upload your first sermon →</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 bg-[#1e3a8a] rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-[#1e3a8a] mb-4">Quick Actions</h3>
+        <div class="flex flex-wrap gap-4">
+            <a href="{% url 'church_home' church.id %}" target="_blank" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg text-sm font-medium">
+                View Church Website
+            </a>
+            <a href="/admin/" target="_blank" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                Django Admin
+            </a>
+            {% if church.shop_url %}
+                <a href="{{ church.shop_url }}" target="_blank" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    View Online Store
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

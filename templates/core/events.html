@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bethel Prayer Ministry | Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Enhanced dropdown styles */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            color: #1e3a8a;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 12rem;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .dropdown-container:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-menu a {
+            display: block;
+            padding: 0.25rem 0;
+            color: #1e3a8a;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .dropdown-menu a:hover {
+            color: #1e3a8a;
+        }
+        
+        .dropdown-menu .all-link {
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .dropdown-menu .divider {
+            border-top: 1px solid #e5e7eb;
+            margin: 0.25rem 0;
+            padding-top: 0.25rem;
+        }
+        
+        .dropdown-menu .no-items {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white shadow-lg sticky top-0 z-50 border-b border-white">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-2xl font-serif font-bold">Bethel Prayer Ministry</a>
+            <nav class="hidden md:flex space-x-6 text-sm">
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Church ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/locations" class="block py-1 hover:text-[#1e3a8a]">Locations</a>
+                        <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
+                    </div>
+                </div>
+                <a href="/about" class="hover:text-white transition-colors">About Us</a>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/ministries/" class="all-link">All Ministries</a>
+                        {% for ministry in all_ministries %}
+                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                        {% empty %}
+                        <span class="no-items">No ministries available</span>
+                        {% endfor %}
+                        <div class="divider">
+                            <a href="/volunteer" class="text-sm">Volunteer</a>
+                            <a href="/serve" class="text-sm">Serve</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Events ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/events/" class="all-link">All Events</a>
+                        {% for event in all_events %}
+                        <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
+                        {% empty %}
+                        <span class="no-items">No events available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="/resources" class="hover:text-white transition-colors">Resources</a>
+                <a href="/testimonies" class="hover:text-white transition-colors">Testimonies</a>
+                <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
+                <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+                <a href="/events/calendar/" class="hover:text-white transition-colors">Calendar</a>
+            </nav>
+            <button class="md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-[#f1f5fd] text-[#1e3a8a] py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Discover Our Events</h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Join our community in faith, fellowship, and spiritual growth</p>
+        </div>
+    </section>
+
+    <!-- Events Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 class="text-3xl font-bold mb-8 text-[#1e3a8a]">All Events</h2>
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for event in all_events %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    {% include 'core/_event_card.html' with event=event %}
+                </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No Events Available</h3>
+                <p class="text-gray-500">Check back soon for upcoming events!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Calendar Placeholder -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <a href="/events/calendar/" class="inline-block bg-[#1e3a8a] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-[#1e3a8a] transition">Go to Calendar View</a>
+        <p class="mt-2 text-gray-500">See all events in a calendar format.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-deep-blue text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 class="text-2xl font-bold mb-4">Bethel Prayer Ministry</h3>
+            <p class="mb-4">Connecting people through faith, prayer, and spiritual growth worldwide.</p>
+            <p>&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+        </div>
+    </footer>
+
+    {% if past_highlights %}
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-deep-blue mb-4">Past Highlights</h2>
+                <p class="text-xl text-gray-600">Relive the amazing moments from our previous events</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for highlight in past_highlights|slice:':3' %}
+                <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
+                        <p class="text-gray-600 mb-4">{{ highlight.description|truncatewords:20 }}</p>
+                        <p class="text-sm text-gray-500">{{ highlight.year }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if past_highlights|length > 3 %}
+            <div class="text-center mt-8">
+                <a href="/events/highlights/" class="inline-block bg-[#1e3a8a] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-[#243c8a] transition">See All</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <script>
+        // Simple dropdown functionality without conflicts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click outside to close functionality
+            document.addEventListener('click', function(event) {
+                const dropdowns = document.querySelectorAll('.dropdown-menu');
+                dropdowns.forEach(dropdown => {
+                    if (!dropdown.parentElement.contains(event.target)) {
+                        dropdown.style.opacity = '0';
+                        dropdown.style.visibility = 'hidden';
+                        dropdown.style.transform = 'translateY(-10px)';
+                    }
+                });
+            });
+            
+            // Ensure dropdowns work on touch devices
+            const dropdownButtons = document.querySelectorAll('.dropdown-container button');
+            dropdownButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdown = this.nextElementSibling;
+                    const isVisible = dropdown.style.visibility === 'visible';
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(d => {
+                        d.style.opacity = '0';
+                        d.style.visibility = 'hidden';
+                        d.style.transform = 'translateY(-10px)';
+                    });
+                    
+                    // Toggle current dropdown
+                    if (!isVisible) {
+                        dropdown.style.opacity = '1';
+                        dropdown.style.visibility = 'visible';
+                        dropdown.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

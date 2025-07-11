@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.title }} - Speakers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-[#1e3a8a] to-[#6366f1] text-white py-20 mb-12">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col items-center text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Speakers for {{ event.title }}</h1>
+            <p class="text-lg mb-8">Meet the ministers and speakers for this event. Learn more about their background, ministry, and what they'll be sharing.</p>
+            <a href="/events/{{ event.id }}/" class="inline-block bg-white text-[#1e3a8a] px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">&larr; Back to Event</a>
+        </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-4 pb-20">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+            {% for speaker in speakers %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-8">
+                {% if speaker.photo %}
+                <img src="{{ speaker.photo.url }}" alt="{{ speaker.name }}" class="w-32 h-32 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
+                {% else %}
+                <div class="w-32 h-32 rounded-full bg-[#1e3a8a] flex items-center justify-center mb-4">
+                    <i class="fas fa-user text-white text-5xl"></i>
+                </div>
+                {% endif %}
+                <div class="text-xl font-bold text-[#1e3a8a] mb-1">{{ speaker.name }}</div>
+                {% if speaker.title %}
+                <div class="text-gray-500 mb-2">{{ speaker.title }}</div>
+                {% endif %}
+                {% if speaker.bio %}
+                <div class="text-gray-600 text-center text-base mt-2">{{ speaker.bio }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</body>
+</html> 

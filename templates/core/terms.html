@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-8">
+  <h1 class="text-3xl font-bold text-center mb-8 text-deep-blue">Terms of Service</h1>
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <p class="text-gray-600 mb-6">Last updated: {{ year|default:2025 }}</p>
+    
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">1. Acceptance of Terms</h3>
+    <p class="text-gray-700 mb-6">By accessing and using the Bethel platform, you accept and agree to be bound by the terms and provision of this agreement.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">2. Description of Service</h3>
+    <p class="text-gray-700 mb-6">Bethel is a multi-church platform that provides churches with tools for managing their online presence, including events, ministries, sermons, donations, and community engagement.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">3. User Accounts</h3>
+    <p class="text-gray-700 mb-4">You are responsible for:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Maintaining the confidentiality of your account</li>
+      <li>All activities that occur under your account</li>
+      <li>Providing accurate and complete information</li>
+      <li>Notifying us immediately of any unauthorized use</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">4. Acceptable Use</h3>
+    <p class="text-gray-700 mb-4">You agree not to:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Use the service for any unlawful purpose</li>
+      <li>Upload or transmit harmful content</li>
+      <li>Interfere with the service or other users</li>
+      <li>Attempt to gain unauthorized access</li>
+      <li>Use automated systems to access the service</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">5. Content and Intellectual Property</h3>
+    <p class="text-gray-700 mb-6">Users retain ownership of their content but grant us a license to use, display, and distribute it in connection with the service. We respect intellectual property rights and expect users to do the same.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">6. Donations and Payments</h3>
+    <p class="text-gray-700 mb-6">Donations are processed through secure third-party payment processors. We are not responsible for the processing of payments but will work to resolve any issues that arise.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">7. Privacy</h3>
+    <p class="text-gray-700 mb-6">Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">8. Termination</h3>
+    <p class="text-gray-700 mb-6">We may terminate or suspend your account at any time for violations of these terms or for any other reason at our discretion.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">9. Limitation of Liability</h3>
+    <p class="text-gray-700 mb-6">We provide the service "as is" and make no warranties about its reliability or availability. We are not liable for any damages arising from your use of the service.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">10. Changes to Terms</h3>
+    <p class="text-gray-700 mb-6">We may modify these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">11. Contact Information</h3>
+    <p class="text-gray-700">For questions about these Terms of Service, please contact us at legal@bethel.com</p>
+  </div>
+</div>
+{% endblock %} 

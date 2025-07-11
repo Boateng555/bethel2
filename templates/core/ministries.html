@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bethel Prayer Ministry | Ministries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        '[#1e3a8a]': '#1e3a8a',
+                        'white': '#ffffff',
+                        'very-white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Enhanced dropdown styles */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            color: #1e3a8a;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 12rem;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .dropdown-container:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-menu a {
+            display: block;
+            padding: 0.25rem 0;
+            color: #1e3a8a;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .dropdown-menu a:hover {
+            color: #1e3a8a;
+        }
+        
+        .dropdown-menu .all-link {
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .dropdown-menu .divider {
+            border-top: 1px solid #e5e7eb;
+            margin: 0.25rem 0;
+            padding-top: 0.25rem;
+        }
+        
+        .dropdown-menu .no-items {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-serif font-bold text-deep-blue">Bethel Prayer Ministry</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="hover:text-white transition-colors">Home</a>
+                    <div class="dropdown-container">
+                        <button class="hover:text-white transition-colors">Events ▾</button>
+                        <div class="dropdown-menu">
+                            <a href="/events/" class="all-link">All Events</a>
+                            {% for event in all_events %}
+                            <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
+                            {% empty %}
+                            <span class="no-items">No events available</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="dropdown-container">
+                        <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                        <div class="dropdown-menu">
+                            <a href="/ministries/" class="all-link">All Ministries</a>
+                            {% for ministry in all_ministries %}
+                            <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                            {% empty %}
+                            <span class="no-items">No ministries available</span>
+                            {% endfor %}
+                            <div class="divider">
+                                <a href="/volunteer" class="text-sm">Volunteer</a>
+                                <a href="/serve" class="text-sm">Serve</a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                    <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+                    <a href="/about" class="hover:text-white transition-colors">About Us</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-6xl font-serif font-bold mb-4">Our Ministries</h1>
+            <p class="text-xl md:text-2xl mb-8">Discover how you can get involved and serve in our community</p>
+            <div class="flex justify-center space-x-4">
+                <a href="#ministries" class="bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Explore Ministries
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ministries Section -->
+    <section id="ministries" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-deep-blue mb-4">Join Our Ministries</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Find your place to serve and grow in faith. Each ministry offers unique opportunities to connect, serve, and make a difference in our community.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for ministry in all_ministries %}
+                    {% include 'core/_ministry_card.html' with ministry=ministry %}
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-church text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-2xl font-serif font-bold text-gray-500 mb-2">No Ministries Available</h3>
+                    <p class="text-gray-400">Check back soon for ministry opportunities!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="bg-very-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-deep-blue mb-4">Ready to Get Involved?</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                Join one of our ministries and start making a difference in our community today.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="/volunteer" class="bg-deep-blue text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] transition-colors">
+                    Become a Volunteer
+                </a>
+                <a href="/contact" class="bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold border-2 border-deep-blue hover:bg-deep-blue hover:text-white transition-colors">
+                    Contact Us
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-deep-blue text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-serif font-bold mb-4">Bethel Prayer Ministry</h3>
+                    <p class="text-gray-300">Spreading love, hope, and faith in our community through prayer and service.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/events/" class="text-gray-300 hover:text-white transition-colors">Events</a></li>
+                        <li><a href="/ministries/" class="text-gray-300 hover:text-white transition-colors">Ministries</a></li>
+                        <li><a href="/about" class="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Get Involved</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/volunteer" class="text-gray-300 hover:text-white transition-colors">Volunteer</a></li>
+                        <li><a href="/donation" class="text-gray-300 hover:text-white transition-colors">Donate</a></li>
+                        <li><a href="/prayer" class="text-gray-300 hover:text-white transition-colors">Prayer Requests</a></li>
+                        <li><a href="/contact" class="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Connect With Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple dropdown functionality without conflicts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click outside to close functionality
+            document.addEventListener('click', function(event) {
+                const dropdowns = document.querySelectorAll('.dropdown-menu');
+                dropdowns.forEach(dropdown => {
+                    if (!dropdown.parentElement.contains(event.target)) {
+                        dropdown.style.opacity = '0';
+                        dropdown.style.visibility = 'hidden';
+                        dropdown.style.transform = 'translateY(-10px)';
+                    }
+                });
+            });
+            
+            // Ensure dropdowns work on touch devices
+            const dropdownButtons = document.querySelectorAll('.dropdown-container button');
+            dropdownButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdown = this.nextElementSibling;
+                    const isVisible = dropdown.style.visibility === 'visible';
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(d => {
+                        d.style.opacity = '0';
+                        d.style.visibility = 'hidden';
+                        d.style.transform = 'translateY(-10px)';
+                    });
+                    
+                    // Toggle current dropdown
+                    if (!isVisible) {
+                        dropdown.style.opacity = '1';
+                        dropdown.style.visibility = 'visible';
+                        dropdown.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

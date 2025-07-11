@@ -1,0 +1,90 @@
+{% extends 'core/base.html' %}
+
+{% block title %}News - {{ church.name }}{% endblock %}
+
+{% block content %}
+<!-- Global Site Navigation Banner -->
+<div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] text-white py-3 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
+        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-sm font-medium">You're viewing {{ church.name }}</span>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
+                Find Other Churches
+            </a>
+            <a href="/" class="bg-transparent border border-white text-white hover:bg-white hover:text-[#1e3a8a] px-4 py-1 rounded text-sm font-medium transition duration-200">
+                Go to Global Site
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold mb-4">Latest News from {{ church.name }}</h1>
+            <p class="text-xl opacity-90">Stay updated with the latest happenings in our church community</p>
+        </div>
+    </div>
+</div>
+
+<!-- News Grid -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    {% if news %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for article in news %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+            {% if article.image %}
+            <div class="h-48 bg-cover bg-center" style="background-image: url('{{ article.image.url }}');">
+            </div>
+            {% else %}
+            <div class="h-48 bg-gradient-to-r from-indigo-500 to-indigo-200 flex items-center justify-center">
+                <i class="fas fa-newspaper text-white text-6xl"></i>
+            </div>
+            {% endif %}
+            <div class="p-6">
+                <div class="flex items-center text-sm text-gray-500 mb-3">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    {{ article.date|date:"F j, Y" }}
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">{{ article.title }}</h3>
+                <p class="text-gray-700 text-sm mb-4">
+                    {% if article.excerpt %}
+                        {{ article.excerpt|truncatewords:25 }}
+                    {% else %}
+                        {{ article.content|truncatewords:25 }}
+                    {% endif %}
+                </p>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-user mr-1"></i>
+                        {{ church.name }}
+                    </span>
+                    <a href="#" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold text-sm">
+                        Read More →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No News Available -->
+    <div class="text-center py-16">
+        <div class="text-gray-400 text-6xl mb-4">
+            <i class="fas fa-newspaper"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">No News Available</h3>
+        <p class="text-gray-600 mb-6">Check back soon for updates from {{ church.name }}</p>
+        <a href="{% url 'church_home' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-6 py-3 rounded-lg font-semibold transition duration-300">
+            Back to Home
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

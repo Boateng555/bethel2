@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sermons - Bethel Prayer Ministry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @media (max-width: 640px) {
+        .sermon-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 2rem !important;
+        }
+      }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-800">Bethel Prayer Ministry</h1>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900">About Us</a>
+                    <a href="{% url 'events' %}" class="text-gray-600 hover:text-gray-900">Events</a>
+                    <a href="{% url 'ministries' %}" class="text-gray-600 hover:text-gray-900">Get Involved</a>
+                    <a href="{% url 'sermon' %}" class="text-[#1e3a8a] font-semibold">Sermon</a>
+                    <a href="{% url 'shop' %}" class="text-gray-600 hover:text-gray-900">Shop</a>
+                    <a href="{% url 'donation' %}" class="text-gray-600 hover:text-gray-900">Donation</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="{% url 'home' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="{% url 'about' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">About Us</a>
+                    <a href="{% url 'events' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">Events</a>
+                    <a href="{% url 'ministries' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">Get Involved</a>
+                    <a href="{% url 'sermon' %}" class="block px-3 py-2 text-[#1e3a8a] font-semibold">Sermon</a>
+                    <a href="{% url 'shop' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">Shop</a>
+                    <a href="{% url 'donation' %}" class="block px-3 py-2 text-gray-600 hover:text-gray-900">Donation</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Sermons</h1>
+            <p class="text-xl text-gray-600">Listen to inspiring messages from our pastors</p>
+        </div>
+
+        <!-- Filter/Search Bar -->
+        <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6 mt-8 mb-8">
+          <form class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Keyword:</label>
+              <input type="text" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Search by keyword" name="keyword" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Preacher:</label>
+              <input type="text" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Preacher" name="preacher" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date:</label>
+              <input type="date" class="w-full border border-gray-300 rounded px-3 py-2" name="date" />
+            </div>
+            <div class="md:col-span-3 flex gap-4 mt-2">
+              <button type="submit" class="bg-[#1e3a8a] text-white px-4 py-2 rounded font-semibold">Apply Filter</button>
+              <button type="reset" class="bg-gray-500 text-white px-4 py-2 rounded font-semibold">Clear Filter</button>
+            </div>
+          </form>
+        </div>
+
+        {% if sermons %}
+        <div class="sermon-grid grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for sermon in sermons %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                {% if sermon.thumbnail %}
+                <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-[#f1f5fd] flex items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold mb-2 text-gray-900">{{ sermon.title }}</h3>
+                    <p class="text-gray-600 mb-4">{{ sermon.description|truncatewords:30 }}</p>
+                    
+                    <div class="space-y-2 mb-4">
+                        <p class="text-sm text-gray-500"><strong>Preacher:</strong> {{ sermon.preacher }}</p>
+                        <p class="text-sm text-gray-500"><strong>Date:</strong> {{ sermon.date|date:"M d, Y" }}</p>
+                        {% if sermon.scripture_reference %}
+                        <p class="text-sm text-gray-500"><strong>Scripture:</strong> {{ sermon.scripture_reference }}</p>
+                        {% endif %}
+                        {% if sermon.duration %}
+                        <p class="text-sm text-gray-500"><strong>Duration:</strong> {{ sermon.duration }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        {% if sermon.audio_file %}
+                        <a href="{{ sermon.audio_file.url }}" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-4 py-2 rounded text-sm font-semibold transition-colors">
+                            Listen
+                        </a>
+                        {% endif %}
+                        {% if sermon.video_file %}
+                        <a href="{{ sermon.video_file.url }}" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-4 py-2 rounded text-sm font-semibold transition-colors">
+                            Watch
+                        </a>
+                        {% endif %}
+                        {% if sermon.link %}
+                        <a href="{{ sermon.link }}" target="_blank" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-4 py-2 rounded text-sm font-semibold transition-colors">
+                            View Link
+                        </a>
+                        {% endif %}
+                        {% if not sermon.audio_file and not sermon.video_file and not sermon.link %}
+                        <span class="text-gray-400 text-sm">Media coming soon</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Sermons Available</h3>
+                <p class="text-gray-600">Sermons will be available soon. Check back later!</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-2">Never Miss a Sermon</h3>
+          <p class="mb-4">Subscribe to our podcast or YouTube channel</p>
+          <div class="flex justify-center gap-4">
+            <a href="#" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-semibold"><i class="fab fa-youtube"></i> YouTube</a>
+            <a href="#" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-semibold"><i class="fas fa-podcast"></i> Podcast</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,191 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Manage Donations - {{ church.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Donations</h1>
+                <p class="text-gray-600 mt-2">Manage donation methods for {{ church.name }}</p>
+            </div>
+            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-200">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Add New Donation Method -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center"><svg class="w-6 h-6 mr-2 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path></svg>Add New Donation Method</h2>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input type="text" id="name" name="name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900 placeholder-gray-500"
+                           placeholder="e.g., General Fund, Building Fund">
+                </div>
+                
+                <div>
+                    <label for="payment_type" class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+                    <select id="payment_type" name="payment_type" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900">
+                        <option value="">Select Payment Type</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="stripe">Stripe</option>
+                        <option value="gofundme">GoFundMe</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="check">Check</option>
+                        <option value="cash">Cash</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label for="external_link" class="block text-sm font-medium text-gray-700 mb-1">External Link (Optional)</label>
+                <input type="url" id="external_link" name="external_link"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900 placeholder-gray-500"
+                       placeholder="https://paypal.me/yourchurch or https://gofundme.com/...">
+                <p class="text-sm text-gray-500 mt-1">Direct link to PayPal, GoFundMe, or other payment platforms</p>
+            </div>
+            
+            <div>
+                <label for="account_info" class="block text-sm font-medium text-gray-700 mb-1">Account Information</label>
+                <textarea id="account_info" name="account_info" rows="4" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900 placeholder-gray-500"
+                          placeholder="Account details, email, or payment instructions"></textarea>
+                <p class="text-sm text-gray-500 mt-1">Account details, email, or payment instructions (if no external link)</p>
+            </div>
+            
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                <textarea id="description" name="description" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900 placeholder-gray-500"
+                          placeholder="Brief description of what this fund supports"></textarea>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <label class="flex items-center">
+                    <input type="checkbox" name="is_active" checked
+                           class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a] text-gray-900">
+                    <span class="ml-2 text-sm text-gray-700">Active</span>
+                </label>
+                
+                <label class="flex items-center">
+                    <input type="checkbox" name="is_default"
+                           class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a] text-gray-900">
+                    <span class="ml-2 text-sm text-gray-700">Default (Recommended)</span>
+                </label>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" name="action" value="add"
+                        class="bg-[#1e3a8a] text-white px-6 py-2 rounded-md hover:bg-[#1e3a8a] transition duration-200">
+                    Add Donation Method
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Existing Donation Methods -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center"><svg class="w-6 h-6 mr-2 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path></svg>Existing Donation Methods</h2>
+        
+        {% if donation_methods %}
+        <div class="space-y-4">
+            {% for method in donation_methods %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ method.name }}</h3>
+                        {% if method.is_default %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white">
+                            Default
+                        </span>
+                        {% endif %}
+                        {% if method.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white">
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button onclick="editMethod('{{ method.id }}')" 
+                                class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium">
+                            Edit
+                        </button>
+                        <form method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this donation method?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="method_id" value="{{ method.id }}">
+                            <button type="submit" name="action" value="delete"
+                                    class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm font-medium">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Payment Type:</span>
+                        <span class="text-gray-900">{{ method.get_payment_type_display }}</span>
+                    </div>
+                    
+                    {% if method.external_link %}
+                    <div>
+                        <span class="font-medium text-gray-700">External Link:</span>
+                        <a href="{{ method.external_link }}" target="_blank" 
+                           class="text-[#1e3a8a] hover:text-[#1e3a8a] break-all">
+                            {{ method.external_link|truncatechars:50 }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if method.description %}
+                <div class="mt-2">
+                    <span class="font-medium text-gray-700">Description:</span>
+                    <span class="text-gray-900">{{ method.description }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3 p-3 bg-gray-50 rounded-md">
+                    <span class="font-medium text-gray-700">Account Information:</span>
+                    <div class="text-gray-900 whitespace-pre-wrap text-sm mt-1">{{ method.account_info }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="text-gray-400 mb-4">
+                <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No donation methods yet</h3>
+            <p class="text-gray-500">Add your first donation method above to start accepting donations.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function editMethod(methodId) {
+    // This would open an edit modal or redirect to an edit page
+    // For now, we'll just show an alert
+    alert('Edit functionality will be implemented in the next update. For now, please delete and recreate the donation method.');
+}
+</script>
+{% endblock %} 

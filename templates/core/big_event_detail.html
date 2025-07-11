@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.title }} - {{ event.church.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(36, 59, 85, 0.9) 100%);
+        }
+        
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .speaker-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .schedule-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: #1e3a8a;
+        }
+        
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+    <style>
+      @media (max-width: 640px) {
+        section.relative.w-full.h-screen.overflow-hidden {
+          height: 50vh !important;
+          min-height: unset !important;
+          max-height: 60vh !important;
+        }
+        #hero-media-container,
+        .hero-swiper,
+        .hero-swiper .swiper-wrapper,
+        .hero-swiper .swiper-slide,
+        .hero-swiper img,
+        .hero-swiper video {
+          height: 100% !important;
+          min-height: unset !important;
+          max-height: 60vh !important;
+        }
+        .max-w-5xl.mx-auto.px-6.py-32.flex.flex-col.items-center.text-center {
+          padding-top: 2rem !important;
+          padding-bottom: 2rem !important;
+        }
+        .bg-white.shadow-md.rounded-lg.p-8.mb-8.flex.flex-col.items-center.justify-center {
+          padding: 1rem !important;
+          margin-bottom: 1rem !important;
+        }
+        .text-5xl, .text-4xl {
+          font-size: 1.5rem !important;
+        }
+        .text-2xl {
+          font-size: 1.1rem !important;
+        }
+        .text-lg {
+          font-size: 0.95rem !important;
+        }
+        .text-base {
+          font-size: 0.85rem !important;
+        }
+        .mb-8 {
+          margin-bottom: 1rem !important;
+        }
+        .mb-4 {
+          margin-bottom: 0.5rem !important;
+        }
+        .mb-2 {
+          margin-bottom: 0.25rem !important;
+        }
+        .p-8 {
+          padding: 1rem !important;
+        }
+        .flex.flex-col.items-center.justify-center svg {
+          width: 1.5rem !important;
+          height: 1.5rem !important;
+        }
+      }
+      /* On mobile, move countdown below event info */
+      @media (max-width: 640px) {
+        .event-hero-flex {
+          flex-direction: column !important;
+        }
+        .event-hero-countdown {
+          order: 2 !important;
+          margin-top: 1.5rem !important;
+        }
+        .event-hero-info {
+          order: 1 !important;
+        }
+      }
+      @media (max-width: 640px) {
+          .event-hero-flex {
+            flex-direction: column !important;
+          }
+          .event-hero-countdown {
+            order: 2 !important;
+            margin-top: 1.5rem !important;
+            background: #fff !important;
+            border-radius: 1rem !important;
+            padding: 1.25rem !important;
+            border: 2px solid #1e3a8a !important;
+            box-shadow: 0 2px 8px rgba(30,58,138,0.08) !important;
+          }
+          .event-hero-countdown .text-white,
+          .event-hero-countdown .text-gray-200,
+          .event-hero-countdown .text-gray-100,
+          .event-hero-countdown .text-black {
+            color: #111 !important;
+            font-weight: bold !important;
+            text-shadow: none !important;
+          }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- NAVBAR -->
+    {% include 'core/local_church_navbar.html' with church=event.church %}
+
+    <!-- Hero Section -->
+    <section class="relative w-full h-screen overflow-hidden">
+        <div id="hero-media-container" class="absolute inset-0 w-full h-full">
+            {% if event.hero_media.all %}
+            <!-- Swiper Carousel -->
+            <div class="swiper hero-swiper h-full">
+                <div class="swiper-wrapper h-full">
+                    {% for media in event.hero_media.all|dictsort:'order' %}
+                        {% if media.image %}
+                        <div class="swiper-slide h-full">
+                            <img src="{{ media.image.url }}" alt="Event Media" class="w-full h-full object-cover" />
+                        </div>
+                        {% endif %}
+                        {% if media.video %}
+                        <div class="swiper-slide h-full">
+                            <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                                <source src="{{ media.video.url }}" type="video/mp4" />
+                            </video>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Add Pagination -->
+                <div class="swiper-pagination"></div>
+            </div>
+
+            {% elif event.hero_media.all %}
+                <!-- Fallback to first image from hero media -->
+                {% load custom_filters %}
+                {% with first_media=event.hero_media.all|dictsort:'order'|first_with_image %}
+                    {% if first_media %}
+                        <img src="{{ first_media.image.url }}" alt="{{ event.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                    {% endif %}
+                {% endwith %}
+            {% else %}
+                <div class="absolute inset-0 bg-gray-500"></div>
+            {% endif %}
+        </div>
+        
+        <!-- Dark overlay for better text readability -->
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+        
+        <!-- Content -->
+        <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+                {{ event.title }}
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">
+                {{ event.description|default:'Join us in worship and community as we grow together in faith.' }}
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 mb-12">
+                {% if event.requires_registration %}
+                <a href="#register" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    Register Now
+                </a>
+                {% endif %}
+                <a href="#about" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    Event Details
+                </a>
+            </div>
+            
+            <!-- Countdown Section -->
+            <div class="w-full max-w-2xl">
+                <h2 class="text-3xl font-extrabold text-center mb-8 text-white drop-shadow-lg">Event Starts In</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="countdown-box rounded-lg p-6 text-center">
+                        <div class="text-4xl font-bold text-white" id="days">00</div>
+                        <div class="text-sm uppercase tracking-wider text-white">Days</div>
+                    </div>
+                    <div class="countdown-box rounded-lg p-6 text-center">
+                        <div class="text-4xl font-bold text-white" id="hours">00</div>
+                        <div class="text-sm uppercase tracking-wider text-white">Hours</div>
+                    </div>
+                <div class="countdown-box rounded-lg p-6 text-center">
+                        <div class="text-4xl font-bold text-white" id="minutes">00</div>
+                        <div class="text-sm uppercase tracking-wider text-white">Minutes</div>
+                </div>
+                <div class="countdown-box rounded-lg p-6 text-center">
+                        <div class="text-4xl font-bold text-white" id="seconds">00</div>
+                        <div class="text-sm uppercase tracking-wider text-white">Seconds</div>
+                </div>
+                </div>
+                <!-- Debug output for countdown date -->
+                {% if not event.start_date %}
+                <div class="mt-6 text-center text-sm text-yellow-200">
+                    <div class="text-red-300 font-bold">Warning: No event start date set!</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-[#1e3a8a] font-semibold tracking-wide uppercase">About The Event</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-deep-blue sm:text-4xl">
+                    {{ event.title }}
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-700 lg:mx-auto">
+                    {{ event.description }}
+                </p>
+            </div>
+            <div class="mt-20 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div class="lg:col-span-2">
+                    <h2 class="text-3xl font-bold text-deep-blue mb-8">Event Details</h2>
+                    <div class="prose prose-lg max-w-none text-gray-700">
+                        <p class="text-xl leading-relaxed">{{ event.description }}</p>
+                    </div>
+                    {% if event.address %}
+                    <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-xl font-semibold text-deep-blue mb-4">Location Details</h3>
+                        <p class="text-gray-700">{{ event.address }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if qr_code_base64 %}
+                    <div class="flex flex-col items-center my-12">
+                        <div class="mb-2 text-lg font-semibold text-[#1e3a8a]">Scan to view this event on your phone</div>
+                        <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="Event QR Code" class="w-40 h-40 shadow-lg border-2 border-[#1e3a8a] rounded-lg">
+                    </div>
+                    {% endif %}
+
+                </div>
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-lg p-8 sticky top-6 border border-gray-200">
+                        <h3 class="text-2xl font-bold text-deep-blue mb-6">Event Information</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Date & Time</h4>
+                                <p class="text-gray-600">{{ event.start_date|date:"F j, Y" }}</p>
+                                <p class="text-gray-600">{{ event.start_date|time:"g:i A" }} - {{ event.end_date|time:"g:i A" }}</p>
+            </div>
+                            {% if event.location %}
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Location</h4>
+                                <p class="text-gray-600">{{ event.location }}</p>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Event Type</h4>
+                                <p class="text-gray-600">{{ event.get_event_type_display }}</p>
+                            </div>
+                            {% if event.requires_registration %}
+                            <div class="bg-[#1e3a8a] p-4 rounded-lg">
+                                <h4 class="font-semibold text-white mb-2">Registration</h4>
+                                <p class="text-white mb-2">Registration required for this event</p>
+                                {% if event.registration_fee %}
+                                <p class="text-white">Fee: ${{ event.registration_fee }}</p>
+                            {% endif %}
+                            {% if event.registration_deadline %}
+                                <p class="text-white">Deadline: {{ event.registration_deadline|date:"F j, Y" }}</p>
+                                {% endif %}
+                                {% if event.max_attendees %}
+                                <p class="text-white">Max attendees: {{ event.max_attendees }}</p>
+                                {% endif %}
+                                </div>
+                            {% endif %}
+                            <!-- Share Buttons -->
+                            <div class="pt-4 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-900 mb-3">Share This Event</h4>
+                                <div class="flex space-x-3">
+                                    <a href="https://wa.me/?text={{ event.title|urlencode }} - {{ request.build_absolute_uri }}" target="_blank" class="bg-[#1e3a8a] text-white p-2 rounded-lg hover:bg-[#1e3a8a] transition-colors">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                                        </svg>
+                                    </a>
+                                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="bg-[#1e3a8a] text-white p-2 rounded-lg hover:bg-[#1e3a8a] transition-colors">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                        </svg>
+                                    </a>
+                                    <a href="mailto:?subject={{ event.title|urlencode }}&body={{ event.description|truncatewords:30|urlencode }} - {{ request.build_absolute_uri }}" class="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Past Event Highlights Section -->
+    {% if past_highlights %}
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-12">
+                <h2 class="text-base text-[#1e3a8a] font-semibold tracking-wide uppercase">Past Event Highlights</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Relive the amazing moments from our previous events
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-3 mt-12">
+                {% for highlight in past_highlights|slice:':3' %}
+                <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    {% if highlight.image %}
+                    <img src="{{ highlight.image.url }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
+                    {% endif %}
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
+                        <p class="text-gray-600 mb-4">{{ highlight.description|truncatewords:20 }}</p>
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-gray-500">{{ highlight.year }}</p>
+                            {% if highlight.attendees_count %}
+                            <span class="text-sm text-gray-500">{{ highlight.attendees_count }} attendee{% if highlight.attendees_count|add:'-1' %}s{% endif %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if past_highlights|length > 3 %}
+            <div class="text-center mt-8">
+                <a href="/events/highlights/" class="inline-block bg-[#1e3a8a] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-[#243c8a] transition">See All</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Event Details Section -->
+    <section class="max-w-5xl mx-auto mt-12">
+        <h2 class="text-2xl font-bold text-center mb-6">Everything You Need To Know</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                <i class="fas fa-calendar-alt text-[#1e3a8a] text-3xl mb-2"></i>
+                <div class="text-lg font-semibold">Date</div>
+                <div class="text-gray-700">{{ event.start_date|date:'F d, Y' }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                <i class="fas fa-clock text-[#1e3a8a] text-3xl mb-2"></i>
+                <div class="text-lg font-semibold">Time</div>
+                <div class="text-gray-700">{{ event.start_date|date:'g:i A' }} - {{ event.end_date|date:'g:i A' }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                <i class="fas fa-map-marker-alt text-[#1e3a8a] text-3xl mb-2"></i>
+                <div class="text-lg font-semibold">Location</div>
+                <div class="text-gray-700">{{ event.location }}<br>{{ event.address }}</div>
+            </div>
+        </div>
+        {% if event.theme %}
+        <div class="bg-[#1e3a8a] rounded-lg p-6 mb-6">
+            <div class="text-lg font-bold mb-2">Theme: "{{ event.theme }}"</div>
+            <div class="text-gray-700">{{ event.theme_description }}</div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Featured Speakers Section -->
+    <section class="max-w-7xl mx-auto mt-16">
+        <h2 class="text-2xl font-bold text-center mb-6">Meet Our Anointed Ministers</h2>
+        <p class="text-center text-gray-600 mb-8">God has graced us with powerful ministers who will bring the Word with clarity and anointing.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8">
+            {% for speaker in event.speakers.all %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-8">
+                {% if speaker.photo %}
+                <img src="{{ speaker.photo.url }}" alt="{{ speaker.name }}" class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
+                {% else %}
+                <div class="w-24 h-24 rounded-full bg-[#1e3a8a] flex items-center justify-center mb-4">
+                    <i class="fas fa-user text-white text-4xl"></i>
+                </div>
+                {% endif %}
+                <div class="text-lg font-bold text-[#1e3a8a] mb-1">{{ speaker.name }}</div>
+                {% if speaker.title %}
+                <div class="text-gray-500 mb-2">{{ speaker.title }}</div>
+                {% endif %}
+                {% if speaker.bio %}
+                <div class="text-gray-600 text-center text-sm">{{ speaker.bio }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-center">
+            <a href="/events/{{ event.id }}/speakers/" class="bg-[#1e3a8a] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#1e3a8a] transition">View All Speakers</a>
+        </div>
+    </section>
+
+    <!-- Event Schedule Section -->
+    <section class="max-w-5xl mx-auto mt-16">
+        <h2 class="text-2xl font-bold text-center mb-6">Event Schedule</h2>
+        <p class="text-center text-gray-600 mb-8">Here's the breakdown of our spiritual journey together.</p>
+        <div>
+            {% regroup event.schedule_items.all by day as schedule_by_day %}
+            {% for day in schedule_by_day %}
+            <div class="mb-8">
+                <div class="font-bold text-lg text-[#1e3a8a] mb-2">Day {{ forloop.counter }}: {{ day.grouper }}</div>
+                <div class="space-y-4">
+                    {% for item in day.list %}
+                    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between schedule-item relative">
+                        <div class="flex-1">
+                            <div class="font-semibold">{{ item.start_time|time:'g:i A' }} - {{ item.end_time|time:'g:i A' }}</div>
+                            <div class="text-[#1e3a8a] font-bold">{{ item.title }}</div>
+                            <div class="text-gray-600 text-sm">{{ item.description }}</div>
+                        </div>
+                        {% if item.speaker %}
+                        <div class="mt-2 md:mt-0 md:ml-6 flex items-center">
+                            {% if item.speaker.photo %}
+                            <img src="{{ item.speaker.photo.url }}" alt="{{ item.speaker.name }}" class="w-10 h-10 rounded-full mr-2 object-cover">
+                            {% endif %}
+                            <span class="font-semibold text-gray-800">{{ item.speaker.name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if item.location %}
+                        <div class="mt-2 md:mt-0 md:ml-6 text-sm text-gray-500"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Registration Section -->
+    {% if event.requires_registration %}
+    <section id="register" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+                    <h2 class="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-4xl">
+                        <span class="block">Ready to join us?</span>
+                        <span class="block text-[#1e3a8a]">Register Now</span>
+                    </h2>
+                    <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                        Secure your spot today for this amazing event.
+                    </p>
+                    <div class="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+                        <p class="text-base font-medium text-gray-900">What's included:</p>
+                        <ul class="mt-2 space-y-2">
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-[#1e3a8a]"></i>
+                                </div>
+                                <p class="ml-2 text-base text-gray-600">Access to all sessions</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-[#1e3a8a]"></i>
+                                </div>
+                                <p class="ml-2 text-base text-gray-600">Event materials</p>
+                            </li>
+                            {% if event.registration_fee %}
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-[#1e3a8a]"></i>
+                                </div>
+                                <p class="ml-2 text-base text-gray-600">Registration fee: ${{ event.registration_fee }}</p>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-12 lg:mt-0 lg:col-span-6">
+                    <div class="bg-white shadow-xl rounded-lg p-8 sm:p-10">
+                        <h3 class="text-lg font-medium text-gray-900 mb-6">Registration Form</h3>
+                        {% if registration_success %}
+                            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-center">
+                                Thank you for registering! We have received your information.
+                            </div>
+                        {% endif %}
+                        {% if not registration_success %}
+                        <form method="post" action="{% url 'event_registration' event.id %}">
+                            {% csrf_token %}
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <div>
+                                    <label for="first_name" class="block text-sm font-medium text-gray-700">First name</label>
+                                    <div class="mt-1">
+                                        <input type="text" name="first_name" id="first_name" required class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="last_name" class="block text-sm font-medium text-gray-700">Last name</label>
+                                    <div class="mt-1">
+                                        <input type="text" name="last_name" id="last_name" required class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md">
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                                    <div class="mt-1">
+                                        <input type="email" name="email" id="email" required class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md">
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone number</label>
+                                    <div class="mt-1">
+                                        <input type="tel" name="phone" id="phone" class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md">
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <label for="dietary_restrictions" class="block text-sm font-medium text-gray-700">Dietary restrictions</label>
+                                    <div class="mt-1">
+                                        <textarea name="dietary_restrictions" id="dietary_restrictions" rows="3" class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md" placeholder="Any dietary restrictions or allergies?"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <label for="special_needs" class="block text-sm font-medium text-gray-700">Special needs</label>
+                                    <div class="mt-1">
+                                        <textarea name="special_needs" id="special_needs" rows="3" class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md" placeholder="Any special accommodations needed?"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2">
+                                    <label for="additional_notes" class="block text-sm font-medium text-gray-700">Additional notes</label>
+                                    <div class="mt-1">
+                                        <textarea name="additional_notes" id="additional_notes" rows="3" class="py-3 px-4 block w-full shadow-sm focus:ring-[#1e3a8a] focus:border-[#1e3a8a] border-gray-300 rounded-md" placeholder="Any additional information?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8">
+                                <button type="submit" class="w-full bg-[#1e3a8a] text-white py-3 px-4 rounded-md text-base font-medium hover:bg-[#1e3a8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1e3a8a] transition duration-300">
+                                    Register for Event
+                                </button>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">{{ event.church.name }}</h3>
+                    <p class="text-gray-400">{{ event.church.description|truncatewords:20 }}</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <p class="text-gray-400">
+                        {% if event.church.phone %}{{ event.church.phone }}<br>{% endif %}
+                        {% if event.church.email %}{{ event.church.email }}{% endif %}
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Location</h3>
+                    <p class="text-gray-400">{{ event.church.get_full_address }}</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-800 text-center">
+                <p class="text-gray-400">&copy; 2024 {{ event.church.name }}. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        var menuBtn = document.getElementById('mobile-menu-button');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        }
+
+        // Countdown Timer
+        function updateCountdown() {
+            const eventDateString = "{{ event.start_date|date:'Y/m/d H:i:s' }}";
+            const eventDate = new Date(eventDateString).getTime();
+            const now = new Date().getTime();
+            const distance = eventDate - now;
+            console.log('Countdown debug:', {eventDateString, eventDate, now, distance});
+
+            if (!eventDateString || isNaN(eventDate)) {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+
+            if (distance < 0) {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+            }
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+
+    <!-- Swiper.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new Swiper('.hero-swiper', {
+                loop: true,
+                autoplay: { delay: 5000, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+                // Enable touch/swipe navigation
+                allowTouchMove: true,
+                touchRatio: 1,
+                touchAngle: 45,
+                grabCursor: true,
+                // Hide navigation arrows since we're using swipe
+                navigation: false,
+            });
+        });
+    </script>
+</body>
+</html> 

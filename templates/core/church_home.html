@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ church.name }} - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+@media (max-width: 640px) {
+  .church-hero-title {
+    font-size: 2rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .church-hero-subtitle {
+    font-size: 1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .church-hero-btns {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    width: 100%;
+  }
+  .church-hero-btns a {
+    width: 100% !important;
+    font-size: 1rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .church-hero-section {
+    padding-top: 3.5rem !important;
+    padding-bottom: 3.5rem !important;
+    height: auto !important;
+    min-height: unset !important;
+  }
+  .hero-section-outer {
+    height: auto !important;
+    min-height: unset !important;
+  }
+  .church-section-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .church-section-subtitle {
+    font-size: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .church-card, .church-info-card {
+    padding: 0.5rem !important;
+    font-size: 0.9rem !important;
+    border-radius: 0.75rem !important;
+  }
+  .church-card h3, .church-info-card h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .church-card p, .church-info-card p {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .church-card .h-48, .church-card .h-40, .church-card .h-32 {
+    height: 6rem !important;
+    min-height: 0 !important;
+    max-height: 7rem !important;
+  }
+  .church-grid, .church-info-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+  .church-btn, .church-card a, .church-info-card a {
+    font-size: 0.95rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+  .church-section {
+    padding-top: 1.2rem !important;
+    padding-bottom: 1.2rem !important;
+  }
+  .church-grid-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .church-global-banner {
+    padding: 0 !important;
+    background-color: #e0e7ff !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  .church-global-banner > .max-w-7xl,
+  .church-global-banner .flex {
+    min-height: 0 !important;
+    height: auto !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+  .church-global-banner .mb-2,
+  .church-global-banner .mb-2.sm\:mb-0 {
+    margin-bottom: 0 !important;
+  }
+  .church-global-banner span, .church-global-banner .text-sm, .church-global-banner .font-medium {
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    line-height: 1.1 !important;
+  }
+  .church-global-banner a {
+    font-size: 10px !important;
+    padding: 0.05rem 0.3rem !important;
+    border-radius: 0.15rem !important;
+    height: 1.1rem !important;
+    min-height: 0 !important;
+    line-height: 1 !important;
+  }
+  .church-global-banner .flex {
+    gap: 0.05rem !important;
+    align-items: center !important;
+  }
+  /* Ensure content doesn't interfere with swipe navigation */
+  .relative.z-10 {
+    z-index: 10 !important; /* Lower than swipe area */
+  }
+}
+</style>
+</head>
+<body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+        <div class="flex items-center space-x-4">
+            <span class="text-2xl font-bold font-serif">{{ church.name }}</span>
+        </div>
+        <!-- Desktop Nav (hidden on mobile) -->
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <a href="{% url 'church_home' church.id %}" class="hover:text-white transition-colors">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="hover:text-white transition-colors">About</a>
+            <a href="{% url 'church_events' church.id %}" class="hover:text-white transition-colors">Events</a>
+            <a href="{% url 'church_ministries' church.id %}" class="hover:text-white transition-colors">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="hover:text-white transition-colors">Sermons</a>
+            <a href="{% url 'church_news' church.id %}" class="hover:text-white transition-colors">News</a>
+            {% if church.shop_url %}
+                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
+            {% endif %}
+            <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Give</a>
+            <a href="/churches/" class="hover:text-white transition-colors">Find Other Churches</a>
+            <a href="/" class="hover:text-white transition-colors">Global Site</a>
+        </nav>
+        <!-- Mobile Hamburger Button -->
+        <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+    
+    <!-- Mobile Menu (separate from header) -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
+        <a href="{% url 'church_home' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
+        <a href="{% url 'church_about' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">About</a>
+        <a href="{% url 'church_events' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
+        <a href="{% url 'church_ministries' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
+        <a href="{% url 'church_sermons' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
+        <a href="{% url 'church_news' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">News</a>
+        {% if church.shop_url %}
+            <a href="{{ church.shop_url }}" target="_blank" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+        {% endif %}
+        <a href="{% url 'church_donation' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Give</a>
+        <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Other Churches</a>
+        <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
+        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+    </div>
+
+<!-- Global Site Navigation Banner -->
+<div class="bg-[#e0e7ff] text-[#1e3a8a] py-3 px-6 church-global-banner">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
+        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-sm font-medium">You're viewing {{ church.name }}</span>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
+                Find Other Churches
+            </a>
+            <a href="/" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
+                Go to Global Site
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<section class="relative w-full h-screen overflow-hidden hero-section-outer">
+    {% if hero %}
+        <div id="hero-media-container" class="absolute inset-0 w-full h-full">
+            {% if hero.hero_media.all %}
+            <!-- Swiper Carousel -->
+            <div class="swiper hero-swiper h-full">
+                <div class="swiper-wrapper h-full">
+                    {% for media in hero.hero_media.all|dictsort:'order' %}
+                        {% if media.image %}
+                        <div class="swiper-slide h-full">
+                            <img src="{{ media.image.url }}" alt="Hero Media" class="w-full h-full object-cover" />
+                        </div>
+                        {% endif %}
+                        {% if media.video %}
+                        <div class="swiper-slide h-full">
+                            <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                                <source src="{{ media.video.url }}" type="video/mp4" />
+                            </video>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Add Pagination -->
+                <div class="swiper-pagination"></div>
+            </div>
+            {% elif hero.background_type == 'video' and hero.background_video %}
+                <video autoPlay muted loop playsInline class="absolute inset-0 w-full h-full object-cover">
+                    <source src="{{ hero.background_video.url }}" type="video/mp4" />
+                </video>
+            {% elif hero.background_type == 'image' and hero.background_image %}
+                <img src="{{ hero.background_image.url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+            {% endif %}
+        </div>
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center church-hero-section">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg church-hero-title">{{ hero.title }}</h1>
+            <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl church-hero-subtitle">{{ hero.subtitle }}</p>
+            <div class="flex flex-col sm:flex-row gap-1 justify-center items-center church-hero-btns">
+                <a href="{{ hero.primary_button_link }}" class="inline-block px-2 py-0.5 text-xs rounded bg-[#1e3a8a] hover:bg-white text-white font-semibold text-center leading-none transition duration-300 mb-1 sm:mb-0 min-w-[80px] max-w-[120px]">{{ hero.primary_button_text }}</a>
+                <a href="{{ hero.secondary_button_link }}" class="inline-block px-2 py-0.5 text-xs rounded bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue font-semibold text-center leading-none transition duration-300 min-w-[80px] max-w-[120px]">{{ hero.secondary_button_text }}</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Fallback hero -->
+        <div class="absolute inset-0 bg-deep-blue"></div>
+        <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center church-hero-section">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white church-hero-title">Welcome to {{ church.name }}</h1>
+            <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl church-hero-subtitle">Join us in worship and community as we grow together in faith.</p>
+            <div class="flex flex-col sm:flex-row gap-4 church-hero-btns">
+                <a href="{% url 'church_about' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Plan Your Visit</a>
+                <a href="{% url 'church_sermons' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Church Info -->
+<div class="container mx-auto px-4 py-12 church-section">
+    <div class="max-w-4xl mx-auto text-center church-info-card">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6 church-section-title">Welcome to {{ church.name }}</h2>
+        <p class="text-lg text-gray-700 leading-relaxed church-section-subtitle">{{ church.description|default:"Join us for worship, fellowship, and spiritual growth." }}</p>
+    </div>
+</div>
+
+<!-- Quick Info -->
+<div class="container mx-auto px-4 pb-12 church-section">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto church-info-grid">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
+            <div class="text-[#1e3a8a] text-3xl mb-2">📍</div>
+            <h3 class="text-lg font-semibold mb-2">Location</h3>
+            <p class="text-gray-600">{{ church.address|default:"Contact us for directions" }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
+            <div class="text-[#1e3a8a] text-3xl mb-2">⏰</div>
+            <h3 class="text-lg font-semibold mb-2">Service Times</h3>
+            <p class="text-gray-600">{{ church.service_times|default:"Sunday 9:00 AM & 11:00 AM" }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
+            <div class="text-[#1e3a8a] text-3xl mb-2">📞</div>
+            <h3 class="text-lg font-semibold mb-2">Contact</h3>
+            <p class="text-gray-600">{{ church.phone|default:"Contact us for more information" }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Section -->
+<section class="bg-white py-16 church-section">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 bg-white rounded-t-xl p-8 church-info-card">
+            <h2 class="text-3xl font-bold text-[#1e3a8a] mb-4 church-section-title">Event Calendar</h2>
+            <p class="text-lg text-gray-700 church-section-subtitle">View all our events in a monthly calendar format</p>
+        </div>
+        <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] rounded-b-xl p-8 text-center church-info-card">
+            <div class="text-[#1e3a8a] text-6xl mb-4">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 church-section-title">Stay Connected</h3>
+            <p class="text-white mb-6 church-section-subtitle">Never miss an event! View our complete calendar with all upcoming activities, services, and special events.</p>
+            <div class="space-x-4">
+                <a href="{% url 'church_calendar' church.id %}" class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300 hover:bg-gray-100 church-btn">
+                    <i class="fas fa-calendar-alt"></i> View Calendar
+                </a>
+                <a href="{% url 'church_events' church.id %}" class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300 hover:bg-gray-100 church-btn">
+                    All Events
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Events Section -->
+{% if events %}
+<section class="bg-gray-50 py-16 church-section">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
+            <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+            {% for event in events %}
+                <div class="church-card">{% include 'core/_event_card.html' with event=event church=church %}</div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="{% url 'church_events' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300 church-btn">View All Events</a>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="bg-white py-16 church-section">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-[#1e3a8a] mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
+            <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
+        </div>
+        <div class="flex justify-center">
+            <div class="bg-white border border-[#1e3a8a] rounded-xl shadow-md p-10 text-center church-info-card">
+                <p class="text-[#1e3a8a] text-xl font-semibold">No upcoming events at the moment. Check back soon!</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Ministries Section -->
+{% if ministries %}
+<section class="py-16 church-section">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Our Ministries</h2>
+            <p class="text-lg text-gray-600 church-section-subtitle">Discover ways to get involved and grow in your faith</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+            {% for ministry in ministries %}
+                <div class="church-card">{% include 'core/_ministry_card.html' with ministry=ministry church=church %}</div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="{% url 'church_ministries' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300 church-btn">View All Ministries</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Sermons Section -->
+{% if sermons %}
+<section class="py-16 bg-very-white church-section">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest Sermons</h2>
+            <p class="text-lg text-gray-600 church-section-subtitle">Listen to inspiring messages from our pastors</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+            {% for sermon in sermons|slice:':3' %}
+                <div class="church-card">{% include 'core/_sermon_card.html' with sermon=sermon church=church %}</div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="{% url 'church_sermons' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300 church-btn">View All Sermons</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest News Section -->
+{% if news %}
+<section class="bg-gray-50 py-16 church-section">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
+            <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+            {% for article in news %}
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition church-card">
+                {% if article.image %}
+                <div class="h-48 bg-cover bg-center" style="background-image: url('{{ article.image.url }}');">
+                </div>
+                {% else %}
+                <div class="h-48 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                    <i class="fas fa-newspaper text-white text-6xl"></i>
+                </div>
+                {% endif %}
+                <div class="p-6">
+                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        {{ article.date|date:"F j, Y" }}
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ article.title }}</h3>
+                    <p class="text-gray-700 text-sm mb-4">{{ article.excerpt|default:article.content|truncatewords:20 }}</p>
+                    <a href="#" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold">Read More →</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="{% url 'church_news' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300 church-btn">View All News</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<div class="container mx-auto px-4 py-12 church-section">
+    <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] rounded-lg p-8 text-center text-white church-info-card">
+        <h3 class="text-2xl font-bold mb-4 church-section-title">Join Us This Sunday</h3>
+        <p class="text-lg mb-6 church-section-subtitle">Experience the love of Christ in our community. Everyone is welcome!</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
+    <a href="{% url 'church_about' church.id %}" class="bg-white text-[#1e3a8a] px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition duration-200 church-btn w-full sm:w-auto">Learn More About Us</a>
+    <a href="{% url 'church_donation' church.id %}" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200 church-btn w-full sm:w-auto">Support Our Ministry</a>
+</div>
+    </div>
+</div>
+
+<!-- Swiper.js CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing Swiper...');
+    
+    // Check if Swiper element exists
+    const swiperElement = document.querySelector('.hero-swiper');
+    if (swiperElement) {
+        console.log('Swiper element found, initializing...');
+        
+        // Initialize Swiper for hero carousel with swipe navigation
+        const swiper = new Swiper('.hero-swiper', {
+            loop: true,
+            autoplay: { delay: 5000, disableOnInteraction: false },
+            pagination: { el: '.swiper-pagination', clickable: true },
+            // Enable touch/swipe navigation
+            allowTouchMove: true,
+            touchRatio: 1,
+            touchAngle: 45,
+            grabCursor: true,
+            // Enhanced touch settings for mobile
+            touchStartPreventDefault: false,
+            touchMoveStopPropagation: false,
+            shortSwipes: true,
+            longSwipes: true,
+            longSwipesRatio: 0.5,
+            longSwipesMs: 300,
+            // Hide navigation arrows since we're using swipe
+            navigation: false,
+        });
+        
+        console.log('Swiper initialized successfully:', swiper);
+    } else {
+        console.log('Swiper element not found');
+    }
+});
+</script>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('mobile-menu-button');
+            const menu = document.getElementById('mobile-menu');
+            const closeBtn = document.getElementById('mobile-menu-close');
+            
+            // Open menu
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    menu.classList.remove('hidden');
+                });
+            }
+            
+            // Close menu
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    menu.classList.add('hidden');
+                });
+            }
+            
+            // Close menu when clicking a link
+            if (menu) {
+                menu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        menu.classList.add('hidden');
+                    });
+                });
+            }
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (menu && !menu.contains(e.target) && e.target !== menuBtn && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+            
+            // Close menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

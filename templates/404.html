@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Bethel Prayer Ministry International</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        'medium-blue': '#3b82f6',
+                        'light-blue': '#60a5fa',
+                        'very-light-blue': '#dbeafe',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-deep-blue text-white font-sans min-h-screen">
+    <!-- NAVBAR -->
+    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+        <div class="flex items-center space-x-4">
+            <a href="/" class="flex flex-col items-center">
+                <span class="text-sm font-semibold mt-1">Bethel Prayer Ministry International</span>
+            </a>
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <a href="/" class="hover:text-light-blue transition-colors">Home</a>
+            <a href="/churches/" class="hover:text-light-blue transition-colors">Find Churches</a>
+            <a href="/about" class="hover:text-light-blue transition-colors">About Us</a>
+            <a href="/events/" class="hover:text-light-blue transition-colors">Events</a>
+            <a href="/ministries/" class="hover:text-light-blue transition-colors">Ministries</a>
+            <a href="/donation" class="hover:text-light-blue transition-colors">Donate</a>
+        </nav>
+    </header>
+
+    <!-- Error Content -->
+    <main class="flex-1 flex items-center justify-center py-16 px-4">
+        <div class="max-w-2xl mx-auto text-center">
+            <!-- Error Icon -->
+            <div class="mb-8">
+                <div class="w-32 h-32 mx-auto bg-white bg-opacity-10 rounded-full flex items-center justify-center">
+                    <svg class="w-16 h-16 text-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div class="text-center">
+                <h1 class="text-6xl font-bold text-blue-600 mb-4">404</h1>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Page Not Found</h2>
+                <p class="text-gray-600 mb-8">The page you're looking for doesn't exist.</p>
+                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                    Go Home
+                </a>
+            </div>
+
+            <!-- Helpful Links -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Here are some helpful links:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Go to Homepage
+                    </a>
+                    <a href="/churches/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Find Churches
+                    </a>
+                    <a href="/events/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Browse Events
+                    </a>
+                    <a href="/ministries/" class="bg-medium-blue hover:bg-light-blue text-white px-6 py-3 rounded-lg transition-colors">
+                        Explore Ministries
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search Suggestion -->
+            <div class="text-gray-300">
+                <p class="mb-2">Can't find what you're looking for?</p>
+                <p class="text-sm">Try visiting our <a href="/churches/" class="text-light-blue hover:underline">church directory</a> or <a href="/" class="text-light-blue hover:underline">homepage</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-deep-blue border-t border-blue-700 py-8 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="text-gray-300">&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html> 

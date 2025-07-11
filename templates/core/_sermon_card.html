@@ -1,0 +1,26 @@
+<div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    {% if sermon.thumbnail %}
+        <div class="h-40 bg-cover bg-center" style="background-image: url('{{ sermon.thumbnail.url }}');"></div>
+    {% else %}
+        <div class="h-40 bg-gradient-to-r from-indigo-500 to-indigo-200 flex items-center justify-center">
+            <i class="fas fa-microphone-alt text-white text-6xl"></i>
+        </div>
+    {% endif %}
+    <div class="p-6">
+        <div class="flex items-center text-sm text-gray-500 mb-2">
+            <i class="fas fa-calendar-alt mr-2"></i>
+            {{ sermon.date|date:"M d, Y" }}
+        </div>
+        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ sermon.title }}</h3>
+        <p class="text-gray-600 mb-4">{{ sermon.description|truncatewords:20 }}</p>
+        <div class="flex justify-between items-center">
+            <span class="text-[#1e3a8a] font-semibold">Preacher: <span class="font-bold text-gray-900">{{ sermon.preacher }}</span></span>
+            <span class="text-gray-700 font-semibold">Date: <span class="font-bold">{{ sermon.date|date:'M d, Y' }}</span></span>
+        </div>
+        <div class="flex justify-between items-center mt-4">
+            {% if sermon.video_file %}
+                <a href="{{ sermon.video_file.url }}" target="_blank" class="bg-[#1e3a8a] text-white px-4 py-2 rounded font-semibold">Watch</a>
+            {% endif %}
+        </div>
+    </div>
+</div> 
