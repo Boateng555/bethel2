@@ -5,3 +5,4 @@ whitenoise
 cloudinary
 django-cloudinary-storage 
 dj-database-url 
+djangorestframework 
