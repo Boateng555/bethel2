@@ -166,3 +166,8 @@ import dj_database_url
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://web-production-158c.up.railway.app",
+    "https://*.up.railway.app",
+]
