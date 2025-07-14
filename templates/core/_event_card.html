@@ -1,17 +1,17 @@
 {% if church %}
-<a href="{% url 'church_event_detail' church.id event.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+<a href="{% url 'church_event_detail' church.id event.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% else %}
-<a href="{% url 'event_detail' event.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+<a href="{% url 'event_detail' event.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% endif %}
     {% if event.card_image %}
-        <div class="h-40 bg-cover bg-center" style="background-image: url('{{ event.card_image.url }}');"></div>
+        <img src="{{ event.card_image.url }}" alt="{{ event.title }}" class="w-full h-32 object-cover">
     {% else %}
-        <div class="h-40 bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
+        <div class="h-32 bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
             <i class="fas fa-calendar text-white text-6xl"></i>
         </div>
     {% endif %}
-    <div class="p-6">
-        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ event.title }}</h3>
+    <div class="p-6 flex flex-col flex-1">
+        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ event.title }}</h3>
         <div class="flex items-center text-sm text-gray-500 mb-2 gap-3">
             {% if event.start_date %}
                 <span class="flex items-center">
@@ -26,7 +26,7 @@
                 <span class="flex items-center"><i class="fas fa-users mr-1"></i>{{ event.attendees_count }} attendee{% if event.attendees_count != 1 %}s{% endif %}</span>
             {% endif %}
         </div>
-        <p class="text-gray-600 mb-2">
+        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
             {% if event.start_date %}
                 {{ event.start_date|date:"F j, Y" }}
             {% endif %}
