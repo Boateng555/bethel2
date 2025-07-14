@@ -158,18 +158,18 @@
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
         <nav class="hidden md:flex space-x-6 text-sm">
-            <a href="{% url 'church_home' church.id %}" class="hover:text-white transition-colors">Home</a>
-            <a href="{% url 'church_about' church.id %}" class="hover:text-white transition-colors">About</a>
-            <a href="{% url 'church_events' church.id %}" class="hover:text-white transition-colors">Events</a>
-            <a href="{% url 'church_ministries' church.id %}" class="hover:text-white transition-colors">Ministries</a>
-            <a href="{% url 'church_sermons' church.id %}" class="hover:text-white transition-colors">Sermons</a>
-            <a href="{% url 'church_news' church.id %}" class="hover:text-white transition-colors">News</a>
+            <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-white transition-colors">Home</a>
+            <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-white transition-colors">About</a>
+            <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-white transition-colors">Events</a>
+            <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-white transition-colors">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-white transition-colors">Sermons</a>
+            <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-white transition-colors">News</a>
             {% if church.shop_url %}
                 <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
             {% endif %}
-            <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Give</a>
+            <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-white transition-colors">Give</a>
             <a href="/churches/" class="hover:text-white transition-colors">Find Other Churches</a>
-            <a href="/" class="hover:text-white transition-colors">Global Site</a>
+            <a href="/?global=true" class="hover:text-white transition-colors">Global Site</a>
         </nav>
         <!-- Mobile Hamburger Button -->
         <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
@@ -181,18 +181,18 @@
     
     <!-- Mobile Menu (separate from header) -->
     <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
-        <a href="{% url 'church_home' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
-        <a href="{% url 'church_about' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">About</a>
-        <a href="{% url 'church_events' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
-        <a href="{% url 'church_ministries' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
-        <a href="{% url 'church_sermons' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
-        <a href="{% url 'church_news' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">News</a>
+        <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
+        <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">About</a>
+        <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
+        <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
+        <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
+        <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">News</a>
         {% if church.shop_url %}
             <a href="{{ church.shop_url }}" target="_blank" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
         {% endif %}
-        <a href="{% url 'church_donation' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Give</a>
+        <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Give</a>
         <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Other Churches</a>
-        <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
+        <a href="/?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
         <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
     </div>
 
@@ -209,7 +209,7 @@
             <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
                 Find Other Churches
             </a>
-            <a href="/" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
+            <a href="/?global=true" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
                 Go to Global Site
             </a>
         </div>
