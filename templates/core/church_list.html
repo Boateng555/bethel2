@@ -113,9 +113,9 @@
         </div>
 
         {% if churches %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="auto-scroll-churches grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for church in churches %}
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+            <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if church.logo %}
                 <img src="{{ church.logo.url }}" alt="{{ church.name }} logo" class="w-full h-32 object-cover rounded-t-lg">
                 {% elif church.banner_image %}
@@ -203,6 +203,29 @@ window.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
+});
+</script>
+<!-- Auto-scroll script for churches carousel -->
+<script>
+function autoScrollCarousel(selector, interval = 2000) {
+    const container = document.querySelector(selector);
+    if (!container) return;
+    let scrollAmount = 0;
+    let maxScroll = container.scrollWidth - container.clientWidth;
+    let direction = 1;
+    setInterval(() => {
+        if (window.innerWidth >= 768) return; // Only auto-scroll on mobile
+        if (container.scrollLeft >= maxScroll) {
+            direction = -1;
+        } else if (container.scrollLeft <= 0) {
+            direction = 1;
+        }
+        scrollAmount = direction === 1 ? container.scrollLeft + 300 : container.scrollLeft - 300;
+        container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+    }, interval);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    autoScrollCarousel('.auto-scroll-churches');
 });
 </script>
 {% endblock %} 
