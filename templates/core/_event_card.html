@@ -15,13 +15,7 @@
         <div class="flex items-center text-sm text-gray-500 mb-2 gap-3">
             {% if event.start_date %}
                 <span class="flex items-center">
-                    {% if church %}
-                        <a href="{% url 'church_calendar' church.id %}?year={{ event.start_date|date:'Y' }}&month={{ event.start_date|date:'n' }}" class="hover:text-[#1e3a8a] focus:outline-none" title="View Calendar">
-                            <i class="fas fa-calendar-alt mr-1"></i>
-                        </a>
-                    {% else %}
-                        <i class="fas fa-calendar-alt mr-1"></i>
-                    {% endif %}
+                    <i class="fas fa-calendar-alt mr-1"></i>
                     {{ event.start_date|date:"Y" }}
                 </span>
             {% endif %}
