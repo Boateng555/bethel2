@@ -5,6 +5,43 @@
 {% block title %}Find a Bethel Church - Church Directory{% endblock %}
 
 {% block content %}
+<style>
+@media (max-width: 640px) {
+  .church-card .flex.flex-row.gap-2 {
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+  }
+  .church-card .flex.flex-row.gap-2 a {
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+  .church-card .p-4 {
+    padding: 0.75rem !important;
+  }
+  .church-card .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .church-card .pb-3 {
+    padding-bottom: 0.5rem !important;
+  }
+  .church-card .pb-2 {
+    padding-bottom: 0.3rem !important;
+  }
+  .church-card .text-xs.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+  }
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
     <div class="text-center mb-8">
@@ -76,47 +113,29 @@
         </div>
 
         {% if churches %}
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for church in churches %}
-            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200">
-                <!-- Make the whole card clickable -->
-                <a href="{% url 'church_home' church.id %}" class="block group focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
-                    <!-- Church Image -->
-                    {% if church.logo %}
-                      <div class="h-48 w-full">
-                        <img src="{{ church.logo.url }}" alt="{{ church.name }} logo" class="w-full h-full object-cover rounded-t-lg">
-                      </div>
-                    {% elif church.banner_image %}
-                      <div class="h-48 w-full">
-                        <img src="{{ church.banner_image.url }}" alt="{{ church.name }} banner" class="w-full h-full object-cover rounded-t-lg">
-                      </div>
-                    {% else %}
-                      <div class="h-48 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center rounded-t-lg">
-                        <span class="text-white text-2xl font-bold">{{ church.name|slice:":2"|upper }}</span>
-                      </div>
-                    {% endif %}
-                    <!-- Church Info -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1e3a8a] transition duration-200">{{ church.name }}</h3>
-                        <p class="text-gray-600 mb-2">{{ church.pastor_name }}</p>
-                        <p class="text-gray-500 text-sm mb-1">{{ church.city }}</p>
-                        <p class="text-white bg-[#1e3a8a] text-sm px-2 py-1 rounded mb-4 inline-block">{{ church.country }}</p>
-                        <p class="text-gray-700 text-sm line-clamp-3">{{ church.description|default:"Join us for worship and fellowship." }}</p>
-                    </div>
-                </a>
-                <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row gap-2 p-6 pt-0">
-                    <a href="{% url 'church_home' church.id %}" class="w-full sm:w-auto bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md hover:bg-[#1e3a8a] transition duration-200 font-semibold text-base">Visit Website</a>
-                    <a href="{% url 'church_detail' church.id %}" class="w-full sm:w-auto bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md hover:bg-[#1e3a8a] transition duration-200 text-base">View Details</a>
-                </div>
-                {% if church_distances and church.id in church_distances and church.latitude and church.longitude %}
-                <div class="px-6 pb-4 flex items-center text-gray-600 text-sm">
-                    <svg class="w-5 h-5 mr-1 text-[#1e3a8a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c1.104 0 2-.896 2-2s-.896-2-2-2-2 .896-2 2 .896 2 2 2zm0 0c-4.418 0-8 1.79-8 4v3h16v-3c0-2.21-3.582-4-8-4z"/></svg>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ church.latitude }},{{ church.longitude }}" target="_blank" rel="noopener noreferrer" class="hover:underline text-[#1e3a8a]">
-                        This church is <strong>{{ church_distances|dict_get:church.id }}</strong> km from you
-                    </a>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                {% if church.logo %}
+                <img src="{{ church.logo.url }}" alt="{{ church.name }} logo" class="w-full h-32 object-cover rounded-t-lg">
+                {% elif church.banner_image %}
+                <img src="{{ church.banner_image.url }}" alt="{{ church.name }} banner" class="w-full h-32 object-cover rounded-t-lg">
+                {% else %}
+                <div class="h-32 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center rounded-t-lg">
+                    <span class="text-white text-2xl font-bold">{{ church.name|slice:":2"|upper }}</span>
                 </div>
                 {% endif %}
+                <div class="p-4 flex flex-col flex-1">
+                    <h3 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-[#1e3a8a] transition duration-200">{{ church.name }}</h3>
+                    <p class="text-gray-600 mb-1">{{ church.pastor_name }}</p>
+                    <p class="text-gray-500 text-sm mb-1">{{ church.city }}</p>
+                    <p class="text-white bg-[#1e3a8a] text-xs px-2 py-1 rounded mb-2 inline-block">{{ church.country }}</p>
+                    <p class="text-gray-700 text-xs line-clamp-2 mb-2">{{ church.description|default:"Join us for worship and fellowship." }}</p>
+                    <div class="flex flex-row gap-2 mt-auto">
+                        <a href="{% url 'church_home' church.id %}" class="inline-block bg-[#1e3a8a] text-white text-xs px-2 py-1 rounded mb-0 font-normal" style="box-shadow:none;border:none;">Visit Website</a>
+                        <a href="{% url 'church_detail' church.id %}" class="inline-block bg-[#1e3a8a] text-white text-xs px-2 py-1 rounded mb-0 font-normal" style="box-shadow:none;border:none;">View Details</a>
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>

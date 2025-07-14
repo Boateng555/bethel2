@@ -280,20 +280,12 @@
                 {% endif %}
             </div>
             <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-            <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
-                    {{ hero.title }}
-                </h1>
-                <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">
-                    {{ hero.subtitle }}
-                </p>
+            <div class="absolute inset-0 flex flex-col justify-center items-center z-10 px-6 text-center max-w-5xl mx-auto">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">{{ hero.title }}</h1>
+                <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">{{ hero.subtitle }}</p>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
-                        {{ hero.primary_button_text }}
-                    </a>
-                    <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
-                        {{ hero.secondary_button_text }}
-                    </a>
+                    <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">{{ hero.primary_button_text }}</a>
+                    <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">{{ hero.secondary_button_text }}</a>
                 </div>
             </div>
         {% else %}
@@ -345,7 +337,20 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Our Ministries</h2>
             <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {% for ministry in ministries %}
-                    {% include 'core/_ministry_card.html' with ministry=ministry %}
+                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                    {% if ministry.image %}
+                    <img src="{{ ministry.image.url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
+                    {% else %}
+                    <div class="h-32 bg-gradient-to-br from-indigo-500 to-indigo-200 flex items-center justify-center">
+                        <i class="fas fa-hands-helping text-white text-6xl"></i>
+                    </div>
+                    {% endif %}
+                    <div class="p-6 flex flex-col flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
+                        <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ ministry.description }}</p>
+                        <a href="{% url 'ministry_detail' ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Learn More →</a>
+                    </div>
+                </div>
                 {% empty %}
                 <div class="col-span-3 text-center text-gray-600">
                     <p>Ministry information coming soon!</p>
@@ -366,7 +371,20 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Latest Sermons</h2>
             <div class="latest-sermons-grid grid grid-cols-2 md:grid-cols-3 gap-8">
                 {% for sermon in sermons %}
-                    {% include 'core/_sermon_card.html' with sermon=sermon %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                    {% if sermon.image %}
+                    <img src="{{ sermon.image.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
+                    {% else %}
+                    <div class="h-32 bg-gradient-to-br from-blue-500 to-blue-200 flex items-center justify-center">
+                        <i class="fas fa-volume-up text-white text-6xl"></i>
+                    </div>
+                    {% endif %}
+                    <div class="p-6 flex flex-col flex-1">
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ sermon.title }}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description }}</p>
+                        <span class="text-[#1e3a8a] font-semibold">{{ sermon.date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
                 {% empty %}
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
@@ -390,13 +408,17 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-[#1e3a8a]">Latest News</h2>
             <div class="grid md:grid-cols-3 gap-8">
                 {% for news_item in news %}
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     {% if news_item.image %}
-                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-48 object-cover">
+                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
+                    {% else %}
+                    <div class="h-32 bg-gradient-to-br from-purple-500 to-purple-200 flex items-center justify-center">
+                        <i class="fas fa-newspaper text-white text-6xl"></i>
+                    </div>
                     {% endif %}
-                    <div class="p-6">
+                    <div class="p-6 flex flex-col flex-1">
                         <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ news_item.title }}</h3>
-                        <div class="text-gray-600 mb-4">{{ news_item.content|truncatewords:20|safe }}</div>
+                        <div class="text-gray-600 text-sm mb-4 line-clamp-2">{{ news_item.content|truncatewords:20|safe }}</div>
                         <span class="text-[#1e3a8a] font-semibold">{{ news_item.date|date:"M d, Y" }}</span>
                     </div>
                 </div>

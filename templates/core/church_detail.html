@@ -6,9 +6,13 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Church Header -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-        <!-- Banner Image -->
+        <!-- Banner or Logo or Fallback -->
         {% if church.banner_image %}
         <div class="h-64 bg-cover bg-center" style="background-image: url('{{ church.banner_image.url }}');"></div>
+        {% elif church.logo %}
+        <div class="h-64 flex items-center justify-center bg-white">
+            <img src="{{ church.logo.url }}" alt="{{ church.name }} Logo" class="h-40 w-auto max-w-full object-contain mx-auto shadow border-4 border-[#1e3a8a] bg-white" />
+        </div>
         {% else %}
         <div class="h-64 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
             <span class="text-white text-6xl font-bold">{{ church.name|first }}</span>

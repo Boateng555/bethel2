@@ -251,14 +251,14 @@
             {% endif %}
         </div>
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center church-hero-section">
+        <div class="absolute inset-0 flex flex-col justify-center items-center z-10 px-6 text-center max-w-5xl mx-auto">
             <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg church-hero-title">{{ hero.title }}</h1>
             <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl church-hero-subtitle">{{ hero.subtitle }}</p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
                     {{ hero.primary_button_text }}
                 </a>
-                <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
+                <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
                     {{ hero.secondary_button_text }}
                 </a>
             </div>
@@ -287,21 +287,25 @@
 
 <!-- Quick Info -->
 <div class="container mx-auto px-4 pb-12 church-section">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto church-info-grid">
+    <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
-            <div class="text-[#1e3a8a] text-3xl mb-2">📍</div>
-            <h3 class="text-lg font-semibold mb-2">Location</h3>
-            <p class="text-gray-600">{{ church.address|default:"Contact us for directions" }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
-            <div class="text-[#1e3a8a] text-3xl mb-2">⏰</div>
-            <h3 class="text-lg font-semibold mb-2">Service Times</h3>
-            <p class="text-gray-600">{{ church.service_times|default:"Sunday 9:00 AM & 11:00 AM" }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
-            <div class="text-[#1e3a8a] text-3xl mb-2">📞</div>
-            <h3 class="text-lg font-semibold mb-2">Contact</h3>
-            <p class="text-gray-600">{{ church.phone|default:"Contact us for more information" }}</p>
+            <div class="flex flex-col md:flex-row md:justify-around gap-6">
+                <div>
+                    <div class="text-[#1e3a8a] text-3xl mb-2">📍</div>
+                    <h3 class="text-lg font-semibold mb-2">Location</h3>
+                    <p class="text-gray-600">{{ church.address|default:"Contact us for directions" }}</p>
+                </div>
+                <div>
+                    <div class="text-[#1e3a8a] text-3xl mb-2">⏰</div>
+                    <h3 class="text-lg font-semibold mb-2">Service Times</h3>
+                    <p class="text-gray-600">{{ church.service_times|default:"Sunday 9:00 AM & 11:00 AM" }}</p>
+                </div>
+                <div>
+                    <div class="text-[#1e3a8a] text-3xl mb-2">📞</div>
+                    <h3 class="text-lg font-semibold mb-2">Contact</h3>
+                    <p class="text-gray-600">{{ church.phone|default:"Contact us for more information" }}</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -367,15 +371,28 @@
 
 <!-- Ministries Section -->
 {% if ministries %}
-<section class="py-16 church-section">
+<section class="bg-white py-16 church-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
         <div class="text-center mb-12">
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Our Ministries</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Discover ways to get involved and grow in your faith</p>
         </div>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for ministry in ministries %}
-                <div class="church-card">{% include 'core/_ministry_card.html' with ministry=ministry church=church %}</div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                {% if ministry.image %}
+                <img src="{{ ministry.image.url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
+                {% else %}
+                <div class="h-32 bg-gradient-to-br from-[#6366f1] to-[#1e3a8a] flex items-center justify-center">
+                    <i class="fas fa-hands-helping text-white text-6xl"></i>
+                </div>
+                {% endif %}
+                <div class="p-6 flex flex-col flex-1">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
+                    <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ ministry.description }}</p>
+                    <a href="{% url 'church_ministry_detail' church.id ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Learn More →</a>
+                </div>
+            </div>
             {% endfor %}
         </div>
         <div class="text-center mt-8">
@@ -393,9 +410,22 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest Sermons</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Listen to inspiring messages from our pastors</p>
         </div>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for sermon in sermons|slice:':3' %}
-                <div class="church-card">{% include 'core/_sermon_card.html' with sermon=sermon church=church %}</div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                {% if sermon.thumbnail %}
+                <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
+                {% else %}
+                <div class="h-32 bg-gradient-to-r from-indigo-500 to-indigo-200 flex items-center justify-center">
+                    <i class="fas fa-microphone-alt text-white text-6xl"></i>
+                </div>
+                {% endif %}
+                <div class="p-6 flex flex-col flex-1">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
+                    <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ sermon.description|truncatewords:20 }}</p>
+                    <a href="{% url 'church_sermons' church.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Listen Now &rarr;</a>
+                </div>
+            </div>
             {% endfor %}
         </div>
         <div class="text-center mt-8">
@@ -413,25 +443,20 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for article in news %}
-            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition church-card">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if article.image %}
-                <div class="h-48 bg-cover bg-center" style="background-image: url('{{ article.image.url }}');">
-                </div>
+                <img src="{{ article.image.url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
                 {% else %}
-                <div class="h-48 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                <div class="h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
                     <i class="fas fa-newspaper text-white text-6xl"></i>
                 </div>
                 {% endif %}
-                <div class="p-6">
-                    <div class="flex items-center text-sm text-gray-500 mb-2">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        {{ article.date|date:"F j, Y" }}
-                    </div>
+                <div class="p-6 flex flex-col flex-1">
                     <h3 class="text-xl font-bold text-gray-900 mb-2">{{ article.title }}</h3>
-                    <p class="text-gray-700 text-sm mb-4">{{ article.excerpt|default:article.content|truncatewords:20 }}</p>
-                    <a href="#" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold">Read More →</a>
+                    <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ article.content|truncatewords:20 }}</p>
+                    <a href="#" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Read More →</a>
                 </div>
             </div>
             {% endfor %}

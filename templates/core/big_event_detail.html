@@ -135,6 +135,23 @@
           }
         }
     </style>
+    <style>
+@media (max-width: 640px) {
+  .flex.flex-col.sm\:flex-row.gap-2.mb-12 {
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    align-items: center !important;
+  }
+  .flex.flex-col.sm\:flex-row.gap-2.mb-12 a {
+    width: auto !important;
+    min-width: 0 !important;
+    margin-right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+  }
+}
+</style>
 </head>
 <body class="bg-gray-50">
     <!-- NAVBAR -->
@@ -187,18 +204,25 @@
             <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
                 {{ event.title }}
             </h1>
+            <div class="flex items-center justify-center text-base text-gray-200 mb-4 gap-3">
+                {% if event.start_date %}
+                    <span class="flex items-center"><i class="fas fa-calendar-alt mr-1"></i>{{ event.start_date|date:"Y" }}</span>
+                {% endif %}
+                {% if event.start_date and event.attendees_count %}
+                    <span class="mx-1">&middot;</span>
+                {% endif %}
+                {% if event.attendees_count %}
+                    <span class="flex items-center"><i class="fas fa-users mr-1"></i>{{ event.attendees_count }} attendee{% if event.attendees_count != 1 %}s{% endif %}</span>
+                {% endif %}
+            </div>
             <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">
                 {{ event.description|default:'Join us in worship and community as we grow together in faith.' }}
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 mb-12">
+            <div class="flex flex-col sm:flex-row gap-2 mb-12">
                 {% if event.requires_registration %}
-                <a href="#register" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
-                    Register Now
-                </a>
+                <a href="#register" class="inline-block bg-[#1e3a8a] text-white text-xs px-3 py-1 rounded font-normal mb-0" style="box-shadow:none;border:none;">Register Now</a>
                 {% endif %}
-                <a href="#about" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
-                    Event Details
-                </a>
+                <a href="#about" class="inline-block bg-[#1e3a8a] text-white text-xs px-3 py-1 rounded font-normal mb-0" style="box-shadow:none;border:none;">Event Details</a>
             </div>
             
             <!-- Countdown Section -->

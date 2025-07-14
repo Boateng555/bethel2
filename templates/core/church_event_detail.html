@@ -223,68 +223,7 @@
 </section>
 {% endif %}
 
-<!-- PAST EVENT HIGHLIGHTS -->
-{% if past_highlights %}
-<section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-deep-blue mb-4">Past Event Highlights</h2>
-            <p class="text-xl text-gray-600">Relive the amazing moments from our previous events</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {% for highlight in past_highlights %}
-            <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                {% if highlight.video_url %}
-                <div class="relative h-48">
-                    <iframe src="{{ highlight.video_url|safe }}" frameborder="0" allowfullscreen class="w-full h-full rounded-lg"></iframe>
-                    <div class="absolute top-4 right-4 bg-deep-blue text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {{ highlight.year }}
-                    </div>
-                </div>
-                {% elif highlight.image %}
-                <div class="relative h-48">
-                    <img src="{{ highlight.image.url }}" alt="{{ highlight.title }}" class="w-full h-full object-cover">
-                    <div class="absolute top-4 right-4 bg-deep-blue text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {{ highlight.year }}
-                    </div>
-                </div>
-                {% else %}
-                <div class="relative h-48 bg-gradient-to-br from-deep-blue to-[#1e3a8a] flex items-center justify-center">
-                    <div class="text-center text-white">
-                        <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-                        </svg>
-                        <p class="text-sm">{{ highlight.year }}</p>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="p-6">
-                    <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
-                    <p class="text-gray-600 mb-4">{{ highlight.description|truncatewords:20 }}</p>
-                    {% if highlight.attendees_count %}
-                    <div class="flex items-center text-sm text-gray-500 mb-3">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        {{ highlight.attendees_count }} attendees
-                    </div>
-                    {% endif %}
-                    {% if highlight.testimonial %}
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-gray-700 italic text-sm">"{{ highlight.testimonial|truncatewords:15 }}"</p>
-                        {% if highlight.testimonial_author %}
-                        <p class="text-gray-600 text-sm mt-2">- {{ highlight.testimonial_author }}</p>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
+<!-- End Registration Section -->
 {% endblock %}
 
 <!-- Swiper.js CDN -->

@@ -178,33 +178,6 @@
         </div>
     </footer>
 
-    {% if past_highlights %}
-    <section class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-deep-blue mb-4">Past Highlights</h2>
-                <p class="text-xl text-gray-600">Relive the amazing moments from our previous events</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {% for highlight in past_highlights|slice:':3' %}
-                <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
-                        <p class="text-gray-600 mb-4">{{ highlight.description|truncatewords:20 }}</p>
-                        <p class="text-sm text-gray-500">{{ highlight.year }}</p>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            {% if past_highlights|length > 3 %}
-            <div class="text-center mt-8">
-                <a href="/events/highlights/" class="inline-block bg-[#1e3a8a] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-[#243c8a] transition">See All</a>
-            </div>
-            {% endif %}
-        </div>
-    </section>
-    {% endif %}
-
     <script>
         // Simple dropdown functionality without conflicts
         document.addEventListener('DOMContentLoaded', function() {
