@@ -408,9 +408,10 @@
     <section class="py-16 bg-[#f1f5fd]">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-[#1e3a8a]">Latest News</h2>
-            <div class="grid md:grid-cols-3 gap-8">
+            <!-- Latest News Section -->
+            <div class="auto-scroll-news grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for news_item in news %}
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     {% if news_item.image %}
                     <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
                     {% else %}
@@ -437,21 +438,19 @@
     <section class="py-16 bg-white">
         <div class="max-w-4xl mx-auto px-6 text-center">
             <h2 class="text-4xl font-bold mb-8 text-deep-blue">Recent Testimonies</h2>
-            <div class="grid md:grid-cols-3 gap-8 mb-8">
+            <!-- Recent Testimonies Section -->
+            <div class="auto-scroll-testimonies grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for testimony in recent_testimonies %}
-                <div class="bg-very-white rounded-lg p-6 shadow text-left flex flex-col justify-between h-full">
-                    <div>
+                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                    <div class="p-6 flex flex-col flex-1">
                         <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ testimony.title }}</h3>
-                        <p class="italic text-gray-700 mb-4">"{{ testimony.content|truncatewords:25 }}"</p>
-                    </div>
-                    <div class="mt-auto">
-                        <span class="font-medium text-[#1e3a8a]">— {{ testimony.get_display_name }}</span>
-                        <span class="text-gray-500 text-sm ml-2">{{ testimony.created_at|date:"M d, Y" }}</span>
+                        <div class="text-gray-600 text-sm mb-4 line-clamp-2">{{ testimony.content|truncatewords:20|safe }}</div>
+                        <span class="text-[#1e3a8a] font-semibold">{{ testimony.get_display_name }}</span>
                     </div>
                 </div>
                 {% empty %}
-                <div class="col-span-3 text-center text-gray-600">
-                    <p>No testimonies yet. <a href="{% url 'testimonies' %}" class="text-[#1e3a8a] underline">Share yours!</a></p>
+                <div class="col-span-3 text-center text-[#1e3a8a]">
+                    <p>No testimonies at the moment.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -615,6 +614,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             autoScrollCarousel('.auto-scroll-events');
             autoScrollCarousel('.auto-scroll-sermons');
+            autoScrollCarousel('.auto-scroll-news');
+            autoScrollCarousel('.auto-scroll-testimonies');
         });
     </script>
 </body>
