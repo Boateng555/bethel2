@@ -78,17 +78,22 @@ def find_nearest_church(country, city):
 def home(request):
     # Check if user wants to go to global site
     go_global = request.GET.get('global', False)
-    
-    if not go_global:
+
+    # Get all approved and active churches
+    churches = Church.objects.filter(is_active=True, is_approved=True)
+
+    if not go_global and churches.exists():
         # Try to detect user location and redirect to local church
         country, city = get_user_location(request)
         if country:
             nearest_church = find_nearest_church(country, city)
             if nearest_church:
-                # Redirect to the local church mini-site
                 return redirect('church_home', church_id=nearest_church.id)
-    
-    # If no location detected, user chose global, or no local church found
+        # If no location or no match, just redirect to the first church
+        first_church = churches.first()
+        return redirect('church_home', church_id=first_church.id)
+
+    # If no churches, or user chose global, show the global homepage
     # Show the global site with aggregated content from all churches
     
     # Get active hero content (global hero, not church-specific) - RELAXED FILTER
