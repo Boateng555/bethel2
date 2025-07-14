@@ -76,8 +76,8 @@ def find_nearest_church(country, city):
     return None
 
 def home(request):
-    # Check if user wants to go to global site
-    go_global = request.GET.get('global', False)
+    # Check if user wants to go to global site (by presence of the parameter)
+    go_global = 'global' in request.GET
 
     # Get all approved and active churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
