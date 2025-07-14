@@ -343,9 +343,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
         </div>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3 church-grid">
+        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for event in events %}
-                <div class="church-card">{% include 'core/_event_card.html' with event=event church=church %}</div>
+                <div class="min-w-[280px] md:min-w-0 church-card">{% include 'core/_event_card.html' with event=event church=church %}</div>
             {% endfor %}
         </div>
         <div class="text-center mt-8">
@@ -410,9 +410,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest Sermons</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Listen to inspiring messages from our pastors</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for sermon in sermons|slice:':3' %}
-            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+            <div class="min-w-[280px] md:min-w-0 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if sermon.thumbnail %}
                 <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
                 {% else %}
@@ -443,9 +443,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for article in news %}
-            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+            <div class="min-w-[280px] md:min-w-0 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if article.image %}
                 <img src="{{ article.image.url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
                 {% else %}
