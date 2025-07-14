@@ -76,6 +76,20 @@ class EventHighlightInline(admin.StackedInline):
     
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
+        
+        # Override the save_new method to automatically set the church
+        original_save_new = formset.save_new
+        
+        def save_new(form, commit=True):
+            instance = original_save_new(form, commit=False)
+            if obj and hasattr(obj, 'church'):
+                instance.church = obj.church
+            if commit:
+                instance.save()
+            return instance
+        
+        formset.save_new = save_new
+        
         formset.help_text = mark_safe(
             "<div style='margin:10px 0; color:#1e3a8a; font-weight:bold;'>"
             "If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used."
