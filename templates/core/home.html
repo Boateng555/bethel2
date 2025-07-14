@@ -314,9 +314,10 @@
     <section class="py-16 bg-very-white">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Upcoming Events</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Upcoming Events Section -->
+            <div class="flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for event in upcoming_events %}
-                    {% include 'core/_event_card.html' with event=event %}
+                    <div class="min-w-[280px] md:min-w-0">{% include 'core/_event_card.html' with event=event %}</div>
                 {% empty %}
                 <div class="col-span-3 text-center text-gray-600">
                     <p>No upcoming events at the moment. Check back soon!</p>
@@ -369,9 +370,10 @@
     <section class="py-16 bg-very-white">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Latest Sermons</h2>
-            <div class="latest-sermons-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Latest Sermons Section -->
+            <div class="latest-sermons-grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for sermon in sermons %}
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     {% if sermon.image %}
                     <img src="{{ sermon.image.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
                     {% else %}
