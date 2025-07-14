@@ -81,17 +81,22 @@ def home(request):
 
     # Get all approved and active churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
+    church_count = churches.count()
 
-    if not go_global and churches.exists():
+    if not go_global and church_count > 0:
         # Try to detect user location and redirect to local church
         country, city = get_user_location(request)
         if country:
             nearest_church = find_nearest_church(country, city)
             if nearest_church:
                 return redirect('church_home', church_id=nearest_church.id)
-        # If no location or no match, just redirect to the first church
-        first_church = churches.first()
-        return redirect('church_home', church_id=first_church.id)
+        # If no location or no match
+        if church_count == 1:
+            # Only one church, redirect to it
+            return redirect('church_home', church_id=churches.first().id)
+        else:
+            # Multiple churches, show choose your church page
+            return redirect('church_list')
 
     # If no churches, or user chose global, show the global homepage
     # Show the global site with aggregated content from all churches
