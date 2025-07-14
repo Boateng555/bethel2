@@ -335,25 +335,8 @@ def visit(request):
 def sermon(request):
     all_events = Event.objects.filter(is_public=True)
     all_ministries = Ministry.objects.filter(is_public=True)
-    sermons = Sermon.objects.filter(is_public=True).order_by('-date')
-
-    # Filtering logic
-    keyword = request.GET.get('keyword', '').strip()
-    preacher = request.GET.get('preacher', '').strip()
-    date = request.GET.get('date', '').strip()
-
-    if keyword:
-        sermons = sermons.filter(
-            models.Q(title__icontains=keyword) |
-            models.Q(preacher__icontains=keyword) |
-            models.Q(scripture_reference__icontains=keyword) |
-            models.Q(scripture_text__icontains=keyword)
-        )
-    if preacher:
-        sermons = sermons.filter(preacher__icontains=preacher)
-    if date:
-        sermons = sermons.filter(date=date)
-
+    sermons = Sermon.objects.filter(is_public=True).order_by('-date')  # Get all public sermons ordered by date
+    
     context = {
         'all_events': all_events,
         'all_ministries': all_ministries,
@@ -795,27 +778,11 @@ def church_ministry_detail(request, church_id, ministry_id):
 def church_sermons(request, church_id):
     """Church-specific sermons page"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
+    
     all_events = Event.objects.filter(church=church, is_public=True)
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     sermons = Sermon.objects.filter(church=church, is_public=True).order_by('-date')
-
-    # Filtering logic
-    keyword = request.GET.get('keyword', '').strip()
-    preacher = request.GET.get('preacher', '').strip()
-    date = request.GET.get('date', '').strip()
-
-    if keyword:
-        sermons = sermons.filter(
-            models.Q(title__icontains=keyword) |
-            models.Q(preacher__icontains=keyword) |
-            models.Q(scripture_reference__icontains=keyword) |
-            models.Q(scripture_text__icontains=keyword)
-        )
-    if preacher:
-        sermons = sermons.filter(preacher__icontains=preacher)
-    if date:
-        sermons = sermons.filter(date=date)
-
+    
     context = {
         'church': church,
         'all_events': all_events,
