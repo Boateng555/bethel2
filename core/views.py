@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
 from rest_framework import generics
 from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight
