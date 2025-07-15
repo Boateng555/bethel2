@@ -145,6 +145,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
     '.up.railway.app',  # Allow all Railway subdomains
     '.railway.app',     # Allow Railway domains
+    'web-production-158c.up.railway.app',  # Your specific Railway domain
 ]
 
 INSTALLED_APPS += [
@@ -174,4 +175,5 @@ if DATABASE_URL:
 CSRF_TRUSTED_ORIGINS = [
     "https://web-production-158c.up.railway.app",
     "https://*.up.railway.app",
+    "https://*.railway.app",
 ]
