@@ -44,6 +44,99 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
+        
+        /* Celebration Animation Styles */
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .celebration-text {
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            animation: confetti-fall 3s linear infinite;
+        }
+        
+        .confetti:nth-child(2n) {
+            background: #4ecdc4;
+            animation-delay: 0.5s;
+        }
+        
+        .confetti:nth-child(3n) {
+            background: #45b7d1;
+            animation-delay: 1s;
+        }
+        
+        .confetti:nth-child(4n) {
+            background: #96ceb4;
+            animation-delay: 1.5s;
+        }
+        
+        .confetti:nth-child(5n) {
+            background: #feca57;
+            animation-delay: 2s;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: firework-explode 2s ease-out infinite;
+        }
+        
+        @keyframes firework-explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
     </style>
     <style>
       @media (max-width: 640px) {
@@ -132,6 +225,21 @@
             color: #111 !important;
             font-weight: bold !important;
             text-shadow: none !important;
+          }
+          /* Make countdown timer smaller on mobile */
+          .countdown-box {
+            padding: 0.75rem !important;
+          }
+          .countdown-box .text-4xl {
+            font-size: 2rem !important;
+            line-height: 1.2 !important;
+          }
+          .countdown-box .text-sm {
+            font-size: 0.875rem !important;
+            line-height: 1.1 !important;
+          }
+          .grid.grid-cols-2.md\:grid-cols-4.gap-4 {
+            gap: 0.75rem !important;
           }
         }
     </style>
@@ -255,6 +363,13 @@
             </div>
         </div>
     </section>
+
+    <!-- Celebration Overlay -->
+    <div id="celebration-overlay" class="celebration-overlay">
+        <div class="celebration-text">🎉 EVENT STARTED! 🎉</div>
+        <div id="confetti-container"></div>
+        <div id="firework-container"></div>
+    </div>
 
     <!-- About Section -->
     <section id="about" class="py-20 bg-white">
@@ -659,13 +774,62 @@
             document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
             document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
 
-            if (distance < 0) {
-                document.getElementById('days').textContent = '00';
-                document.getElementById('hours').textContent = '00';
-                document.getElementById('minutes').textContent = '00';
-                document.getElementById('seconds').textContent = '00';
+            // Check if countdown has reached zero
+            if (distance <= 0 && !window.celebrationTriggered) {
+                window.celebrationTriggered = true;
+                triggerCelebration();
             }
         }
+        
+        // Celebration Animation
+        function triggerCelebration() {
+            const overlay = document.getElementById('celebration-overlay');
+            if (!overlay) return;
+            
+            // Show celebration overlay
+            overlay.style.display = 'flex';
+            
+            // Start confetti animation
+            startConfetti();
+            
+            // Auto-hide after 2 minutes (configurable)
+            const celebrationDuration = 2 * 60 * 1000; // 2 minutes in milliseconds
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                stopConfetti();
+            }, celebrationDuration);
+        }
+        
+        // Confetti Animation
+        function startConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
+            
+            function fireConfetti() {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: colors
+                });
+            }
+            
+            // Fire confetti every 500ms for 2 minutes
+            const confettiInterval = setInterval(fireConfetti, 500);
+            
+            // Store interval ID to stop later
+            window.confettiInterval = confettiInterval;
+            
+            // Fire initial burst
+            fireConfetti();
+        }
+        
+        function stopConfetti() {
+            if (window.confettiInterval) {
+                clearInterval(window.confettiInterval);
+                window.confettiInterval = null;
+            }
+        }
+        
         setInterval(updateCountdown, 1000);
         updateCountdown();
     </script>
@@ -673,6 +837,10 @@
     <!-- Swiper.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             new Swiper('.hero-swiper', {
