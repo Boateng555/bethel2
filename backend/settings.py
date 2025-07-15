@@ -170,9 +170,12 @@ if all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
         'API_KEY': CLOUDINARY_API_KEY,
         'API_SECRET': CLOUDINARY_API_SECRET,
     }
+    # Cloudinary handles media URLs automatically
+    MEDIA_URL = '/media/'  # This will be overridden by Cloudinary
 else:
     # Fallback to local storage if Cloudinary not configured
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
 
 # Use DATABASE_URL if provided (for Railway Postgres)
 import dj_database_url
