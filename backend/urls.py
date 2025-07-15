@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-# Only add media URLs if not using Cloudinary
-if not hasattr(settings, 'CLOUDINARY_STORAGE'):
+# Always serve media files in development
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    print("🔧 Serving local media files for development")
