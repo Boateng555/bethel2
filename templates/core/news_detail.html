@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ news.title }} - {{ news.church.name }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <a href="/" class="text-white hover:text-gray-200 transition-colors">Home</a>
+                <span class="text-gray-300">→</span>
+                <a href="/churches/" class="text-white hover:text-gray-200 transition-colors">Churches</a>
+                <span class="text-gray-300">→</span>
+                <a href="{% url 'church_home' news.church.id %}" class="text-white hover:text-gray-200 transition-colors">{{ news.church.name }}</a>
+                <span class="text-gray-300">→</span>
+                <span class="text-gray-200">News</span>
+            </div>
+            <h1 class="text-4xl font-bold mb-4">{{ news.title }}</h1>
+            <div class="flex items-center justify-center space-x-4 text-lg opacity-90">
+                <span class="flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    {{ news.date|date:"F j, Y" }}
+                </span>
+                <span class="flex items-center">
+                    <i class="fas fa-church mr-2"></i>
+                    {{ news.church.name }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Article -->
+        <div class="lg:col-span-2">
+            <article class="bg-white rounded-xl shadow-md overflow-hidden">
+                {% if news.image %}
+                <div class="h-64 md:h-80 bg-cover bg-center" style="background-image: url('{{ news.image.url }}');">
+                </div>
+                {% endif %}
+                <div class="p-8">
+                    <div class="prose max-w-none">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ news.title }}</h2>
+                        <div class="flex items-center text-sm text-gray-500 mb-6">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            {{ news.date|date:"F j, Y" }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-church mr-2"></i>
+                            {{ news.church.name }}
+                        </div>
+                        
+                        {% if news.excerpt %}
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg text-gray-700 italic">{{ news.excerpt }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-gray-700 leading-relaxed">
+                            {{ news.content|safe }}
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Church Info -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">About {{ news.church.name }}</h3>
+                <p class="text-gray-600 mb-4">{{ news.church.city }}, {{ news.church.country }}</p>
+                {% if news.church.description %}
+                <p class="text-gray-700 text-sm">{{ news.church.description|truncatewords:30 }}</p>
+                {% endif %}
+                <div class="mt-4">
+                    <a href="{% url 'church_home' news.church.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold text-sm">
+                        Visit Church Website →
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Related News -->
+            {% if related_news %}
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Related News</h3>
+                <div class="space-y-4">
+                    {% for related in related_news %}
+                    <div class="border-b border-gray-200 pb-4 last:border-b-0">
+                        <h4 class="font-semibold text-gray-900 mb-2">
+                            <a href="{% url 'news_detail' related.id %}" class="hover:text-[#1e3a8a]">
+                                {{ related.title }}
+                            </a>
+                        </h4>
+                        <p class="text-sm text-gray-500">{{ related.date|date:"M d, Y" }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Back to News -->
+    <div class="mt-12 text-center">
+        <a href="{% url 'church_news' news.church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+            ← Back to All News
+        </a>
+    </div>
+</div>
+{% endblock %} 

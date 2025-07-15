@@ -10,6 +10,7 @@ from calendar import monthcalendar, month_name
 import calendar
 import pytz
 from django.db import models
+from django.db.models import Q
 import requests
 import json
 from django.views.decorators.http import require_POST
@@ -345,12 +346,48 @@ def visit(request):
 def sermon(request):
     all_events = Event.objects.filter(is_public=True)
     all_ministries = Ministry.objects.filter(is_public=True)
-    sermons = Sermon.objects.filter(is_public=True).order_by('-date')  # Get all public sermons ordered by date
+    
+    # Get filter parameters
+    keyword = request.GET.get('keyword', '').strip()
+    preacher = request.GET.get('preacher', '').strip()
+    date_filter = request.GET.get('date', '').strip()
+    
+    # Start with all public sermons
+    sermons = Sermon.objects.filter(is_public=True)
+    
+    # Apply keyword filter (search in title and description)
+    if keyword:
+        sermons = sermons.filter(
+            models.Q(title__icontains=keyword) |
+            models.Q(description__icontains=keyword) |
+            models.Q(scripture_reference__icontains=keyword)
+        )
+    
+    # Apply preacher filter
+    if preacher:
+        sermons = sermons.filter(preacher__icontains=preacher)
+    
+    # Apply date filter
+    if date_filter:
+        try:
+            # Convert date string to date object
+            from datetime import datetime
+            filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            sermons = sermons.filter(date=filter_date)
+        except ValueError:
+            # If date format is invalid, ignore the filter
+            pass
+    
+    # Order by date (newest first)
+    sermons = sermons.order_by('-date')
     
     context = {
         'all_events': all_events,
         'all_ministries': all_ministries,
         'sermons': sermons,
+        'keyword': keyword,  # Pass back to template to preserve form values
+        'preacher': preacher,
+        'date_filter': date_filter,
     }
     return render(request, 'core/sermon.html', context)
 
@@ -789,15 +826,42 @@ def church_sermons(request, church_id):
     """Church-specific sermons page"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
     
+    # Get filter parameters
+    keyword = request.GET.get('keyword', '')
+    preacher = request.GET.get('preacher', '')
+    date_filter = request.GET.get('date', '')
+    
+    # Start with all sermons for this church
+    sermons = Sermon.objects.filter(church=church, is_public=True)
+    
+    # Apply filters
+    if keyword:
+        sermons = sermons.filter(
+            Q(title__icontains=keyword) | 
+            Q(description__icontains=keyword) |
+            Q(preacher__icontains=keyword)
+        )
+    
+    if preacher:
+        sermons = sermons.filter(preacher__icontains=preacher)
+    
+    if date_filter:
+        sermons = sermons.filter(date=date_filter)
+    
+    # Order by date (newest first)
+    sermons = sermons.order_by('-date')
+    
     all_events = Event.objects.filter(church=church, is_public=True)
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
-    sermons = Sermon.objects.filter(church=church, is_public=True).order_by('-date')
     
     context = {
         'church': church,
         'all_events': all_events,
         'all_ministries': all_ministries,
         'sermons': sermons,
+        'keyword': keyword,
+        'preacher': preacher,
+        'date_filter': date_filter,
         'is_church_site': True,
     }
     return render(request, 'core/church_sermons.html', context)
@@ -1350,11 +1414,11 @@ def global_news_feature_requests(request):
 
 def privacy(request):
     """Privacy Policy page"""
-    return render(request, 'core/privacy.html')
+    return render(request, 'core/privacy_policy.html')
 
 def terms(request):
     """Terms of Service page"""
-    return render(request, 'core/terms.html')
+    return render(request, 'core/terms_of_service.html')
 
 def cookies(request):
     """Cookie Policy page"""
@@ -1444,3 +1508,27 @@ def event_speakers(request, event_id):
 def all_event_highlights(request):
     highlights = EventHighlight.objects.all().order_by('-year')
     return render(request, 'core/all_event_highlights.html', {'highlights': highlights})
+
+def news_detail(request, news_id):
+    """Display individual news article detail"""
+    news = get_object_or_404(News, id=news_id, is_public=True)
+    
+    # Get navigation data
+    all_events = Event.objects.filter(is_public=True)
+    all_ministries = Ministry.objects.filter(is_public=True)
+    
+    # Get related news from the same church
+    related_news = News.objects.filter(
+        church=news.church, 
+        is_public=True
+    ).exclude(id=news.id).order_by('-date')[:3]
+    
+    context = {
+        'news': news,
+        'all_events': all_events,
+        'all_ministries': all_ministries,
+        'related_news': related_news,
+        'church': news.church,
+    }
+    
+    return render(request, 'core/news_detail.html', context)

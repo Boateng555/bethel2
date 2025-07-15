@@ -3,29 +3,293 @@
 {% block title %}{{ church.name }} - Sermons{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="bg-gray-900 text-white py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-6xl font-bold mb-6">Sermons at {{ church.name }}</h1>
-        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Listen to inspiring messages and teachings from our pastors</p>
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Filter Sermons</h2>
+        <form method="get" class="grid md:grid-cols-3 gap-4">
+                            <div>
+                    <label for="keyword" class="block text-sm font-medium text-gray-700 mb-2">Keyword:</label>
+                    <input type="text" id="keyword" name="keyword" placeholder="Search by keyword" 
+                           value="{{ keyword }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900">
+                </div>
+                <div>
+                    <label for="preacher" class="block text-sm font-medium text-gray-700 mb-2">Preacher:</label>
+                    <input type="text" id="preacher" name="preacher" placeholder="Preacher" 
+                           value="{{ preacher }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900">
+                </div>
+            <div>
+                <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Date:</label>
+                <div class="relative">
+                    <input type="date" id="date" name="date" 
+                           value="{{ date_filter }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a]">
+                    <i class="fas fa-calendar absolute right-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="md:col-span-3 flex gap-4">
+                <button type="submit" class="bg-[#1e3a8a] text-white px-6 py-2 rounded-md hover:bg-[#1e40af] transition-colors">
+                    Apply Filter
+                </button>
+                <button type="reset" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">
+                    Clear Filter
+                </button>
+            </div>
+        </form>
     </div>
-</section>
 
-<!-- Sermons Content -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h2 class="text-3xl font-bold mb-8 text-deep-blue">Latest Sermons</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <!-- Sermons Grid -->
+    {% if sermons %}
+    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <p class="text-gray-600">
+            {% if keyword or preacher or date_filter %}
+                Found {{ sermons.count }} sermon{{ sermons.count|pluralize }} matching your filters
+            {% else %}
+                Showing all {{ sermons.count }} sermon{{ sermons.count|pluralize }}
+            {% endif %}
+        </p>
+        <div class="flex gap-2">
+            <button id="shuffle-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors flex items-center">
+                <i class="fas fa-random mr-2"></i>
+                Shuffle
+            </button>
+            <button id="show-favorites-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md transition-colors flex items-center">
+                <i class="fas fa-heart mr-2"></i>
+                <span id="favorites-count">0</span> Favorites
+            </button>
+        </div>
+    </div>
+    <div id="sermons-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {% for sermon in sermons %}
-            {% include 'core/_sermon_card.html' with sermon=sermon church=church %}
-        {% empty %}
-        <div class="col-span-full text-center py-12">
-            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-            </svg>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">No Sermons Yet</h3>
-            <p class="text-gray-500">Check back soon for sermons from {{ church.name }}.</p>
+        <div class="sermon-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow" data-sermon-id="{{ sermon.id }}">
+            <!-- Sermon thumbnail or fallback banner -->
+            {% if sermon.thumbnail %}
+            <div class="h-48 bg-cover bg-center relative" style="background-image: url('{{ sermon.thumbnail.url }}');">
+                <div class="h-full bg-black bg-opacity-20 flex items-center justify-center">
+                    <i class="fas fa-play-circle text-white text-4xl opacity-80"></i>
+                </div>
+                <!-- Favorite button overlay -->
+                <button class="favorite-btn absolute top-3 right-3 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
+                    <i class="far fa-heart text-gray-600 hover:text-red-500 transition-colors"></i>
+                </button>
+            </div>
+            {% else %}
+            <!-- Blue gradient banner with icon (fallback) -->
+            <div class="h-32 bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center relative">
+                <i class="fas fa-volume-up text-white text-6xl"></i>
+                <!-- Favorite button overlay -->
+                <button class="favorite-btn absolute top-3 right-3 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
+                    <i class="far fa-heart text-gray-600 hover:text-red-500 transition-colors"></i>
+                </button>
+            </div>
+            {% endif %}
+            
+            <div class="p-6">
+                <!-- Metadata row -->
+                <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
+                    <div class="flex items-center">
+                        <i class="fas fa-user mr-1"></i>
+                        <span>{{ sermon.preacher }}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar mr-1"></i>
+                        <span>{{ sermon.date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                
+                <!-- Title and description -->
+                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description|truncatewords:15 }}</p>
+                
+                <!-- Action buttons -->
+                <div class="flex space-x-2">
+                    {% if sermon.video_file %}
+                    <a href="{{ sermon.video_file.url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
+                        <i class="fas fa-video mr-1"></i>
+                        Watch
+                    </a>
+                    {% elif sermon.audio_file %}
+                    <a href="{{ sermon.audio_file.url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
+                        <i class="fas fa-play mr-1"></i>
+                        Listen
+                    </a>
+                    {% elif sermon.link %}
+                    <a href="{{ sermon.link }}" target="_blank" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
+                        <i class="fas fa-external-link-alt mr-1"></i>
+                        Watch
+                    </a>
+                    {% else %}
+                    <button class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center opacity-75 cursor-not-allowed">
+                        <i class="fas fa-video mr-1"></i>
+                        Watch
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+            <i class="fas fa-volume-up text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Sermons Available</h3>
+            <p class="text-gray-600">Sermons will be available soon. Check back later!</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Subscription Section -->
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Never Miss a Sermon</h2>
+        <p class="text-xl text-gray-600 mb-8">Subscribe to our podcast or YouTube channel</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#" class="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors hover:bg-red-700 flex items-center justify-center">
+                <i class="fab fa-youtube text-white mr-2"></i>
+                YouTube
+            </a>
+            <a href="#" class="bg-[#1e3a8a] text-white px-8 py-3 rounded-lg font-semibold transition-colors hover:bg-[#1e40af] flex items-center justify-center">
+                <i class="fas fa-podcast text-white mr-2"></i>
+                Podcast
+            </a>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Favorites functionality
+        const favorites = JSON.parse(localStorage.getItem('sermonFavorites') || '[]');
+        const favoriteBtns = document.querySelectorAll('.favorite-btn');
+        const favoritesCount = document.getElementById('favorites-count');
+        const showFavoritesBtn = document.getElementById('show-favorites-btn');
+        const sermonsContainer = document.getElementById('sermons-container');
+        const sermonCards = document.querySelectorAll('.sermon-card');
+        let originalOrder = Array.from(sermonCards);
+        let showingFavorites = false;
+
+        // Initialize favorites
+        function updateFavoritesDisplay() {
+            favoritesCount.textContent = favorites.length;
+            
+            // Update favorite button states
+            favoriteBtns.forEach(btn => {
+                const sermonId = btn.getAttribute('data-sermon-id');
+                const icon = btn.querySelector('i');
+                
+                if (favorites.includes(sermonId)) {
+                    icon.className = 'fas fa-heart text-red-500';
+                    btn.classList.add('favorited');
+                } else {
+                    icon.className = 'far fa-heart text-gray-600 hover:text-red-500 transition-colors';
+                    btn.classList.remove('favorited');
+                }
+            });
+        }
+
+        // Toggle favorite
+        favoriteBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const sermonId = this.getAttribute('data-sermon-id');
+                const icon = this.querySelector('i');
+                
+                if (favorites.includes(sermonId)) {
+                    // Remove from favorites
+                    const index = favorites.indexOf(sermonId);
+                    favorites.splice(index, 1);
+                    icon.className = 'far fa-heart text-gray-600 hover:text-red-500 transition-colors';
+                    this.classList.remove('favorited');
+                } else {
+                    // Add to favorites
+                    favorites.push(sermonId);
+                    icon.className = 'fas fa-heart text-red-500';
+                    this.classList.add('favorited');
+                }
+                
+                localStorage.setItem('sermonFavorites', JSON.stringify(favorites));
+                updateFavoritesDisplay();
+            });
+        });
+
+        // Show/Hide favorites
+        showFavoritesBtn.addEventListener('click', function() {
+            if (showingFavorites) {
+                // Show all sermons
+                sermonCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+                showFavoritesBtn.innerHTML = '<i class="fas fa-heart mr-2"></i><span id="favorites-count">' + favorites.length + '</span> Favorites';
+                showingFavorites = false;
+            } else {
+                // Show only favorites
+                sermonCards.forEach(card => {
+                    const sermonId = card.getAttribute('data-sermon-id');
+                    if (favorites.includes(sermonId)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                showFavoritesBtn.innerHTML = '<i class="fas fa-eye mr-2"></i>Show All';
+                showingFavorites = true;
+            }
+        });
+
+        // Shuffle functionality
+        document.getElementById('shuffle-btn').addEventListener('click', function() {
+            const cards = Array.from(sermonCards);
+            
+            // Fisher-Yates shuffle algorithm
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            
+            // Reorder in DOM
+            cards.forEach(card => {
+                sermonsContainer.appendChild(card);
+            });
+            
+            // Add shuffle animation
+            cards.forEach((card, index) => {
+                card.style.animation = 'none';
+                card.offsetHeight; // Trigger reflow
+                card.style.animation = `shuffleIn 0.5s ease-out ${index * 0.1}s both`;
+            });
+        });
+
+        // Initialize display
+        updateFavoritesDisplay();
+    });
+
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shuffleIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .favorite-btn.favorited {
+            background-color: rgba(239, 68, 68, 0.9) !important;
+        }
+        
+        .favorite-btn.favorited i {
+            color: white !important;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
 {% endblock %} 

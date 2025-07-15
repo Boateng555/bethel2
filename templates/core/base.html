@@ -82,9 +82,9 @@
         }
     </style>
 </head>
-<body class="bg-deep-blue text-white font-sans">
+<body class="bg-gray-50 text-gray-900 font-sans">
     <!-- NAVBAR -->
-    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if is_church_site and church %}
                 <a href="{% url 'church_home' church.id %}" class="flex flex-col items-center">
@@ -100,10 +100,10 @@
         <nav class="hidden md:flex space-x-6 text-sm">
             {% if is_church_site and church %}
                 <!-- Church-specific navigation -->
-                <a href="{% url 'church_home' church.id %}" class="hover:text-white transition-colors">Home</a>
-                <a href="{% url 'church_about' church.id %}" class="hover:text-white transition-colors">About Us</a>
+                <a href="{% url 'church_home' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Home</a>
+                <a href="{% url 'church_about' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About Us</a>
                 <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                    <button class="text-white hover:text-gray-200 transition-colors">Get Involved ▾</button>
                     <div class="dropdown-menu">
                         <a href="{% url 'church_ministries' church.id %}" class="all-link">All Ministries</a>
                         {% for ministry in all_ministries %}
@@ -114,7 +114,7 @@
                     </div>
                 </div>
                 <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Events ▾</button>
+                    <button class="text-white hover:text-gray-200 transition-colors">Events ▾</button>
                     <div class="dropdown-menu">
                         <a href="{% url 'church_events' church.id %}" class="all-link">All Events</a>
                         <a href="{% url 'church_calendar' church.id %}" class="text-sm">Calendar</a>
@@ -125,28 +125,28 @@
                         {% endfor %}
                     </div>
                 </div>
-                <a href="{% url 'church_sermons' church.id %}" class="hover:text-white transition-colors">Sermons</a>
+                <a href="{% url 'church_sermons' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Sermons</a>
                 {% if church.shop_url %}
-                    <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
+                    <a href="{{ church.shop_url }}" target="_blank" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
                 {% else %}
-                    <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                    <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
                 {% endif %}
-                <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Donate</a>
-                <a href="/churches/" class="hover:text-white transition-colors">Find Other Churches</a>
-                <a href="/" class="hover:text-white transition-colors">Global Site</a>
-                <a href="/local-admin/" class="hover:text-white transition-colors">Admin</a>
+                <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
+                <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
+                <a href="/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+                <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
             {% else %}
                 <!-- Global navigation -->
                 <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Church ▾</button>
+                    <button class="text-white hover:text-gray-200 transition-colors">Church ▾</button>
                     <div class="dropdown-menu">
                         <a href="/churches/" class="block py-1 hover:text-[#1e3a8a]">Find Churches</a>
                         <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
                     </div>
                 </div>
-                <a href="/about" class="hover:text-white transition-colors">About Us</a>
+                <a href="/about" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About Us</a>
                 <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                    <button class="text-white hover:text-gray-200 transition-colors">Get Involved ▾</button>
                     <div class="dropdown-menu">
                         <a href="/ministries/" class="all-link">All Ministries</a>
                         {% for ministry in all_ministries %}
@@ -161,7 +161,7 @@
                     </div>
                 </div>
                 <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Events ▾</button>
+                    <button class="text-white hover:text-gray-200 transition-colors">Events ▾</button>
                     <div class="dropdown-menu">
                         <a href="/events/" class="all-link">All Events</a>
                         <a href="/events/calendar/" class="text-sm">Calendar</a>
@@ -172,16 +172,16 @@
                         {% endfor %}
                     </div>
                 </div>
-                <a href="/sermon" class="hover:text-white transition-colors">Sermon</a>
-                <a href="/resources" class="hover:text-white transition-colors">Resources</a>
-                <a href="{% url 'testimonies' %}" class="hover:text-white transition-colors">Testimonies</a>
-                <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
-                <a href="/shop" class="hover:text-white transition-colors">Shop</a>
-                <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+                <a href="/sermon" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Sermon</a>
+                <a href="/resources" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Resources</a>
+                <a href="{% url 'testimonies' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Testimonies</a>
+                <a href="{% url 'donation' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
+                <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
+                <a href="/donation" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donation</a>
             {% endif %}
         </nav>
         <!-- Mobile Hamburger Button -->
-        <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
@@ -189,40 +189,40 @@
     </header>
     
     <!-- Mobile Menu (separate from header) -->
-    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-white hidden">
         {% if is_church_site and church %}
             <!-- Church-specific mobile navigation -->
-            <a href="{% url 'church_home' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
-            <a href="{% url 'church_about' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
-            <a href="{% url 'church_events' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
-            <a href="{% url 'church_calendar' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
-            <a href="{% url 'church_ministries' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
-            <a href="{% url 'church_sermons' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
+            <a href="{% url 'church_home' church.id %}" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="hover:text-gray-200 w-full text-center py-2">About Us</a>
+            <a href="{% url 'church_events' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Events</a>
+            <a href="{% url 'church_calendar' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Calendar</a>
+            <a href="{% url 'church_ministries' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Sermons</a>
             {% if church.shop_url %}
-                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
             {% else %}
-                <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+                <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
             {% endif %}
-            <a href="{% url 'church_donation' church.id %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Donate</a>
-            <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Other Churches</a>
-            <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
-            <a href="/local-admin/" class="hover:text-[#1e3a8a] w-full text-center py-2">Admin Login</a>
+            <a href="{% url 'church_donation' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Donate</a>
+            <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
+            <a href="/" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+            <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin Login</a>
         {% else %}
             <!-- Global mobile navigation -->
-            <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
-            <a href="/about" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
-            <a href="/leadership" class="hover:text-[#1e3a8a] w-full text-center py-2">Leadership</a>
-            <a href="/resources" class="hover:text-[#1e3a8a] w-full text-center py-2">Resources</a>
-            <a href="{% url 'testimonies' %}" class="hover:text-[#1e3a8a] w-full text-center py-2">Testimonies</a>
-            <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Churches</a>
-            <a href="/events/" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
-            <a href="/events/calendar/" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
-            <a href="/ministries/" class="hover:text-[#1e3a8a] w-full text-center py-2">Get Involved</a>
-            <a href="/sermon" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermon</a>
-            <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
-            <a href="/donation" class="hover:text-[#1e3a8a] w-full text-center py-2">Donation</a>
+            <a href="/" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
+            <a href="/about" class="hover:text-gray-200 w-full text-center py-2">About Us</a>
+            <a href="/leadership" class="hover:text-gray-200 w-full text-center py-2">Leadership</a>
+            <a href="/resources" class="hover:text-gray-200 w-full text-center py-2">Resources</a>
+            <a href="{% url 'testimonies' %}" class="hover:text-gray-200 w-full text-center py-2">Testimonies</a>
+            <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Churches</a>
+            <a href="/events/" class="hover:text-gray-200 w-full text-center py-2">Events</a>
+            <a href="/events/calendar/" class="hover:text-gray-200 w-full text-center py-2">Calendar</a>
+            <a href="/ministries/" class="hover:text-gray-200 w-full text-center py-2">Get Involved</a>
+            <a href="/sermon" class="hover:text-gray-200 w-full text-center py-2">Sermon</a>
+            <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
+            <a href="/donation" class="hover:text-gray-200 w-full text-center py-2">Donation</a>
         {% endif %}
-        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
     </div>
 
     <!-- Messages -->
@@ -252,7 +252,7 @@
                 <a href="{% url 'testimonies' %}">Testimonies</a> |
                 <a href="/privacy/">Privacy Policy</a> |
                 <a href="/terms/">Terms of Service</a> |
-                <a href="/cookies/">Cookie Policy</a>
+                <a href="#" id="footer-cookie-settings">Cookie Settings</a>
             </span>
         </div>
     </footer>
@@ -278,5 +278,8 @@
             }
         });
     </script>
+    
+    <!-- Cookie Consent Popup -->
+    {% include 'core/cookie_consent.html' %}
 </body>
 </html> 

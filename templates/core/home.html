@@ -120,10 +120,33 @@
           padding-left: 0 !important;
           padding-right: 0 !important;
         }
-        .latest-sermons-grid {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 2rem !important;
+        /* Force mobile layout for sermon cards */
+        @media (max-width: 767px) {
+          .auto-scroll-sermons {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            gap: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .auto-scroll-sermons > div {
+            min-width: 280px !important;
+            flex-shrink: 0 !important;
+          }
+        }
+        /* Force mobile layout for news cards */
+        @media (max-width: 767px) {
+          .auto-scroll-news {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            gap: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .auto-scroll-news > div {
+            min-width: 280px !important;
+            flex-shrink: 0 !important;
+          }
         }
         /* Ensure content doesn't interfere with swipe navigation */
         .relative.z-10 {
@@ -336,7 +359,7 @@
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Our Ministries</h2>
-            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                 {% for ministry in ministries %}
                 <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     {% if ministry.image %}
@@ -371,14 +394,14 @@
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Latest Sermons</h2>
             <!-- Latest Sermons Section -->
-            <div class="auto-scroll-sermons latest-sermons-grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+            <div class="auto-scroll-sermons flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for sermon in sermons %}
-                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
-                    {% if sermon.image %}
-                    <img src="{{ sermon.image.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
+                <a href="/sermon/" class="block min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+                    {% if sermon.thumbnail %}
+                    <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
                     {% else %}
                     <div class="h-32 bg-gradient-to-br from-blue-500 to-blue-200 flex items-center justify-center">
-                        <i class="fas fa-volume-up text-white text-6xl"></i>
+                        <i class="fas fa-microphone-alt text-white text-6xl"></i>
                     </div>
                     {% endif %}
                     <div class="p-6 flex flex-col flex-1">
@@ -386,7 +409,7 @@
                         <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description }}</p>
                         <span class="text-[#1e3a8a] font-semibold">{{ sermon.date|date:"M d, Y" }}</span>
                     </div>
-                </div>
+                </a>
                 {% empty %}
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
@@ -409,9 +432,9 @@
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-[#1e3a8a]">Latest News</h2>
             <!-- Latest News Section -->
-            <div class="auto-scroll-news grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
+            <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for news_item in news %}
-                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+                <a href="{% url 'news_detail' news_item.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if news_item.image %}
                     <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
                     {% else %}
@@ -424,7 +447,7 @@
                         <div class="text-gray-600 text-sm mb-4 line-clamp-2">{{ news_item.content|truncatewords:20|safe }}</div>
                         <span class="text-[#1e3a8a] font-semibold">{{ news_item.date|date:"M d, Y" }}</span>
                     </div>
-                </div>
+                </a>
                 {% empty %}
                 <div class="col-span-3 text-center text-[#1e3a8a]">
                     <p>No news articles at the moment.</p>
@@ -439,7 +462,7 @@
         <div class="max-w-4xl mx-auto px-6 text-center">
             <h2 class="text-4xl font-bold mb-8 text-deep-blue">Recent Testimonies</h2>
             <!-- Recent Testimonies Section -->
-            <div class="auto-scroll-testimonies grid flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
+            <div class="auto-scroll-testimonies flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
                 {% for testimony in recent_testimonies %}
                 <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     <div class="p-6 flex flex-col flex-1">
@@ -618,5 +641,8 @@
             autoScrollCarousel('.auto-scroll-testimonies');
         });
     </script>
+    
+    <!-- Cookie Consent Popup -->
+    {% include 'core/cookie_consent.html' %}
 </body>
 </html> 

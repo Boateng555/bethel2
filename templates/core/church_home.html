@@ -60,11 +60,6 @@
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-  .latest-sermons-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 2rem !important;
-  }
   .church-section-title {
     font-size: 1.25rem !important;
     margin-bottom: 1rem !important;
@@ -143,36 +138,64 @@
     gap: 0.05rem !important;
     align-items: center !important;
   }
-  /* Ensure content doesn't interfere with swipe navigation */
-  .relative.z-10 {
-    z-index: 10 !important; /* Lower than swipe area */
-  }
+          /* Force mobile layout for sermon cards */
+        @media (max-width: 767px) {
+          .auto-scroll-sermons {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            gap: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .auto-scroll-sermons > div {
+            min-width: 280px !important;
+            flex-shrink: 0 !important;
+          }
+        }
+        /* Force mobile layout for news cards */
+        @media (max-width: 767px) {
+          .auto-scroll-news {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            gap: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .auto-scroll-news > div {
+            min-width: 280px !important;
+            flex-shrink: 0 !important;
+          }
+        }
+        /* Ensure content doesn't interfere with swipe navigation */
+        .relative.z-10 {
+          z-index: 10 !important; /* Lower than swipe area */
+        }
 }
 </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
     <!-- NAVBAR -->
-    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             <span class="text-2xl font-bold font-serif">{{ church.name }}</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
         <nav class="hidden md:flex space-x-6 text-sm">
-            <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-white transition-colors">Home</a>
-            <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-white transition-colors">About</a>
-            <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-white transition-colors">Events</a>
-            <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-white transition-colors">Ministries</a>
-            <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-white transition-colors">Sermons</a>
-            <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-white transition-colors">News</a>
+            <a href="{% url 'church_home' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-white">Home</a>
+            <a href="{% url 'church_about' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About</a>
+            <a href="{% url 'church_events' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Events</a>
+            <a href="{% url 'church_ministries' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Sermons</a>
+            <a href="{% url 'church_news' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">News</a>
             {% if church.shop_url %}
-                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
+                <a href="{{ church.shop_url }}" target="_blank" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
             {% endif %}
-            <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-white transition-colors">Give</a>
-            <a href="/churches/" class="hover:text-white transition-colors">Find Other Churches</a>
-            <a href="/?global=true" class="hover:text-white transition-colors">Global Site</a>
+            <a href="{% url 'church_donation' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
+            <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
+            <a href="/?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
         </nav>
         <!-- Mobile Hamburger Button -->
-        <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
@@ -180,20 +203,20 @@
     </header>
     
     <!-- Mobile Menu (separate from header) -->
-    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
-        <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
-        <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">About</a>
-        <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
-        <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Ministries</a>
-        <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermons</a>
-        <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">News</a>
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-white hidden">
+        <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
+        <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">About</a>
+        <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Events</a>
+        <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Ministries</a>
+        <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Sermons</a>
+        <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">News</a>
         {% if church.shop_url %}
-            <a href="{{ church.shop_url }}" target="_blank" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
+            <a href="{{ church.shop_url }}" target="_blank" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
         {% endif %}
-        <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Give</a>
-        <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Other Churches</a>
-        <a href="/?global=true" class="hover:text-[#1e3a8a] w-full text-center py-2">Global Site</a>
-        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+        <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Give</a>
+        <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
+        <a href="/?global=true" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
     </div>
 
 <!-- Global Site Navigation Banner -->
@@ -377,7 +400,7 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Our Ministries</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Discover ways to get involved and grow in your faith</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {% for ministry in ministries %}
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if ministry.image %}
@@ -410,7 +433,7 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest Sermons</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Listen to inspiring messages from our pastors</p>
         </div>
-        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+        <div class="auto-scroll-sermons flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for sermon in sermons|slice:':3' %}
                 <div class="min-w-[280px] md:min-w-0">{% include 'core/_sermon_card.html' with sermon=sermon church=church %}</div>
             {% endfor %}
@@ -430,9 +453,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for article in news %}
-                <a href="#" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+                <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if article.image %}
                     <img src="{{ article.image.url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
                     {% else %}
@@ -529,6 +552,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.addEventListener('DOMContentLoaded', function() {
             autoScrollCarousel('.auto-scroll-events');
+            autoScrollCarousel('.auto-scroll-sermons');
+            autoScrollCarousel('.auto-scroll-news');
         });
     </script>
     <script>
@@ -580,5 +605,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     </script>
+    
+    <!-- Cookie Consent Popup -->
+    {% include 'core/cookie_consent.html' %}
 </body>
 </html>

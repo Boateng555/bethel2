@@ -11,7 +11,7 @@ from .views import (
     request_global_hero_feature, request_global_news_feature, global_hero_feature_requests,
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
-    all_event_highlights,
+    all_event_highlights, news_detail,
 )
 
 urlpatterns = [
@@ -23,6 +23,7 @@ urlpatterns = [
     path('events/<uuid:event_id>/add-to-calendar/', event_ics, name='event_ics'),
     path('ministries/', ministries, name='ministries'),
     path('ministries/<uuid:ministry_id>/', ministry_detail, name='ministry_detail'),
+    path('news/<uuid:news_id>/', news_detail, name='news_detail'),
     path('newsletter-signup/', newsletter_signup, name='newsletter-signup'),
     # Church directory
     path('churches/', church_list, name='church_list'),

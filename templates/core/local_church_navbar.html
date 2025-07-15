@@ -2,22 +2,67 @@
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <a href="/" class="text-2xl font-serif font-bold">{{ church.name|default:"Bethel Prayer Ministry" }}</a>
         <nav class="hidden md:flex space-x-6 text-sm">
-            <a href="{% url 'church_home' church.id %}" class="hover:text-white transition-colors">Home</a>
-            <a href="{% url 'church_about' church.id %}" class="hover:text-white transition-colors">About</a>
-            <a href="{% url 'church_events' church.id %}" class="hover:text-white transition-colors">Events</a>
-            <a href="{% url 'church_ministries' church.id %}" class="hover:text-white transition-colors">Ministries</a>
-            <a href="{% url 'church_sermons' church.id %}" class="hover:text-white transition-colors">Sermons</a>
-            <a href="{% url 'church_news' church.id %}" class="hover:text-white transition-colors">News</a>
+            <a href="{% url 'church_home' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About</a>
+            <a href="{% url 'church_events' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Events</a>
+            <a href="{% url 'church_ministries' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-white">Sermons</a>
+            <a href="{% url 'church_news' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">News</a>
             {% if church.shop_url %}
-              <a href="{{ church.shop_url }}" target="_blank" class="hover:text-white transition-colors">Shop</a>
+              <a href="{{ church.shop_url }}" target="_blank" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
             {% endif %}
-            <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Give</a>
-            <a href="{% url 'church_donation' church.id %}" class="hover:text-white transition-colors">Donate</a>
+            <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
+            <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
         </nav>
-        <button class="md:hidden">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
         </button>
     </div>
-</header> 
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden bg-[#1e3a8a] border-t border-white hidden">
+        <div class="px-6 py-4 space-y-4">
+            <a href="{% url 'church_home' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">About</a>
+            <a href="{% url 'church_events' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Events</a>
+            <a href="{% url 'church_ministries' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Sermons</a>
+            <a href="{% url 'church_news' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">News</a>
+            {% if church.shop_url %}
+              <a href="{{ church.shop_url }}" target="_blank" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Shop</a>
+            {% endif %}
+            <a href="{% url 'church_donation' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2 border-b border-white/20">Give</a>
+            <a href="{% url 'church_donation' church.id %}" class="block text-white hover:text-gray-200 transition-colors py-2">Donate</a>
+        </div>
+    </div>
+</header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const menuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (menuButton && mobileMenu) {
+        menuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!menuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+        
+        // Close menu when clicking on a link
+        const menuLinks = mobileMenu.querySelectorAll('a');
+        menuLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+    }
+});
+</script> 
