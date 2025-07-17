@@ -696,8 +696,6 @@ class Sermon(models.Model):
             else:
                 return self.video_file.url
         return ''
-    
-    @property
 
 class DonationMethod(models.Model):
     """Payment methods for each church"""
