@@ -1641,8 +1641,6 @@ def simple_trigger_sync(request):
 def debug_urls(request):
     """Debug view to show current database URLs"""
     try:
-        from core.models import Church, News, Ministry, Sermon, HeroMedia
-        
         output = []
         output.append("<h1>🔍 Database URL Debug</h1>")
         
@@ -1664,15 +1662,6 @@ def debug_urls(request):
             else:
                 output.append(f"<p><strong>{news.title}:</strong> No image</p>")
         
-        # Check HeroMedia images
-        output.append("<h2>📋 HeroMedia Images:</h2>")
-        hero_media = HeroMedia.objects.all()
-        for media in hero_media:
-            if media.image:
-                output.append(f"<p><strong>{media.title}:</strong> {media.image}</p>")
-            else:
-                output.append(f"<p><strong>{media.title}:</strong> No image</p>")
-        
         # Count local vs Cloudinary URLs
         local_count = 0
         cloudinary_count = 0
@@ -1691,20 +1680,12 @@ def debug_urls(request):
                 else:
                     local_count += 1
         
-        for media in hero_media:
-            if media.image:
-                if str(media.image).startswith('http'):
-                    cloudinary_count += 1
-                else:
-                    local_count += 1
-        
         output.append(f"<h2>📊 Summary:</h2>")
         output.append(f"<p><strong>Cloudinary URLs:</strong> {cloudinary_count}</p>")
         output.append(f"<p><strong>Local paths:</strong> {local_count}</p>")
         
         if local_count > 0:
             output.append(f"<p style='color: red;'><strong>❌ Found {local_count} local paths that need to be updated!</strong></p>")
-            output.append("<p><a href='/trigger-sync/' style='background: blue; color: white; padding: 10px; text-decoration: none;'>🔧 Click here to update URLs</a></p>")
         else:
             output.append(f"<p style='color: green;'><strong>✅ All URLs are already Cloudinary URLs!</strong></p>")
         
@@ -1715,9 +1696,6 @@ def debug_urls(request):
 
 def check_production_status(request):
     """Check production environment status"""
-    import cloudinary
-    from cloudinary import config
-    
     status = {
         'environment': {
             'DEBUG': settings.DEBUG,
@@ -1728,33 +1706,21 @@ def check_production_status(request):
             'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
             'api_key_set': bool(os.environ.get('CLOUDINARY_API_KEY')),
             'api_secret_set': bool(os.environ.get('CLOUDINARY_API_SECRET')),
+            'cloudinary_url_set': bool(os.environ.get('CLOUDINARY_URL')),
         },
         'sample_media': {}
     }
     
-    # Test Cloudinary connection
-    try:
-        if all([os.environ.get('CLOUDINARY_CLOUD_NAME'), 
-                os.environ.get('CLOUDINARY_API_KEY'), 
-                os.environ.get('CLOUDINARY_API_SECRET')]):
-            config(
-                cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-                api_key=os.environ.get('CLOUDINARY_API_KEY'),
-                api_secret=os.environ.get('CLOUDINARY_API_SECRET')
-            )
-            status['cloudinary_test'] = 'Configured'
-        else:
-            status['cloudinary_test'] = 'Not configured'
-    except Exception as e:
-        status['cloudinary_test'] = f'Error: {str(e)}'
-    
     # Check sample media URLs
-    if Event.objects.exists():
-        event = Event.objects.first()
-        status['sample_media']['event'] = {
-            'title': event.title,
-            'image_field': str(event.image) if event.image else None,
-            'get_url_method': event.get_image_url() if hasattr(event, 'get_image_url') else 'No method',
-        }
+    try:
+        if Event.objects.exists():
+            event = Event.objects.first()
+            status['sample_media']['event'] = {
+                'title': event.title,
+                'image_field': str(event.image) if event.image else None,
+                'get_url_method': event.get_image_url() if hasattr(event, 'get_image_url') else 'No method',
+            }
+    except Exception as e:
+        status['sample_media']['error'] = str(e)
     
     return JsonResponse(status)
