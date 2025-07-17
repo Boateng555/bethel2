@@ -149,8 +149,7 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
 ]
 
 INSTALLED_APPS += [
-    'cloudinary',
-    'cloudinary_storage',
+    'imagekitio',
 ]
 
 # Whitenoise for static files
@@ -158,31 +157,32 @@ MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary for media (only if credentials are provided)
-CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
-CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
-CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+# ImageKit for media (only if credentials are provided)
+IMAGEKIT_PUBLIC_KEY = os.environ.get('IMAGEKIT_PUBLIC_KEY')
+IMAGEKIT_PRIVATE_KEY = os.environ.get('IMAGEKIT_PRIVATE_KEY')
+IMAGEKIT_URL_ENDPOINT = os.environ.get('IMAGEKIT_URL_ENDPOINT')
 
 # For local development, always use local storage
 if DEBUG:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     print("🔧 Using local storage for development")
-elif all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-        'API_KEY': CLOUDINARY_API_KEY,
-        'API_SECRET': CLOUDINARY_API_SECRET,
+elif all([IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_URL_ENDPOINT]):
+    # ImageKit configuration
+    IMAGEKIT_CONFIG = {
+        'PUBLIC_KEY': IMAGEKIT_PUBLIC_KEY,
+        'PRIVATE_KEY': IMAGEKIT_PRIVATE_KEY,
+        'URL_ENDPOINT': IMAGEKIT_URL_ENDPOINT,
     }
-    # Cloudinary handles media URLs automatically
-    MEDIA_URL = '/media/'  # This will be overridden by Cloudinary
-    print("☁️ Using Cloudinary storage for production")
-else:
-    # Fallback to local storage if Cloudinary not configured
+    # For now, we'll use local storage but with ImageKit URLs
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
-    print("⚠️ Cloudinary not configured, using local storage")
+    print("🖼️ Using ImageKit for production")
+else:
+    # Fallback to local storage if ImageKit not configured
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    print("⚠️ ImageKit not configured, using local storage")
 
 # Use DATABASE_URL if provided (for Railway Postgres)
 import dj_database_url
