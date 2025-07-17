@@ -1632,7 +1632,7 @@ def trigger_sync_media_to_cloudinary(request):
 def simple_trigger_sync(request):
     """Simple trigger for sync - temporary fix"""
     try:
-        call_command("sync_media_to_cloudinary")
-        return HttpResponse("✅ Media sync to Cloudinary completed! Check your site now.")
+        call_command("update_urls_to_cloudinary")
+        return HttpResponse("✅ Database URLs updated to Cloudinary! Check your site now.")
     except Exception as e:
         return HttpResponse(f"❌ Error: {str(e)}")
