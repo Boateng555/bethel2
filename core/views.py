@@ -160,18 +160,30 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 def events(request):
-    # Show all public events (no approval required)
-    all_events = Event.objects.filter(is_public=True).prefetch_related('hero_media')
-    featured_events = Event.objects.filter(is_public=True, is_featured=True).prefetch_related('hero_media')[:3]
-    all_ministries = Ministry.objects.filter(is_public=True)
-    past_highlights = EventHighlight.objects.filter(is_public=True).order_by('-year')[:6]
-    context = {
-        'all_events': all_events,
-        'featured_events': featured_events,
-        'all_ministries': all_ministries,
-        'past_highlights': past_highlights,
-    }
-    return render(request, 'core/events.html', context)
+    # Show all public events (no approval required) - simplified version
+    try:
+        all_events = Event.objects.filter(is_public=True)
+        featured_events = Event.objects.filter(is_public=True, is_featured=True)[:3]
+        all_ministries = Ministry.objects.filter(is_public=True)
+        past_highlights = EventHighlight.objects.filter(is_public=True).order_by('-year')[:6]
+        
+        context = {
+            'all_events': all_events,
+            'featured_events': featured_events,
+            'all_ministries': all_ministries,
+            'past_highlights': past_highlights,
+        }
+        return render(request, 'core/events.html', context)
+    except Exception as e:
+        # Fallback to basic context if there's an error
+        context = {
+            'all_events': [],
+            'featured_events': [],
+            'all_ministries': [],
+            'past_highlights': [],
+            'error': str(e)
+        }
+        return render(request, 'core/events.html', context)
 
 def event_detail(request, event_id):
     # Get individual event detail
