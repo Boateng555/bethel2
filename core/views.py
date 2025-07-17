@@ -1833,3 +1833,57 @@ def check_media_field_length(request):
     HeroMedia = apps.get_model('core', 'HeroMedia')
     field = HeroMedia._meta.get_field('image')
     return HttpResponse(f"HeroMedia.image max_length: {field.max_length}")
+
+def debug_media_values(request):
+    """Debug view to show actual database values for media fields"""
+    try:
+        from core.models import HeroMedia, Sermon, Church, News
+        
+        output = []
+        output.append("<h1>🔍 Debug Media Values</h1>")
+        
+        # Check HeroMedia
+        output.append("<h2>📋 HeroMedia Records:</h2>")
+        hero_media = HeroMedia.objects.all()[:10]  # First 10
+        for i, media in enumerate(hero_media, 1):
+            output.append(f"<p><strong>{i}. HeroMedia ID {media.id}:</strong></p>")
+            output.append(f"<p>&nbsp;&nbsp;Image: {media.image}</p>")
+            output.append(f"<p>&nbsp;&nbsp;Video: {media.video}</p>")
+            output.append(f"<p>&nbsp;&nbsp;Order: {media.order}</p>")
+            output.append("<hr>")
+        
+        # Check Sermons
+        output.append("<h2>📋 Sermon Records:</h2>")
+        sermons = Sermon.objects.all()[:5]  # First 5
+        for i, sermon in enumerate(sermons, 1):
+            output.append(f"<p><strong>{i}. {sermon.title}:</strong></p>")
+            output.append(f"<p>&nbsp;&nbsp;Thumbnail: {sermon.thumbnail}</p>")
+            output.append(f"<p>&nbsp;&nbsp;Audio: {sermon.audio_file}</p>")
+            output.append(f"<p>&nbsp;&nbsp;Video: {sermon.video_file}</p>")
+            output.append("<hr>")
+        
+        # Check Churches
+        output.append("<h2>📋 Church Records:</h2>")
+        churches = Church.objects.all()[:3]  # First 3
+        for i, church in enumerate(churches, 1):
+            output.append(f"<p><strong>{i}. {church.name}:</strong></p>")
+            output.append(f"<p>&nbsp;&nbsp;Logo: {church.logo}</p>")
+            output.append(f"<p>&nbsp;&nbsp;Banner: {church.banner_image}</p>")
+            output.append("<hr>")
+        
+        # Check News
+        output.append("<h2>📋 News Records:</h2>")
+        news_items = News.objects.all()[:3]  # First 3
+        for i, news in enumerate(news_items, 1):
+            output.append(f"<p><strong>{i}. {news.title}:</strong></p>")
+            output.append(f"<p>&nbsp;&nbsp;Image: {news.image}</p>")
+            output.append("<hr>")
+        
+        output.append("<h2>🔧 Actions:</h2>")
+        output.append("<p><a href='/fix-all/' style='background: blue; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🔄 Run Fix Again</a></p>")
+        output.append("<p><a href='/' style='background: green; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🏠 Go Home</a></p>")
+        
+        return HttpResponse("".join(output))
+        
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {str(e)}")
