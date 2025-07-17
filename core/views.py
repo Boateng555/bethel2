@@ -1628,3 +1628,11 @@ def trigger_sync_media_to_cloudinary(request):
         call_command("sync_media_to_cloudinary")
         return HttpResponse("Media sync to Cloudinary triggered! Check your site in a few minutes.")
     return HttpResponse("<form method='post'>{% csrf_token %}<button type='submit'>Sync Media to Cloudinary</button></form>")
+
+def simple_trigger_sync(request):
+    """Simple trigger for sync - temporary fix"""
+    try:
+        call_command("sync_media_to_cloudinary")
+        return HttpResponse("✅ Media sync to Cloudinary completed! Check your site now.")
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {str(e)}")
