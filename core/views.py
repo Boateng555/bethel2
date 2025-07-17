@@ -23,6 +23,13 @@ import base64
 from django.core.mail import send_mail
 import math
 
+import cloudinary
+import cloudinary.uploader
+import os
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 # Create your views here.
 
 def get_user_location(request):
@@ -1527,3 +1534,86 @@ def news_detail(request, news_id):
     }
     
     return render(request, 'core/news_detail.html', context)
+
+@csrf_exempt
+def trigger_media_upload(request):
+    """
+    Temporary view to trigger media upload to Cloudinary
+    Only accessible via direct URL
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        # Configure Cloudinary
+        cloudinary.config(
+            cloud_name=settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
+            api_key=settings.CLOUDINARY_STORAGE['API_KEY'],
+            api_secret=settings.CLOUDINARY_STORAGE['API_SECRET']
+        )
+        
+        success_count = 0
+        error_count = 0
+        results = []
+        
+        # Upload Church logos
+        churches = Church.objects.all()
+        for church in churches:
+            if church.logo and not 'res.cloudinary.com' in str(church.logo):
+                try:
+                    local_path = str(church.logo)
+                    
+                    # Upload to Cloudinary
+                    result = cloudinary.uploader.upload(
+                        local_path,
+                        folder="churches/logos",
+                        public_id=f"church_{church.id}_logo",
+                        overwrite=True
+                    )
+                    
+                    # Update database
+                    church.logo = result['secure_url']
+                    church.save()
+                    
+                    results.append(f"✅ {church.name}: {result['secure_url']}")
+                    success_count += 1
+                    
+                except Exception as e:
+                    results.append(f"❌ {church.name}: Error - {e}")
+                    error_count += 1
+        
+        # Upload Hero Media
+        hero_media = HeroMedia.objects.all()
+        for hero in hero_media:
+            if hero.image and not 'res.cloudinary.com' in str(hero.image):
+                try:
+                    local_path = str(hero.image)
+                    
+                    result = cloudinary.uploader.upload(
+                        local_path,
+                        folder="hero",
+                        public_id=f"hero_{hero.id}",
+                        overwrite=True
+                    )
+                    
+                    hero.image = result['secure_url']
+                    hero.save()
+                    
+                    results.append(f"✅ Hero {hero.id}: {result['secure_url']}")
+                    success_count += 1
+                    
+                except Exception as e:
+                    results.append(f"❌ Hero {hero.id}: Error - {e}")
+                    error_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Upload completed! Success: {success_count}, Errors: {error_count}',
+            'results': results
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

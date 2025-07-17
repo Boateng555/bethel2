@@ -11,7 +11,7 @@ from .views import (
     request_global_hero_feature, request_global_news_feature, global_hero_feature_requests,
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
-    all_event_highlights, news_detail,
+    all_event_highlights, news_detail, trigger_media_upload,
 )
 
 urlpatterns = [
@@ -78,4 +78,6 @@ urlpatterns = [
     path('events/highlight/<uuid:highlight_id>/', event_highlight_detail, name='event_highlight_detail'),
     path('events/<uuid:event_id>/speakers/', event_speakers, name='event_speakers'),
     path('events/highlights/', all_event_highlights, name='all_event_highlights'),
+    # Temporary media upload trigger
+    path('trigger-media-upload/', trigger_media_upload, name='trigger_media_upload'),
 ] 
