@@ -160,30 +160,22 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 def events(request):
-    # Show all public events (no approval required) - simplified version
-    try:
-        all_events = Event.objects.filter(is_public=True)
-        featured_events = Event.objects.filter(is_public=True, is_featured=True)[:3]
-        all_ministries = Ministry.objects.filter(is_public=True)
-        past_highlights = EventHighlight.objects.filter(is_public=True).order_by('-year')[:6]
-        
-        context = {
-            'all_events': all_events,
-            'featured_events': featured_events,
-            'all_ministries': all_ministries,
-            'past_highlights': past_highlights,
-        }
-        return render(request, 'core/events.html', context)
-    except Exception as e:
-        # Fallback to basic context if there's an error
-        context = {
-            'all_events': [],
-            'featured_events': [],
-            'all_ministries': [],
-            'past_highlights': [],
-            'error': str(e)
-        }
-        return render(request, 'core/events.html', context)
+    # Completely basic events view - no database queries
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Events - Test</title>
+    </head>
+    <body>
+        <h1>Events Page - Working!</h1>
+        <p>This is a test to see if the events view works without database queries.</p>
+        <p>If you can see this, the issue is with database access on Railway.</p>
+        <a href="/">Go back home</a>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content)
 
 def event_detail(request, event_id):
     # Get individual event detail

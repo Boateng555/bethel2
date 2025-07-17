@@ -17,11 +17,16 @@ from .views import (
 
 urlpatterns = [
     path('', home, name='home'),
-    path('events/', events, name='events'),
+    # Events - put specific patterns first
     path('events/calendar/', calendar_view, name='calendar'),
-    path('events/<uuid:event_id>/', event_detail, name='event_detail'),
+    path('events/highlight/<uuid:highlight_id>/', event_highlight_detail, name='event_highlight_detail'),
+    path('events/highlights/', all_event_highlights, name='all_event_highlights'),
+    path('events/<uuid:event_id>/speakers/', event_speakers, name='event_speakers'),
     path('events/<uuid:event_id>/register/', event_detail, name='event_registration'),
     path('events/<uuid:event_id>/add-to-calendar/', event_ics, name='event_ics'),
+    path('events/<uuid:event_id>/', event_detail, name='event_detail'),
+    path('events/', events, name='events'),
+    # Other pages
     path('ministries/', ministries, name='ministries'),
     path('ministries/<uuid:ministry_id>/', ministry_detail, name='ministry_detail'),
     path('news/<uuid:news_id>/', news_detail, name='news_detail'),
@@ -76,9 +81,6 @@ urlpatterns = [
     path('api/ministries/', MinistryListView.as_view(), name='ministry-list'),
     path('api/news/', NewsListView.as_view(), name='news-list'),
     path('api/newsletter-signup/', NewsletterSignupCreateView.as_view(), name='newsletter-signup-api'),
-    path('events/highlight/<uuid:highlight_id>/', event_highlight_detail, name='event_highlight_detail'),
-    path('events/<uuid:event_id>/speakers/', event_speakers, name='event_speakers'),
-    path('events/highlights/', all_event_highlights, name='all_event_highlights'),
     # Temporary media upload trigger
     path('trigger-media-upload/', trigger_media_upload, name='trigger_media_upload'),
     # Debug views
