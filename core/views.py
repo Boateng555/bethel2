@@ -1712,3 +1712,49 @@ def debug_urls(request):
         
     except Exception as e:
         return HttpResponse(f"❌ Error: {str(e)}")
+
+def check_production_status(request):
+    """Check production environment status"""
+    import cloudinary
+    from cloudinary import config
+    
+    status = {
+        'environment': {
+            'DEBUG': settings.DEBUG,
+            'DEFAULT_FILE_STORAGE': settings.DEFAULT_FILE_STORAGE,
+            'MEDIA_URL': settings.MEDIA_URL,
+        },
+        'cloudinary_config': {
+            'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+            'api_key_set': bool(os.environ.get('CLOUDINARY_API_KEY')),
+            'api_secret_set': bool(os.environ.get('CLOUDINARY_API_SECRET')),
+        },
+        'sample_media': {}
+    }
+    
+    # Test Cloudinary connection
+    try:
+        if all([os.environ.get('CLOUDINARY_CLOUD_NAME'), 
+                os.environ.get('CLOUDINARY_API_KEY'), 
+                os.environ.get('CLOUDINARY_API_SECRET')]):
+            config(
+                cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+                api_key=os.environ.get('CLOUDINARY_API_KEY'),
+                api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+            )
+            status['cloudinary_test'] = 'Configured'
+        else:
+            status['cloudinary_test'] = 'Not configured'
+    except Exception as e:
+        status['cloudinary_test'] = f'Error: {str(e)}'
+    
+    # Check sample media URLs
+    if Event.objects.exists():
+        event = Event.objects.first()
+        status['sample_media']['event'] = {
+            'title': event.title,
+            'image_field': str(event.image) if event.image else None,
+            'get_url_method': event.get_image_url() if hasattr(event, 'get_image_url') else 'No method',
+        }
+    
+    return JsonResponse(status)
