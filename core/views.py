@@ -179,7 +179,7 @@ def events(request):
 
 def event_detail(request, event_id):
     # Get individual event detail
-    event = get_object_or_404(Event.objects.prefetch_related('hero_media'), id=event_id)
+    event = get_object_or_404(Event, id=event_id)
     all_events = Event.objects.filter(is_public=True)  # For navigation dropdown
     all_ministries = Ministry.objects.filter(is_public=True)  # For navigation dropdown
     
@@ -691,8 +691,9 @@ def church_home(request, church_id):
 def church_events(request, church_id):
     """Church-specific events page"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
-    all_events = Event.objects.filter(church=church, is_public=True).prefetch_related('hero_media')
-    featured_events = Event.objects.filter(church=church, is_featured=True, is_public=True).prefetch_related('hero_media')[:3]
+    # Get events for this church
+    all_events = Event.objects.filter(church=church, is_public=True)
+    featured_events = Event.objects.filter(church=church, is_featured=True, is_public=True)[:3]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     
     context = {
@@ -706,83 +707,98 @@ def church_events(request, church_id):
 
 def church_event_detail(request, church_id, event_id):
     """Church-specific event detail page"""
-    church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
-    event = get_object_or_404(Event.objects.prefetch_related('hero_media'), id=event_id, church=church, is_public=True)
-    
-    all_events = Event.objects.filter(church=church, is_public=True)
-    all_ministries = Ministry.objects.filter(church=church, is_active=True)
-    
-    # Handle registration form
-    registration_success = False
-    if request.method == 'POST' and event.requires_registration:
-        form = EventRegistrationForm(request.POST)
-        if form.is_valid():
-            registration = form.save(commit=False)
-            registration.event = event
-            registration.church = church
-            registration.save()
-            # Send notification email to church
-            church_email = event.church.email or 'CHURCH_EMAIL_HERE'  # Set this to your church email
-            send_mail(
-                subject=f'New Event Registration: {event.title}',
-                message=f'New registration for {event.title}:\n\nName: {registration.first_name} {registration.last_name}\nEmail: {registration.email}\nPhone: {registration.phone}',
-                from_email=None,  # Uses DEFAULT_FROM_EMAIL
-                recipient_list=[church_email],
-                fail_silently=True,
-            )
-            # Send confirmation email to user
-            send_mail(
-                subject=f'Thank you for registering for {event.title}',
-                message=f'Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\nEvent Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\nIf you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}',
-                from_email=None,  # Uses DEFAULT_FROM_EMAIL
-                recipient_list=[registration.email],
-                fail_silently=True,
-            )
-            registration_success = True
-            form = EventRegistrationForm()  # Reset form
-    else:
-        form = EventRegistrationForm()
-    
-    # Get past event highlights for this church
-    if event.is_big_event:
-        past_highlights = EventHighlight.objects.filter(event=event, is_public=True).order_by('-year')
-    else:
-        past_highlights = EventHighlight.objects.filter(church=event.church, is_public=True).order_by('-year')[:6]  # Get last 6 highlights
-    
-    # Get registration count if registration is required
-    registration_count = None
-    if event.requires_registration:
-        registration_count = event.registrations.filter(payment_status='paid').count()
-    
-    qr_code_base64 = None
-    if getattr(event, 'show_qr_code', False):
-        qr_url = request.build_absolute_uri()
-        qr = qrcode.QRCode(box_size=8, border=2)
-        qr.add_data(qr_url)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="#1e3a8a", back_color="white")
-        buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
-        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
-    context = {
-        'church': church,
-        'event': event,
-        'all_events': all_events,
-        'all_ministries': all_ministries,
-        'is_church_site': True,
-        'registration_form': form,
-        'registration_success': registration_success,
-        'past_highlights': past_highlights,
-        'registration_count': registration_count,
-        'qr_code_base64': qr_code_base64,
-    }
-    
-    # Use big event template if marked as big event
-    if event.is_big_event:
-        return render(request, 'core/big_event_detail.html', context)
-    else:
-        return render(request, 'core/church_event_detail.html', context)
+    try:
+        church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
+        event = get_object_or_404(Event, id=event_id, church=church, is_public=True)
+        
+        all_events = Event.objects.filter(church=church, is_public=True)
+        all_ministries = Ministry.objects.filter(church=church, is_active=True)
+        
+        # Handle registration form
+        registration_success = False
+        if request.method == 'POST' and event.requires_registration:
+            form = EventRegistrationForm(request.POST)
+            if form.is_valid():
+                registration = form.save(commit=False)
+                registration.event = event
+                registration.church = church
+                registration.save()
+                # Send notification email to church
+                church_email = event.church.email or 'CHURCH_EMAIL_HERE'  # Set this to your church email
+                send_mail(
+                    subject=f'New Event Registration: {event.title}',
+                    message=f'New registration for {event.title}:\n\nName: {registration.first_name} {registration.last_name}\nEmail: {registration.email}\nPhone: {registration.phone}',
+                    from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                    recipient_list=[church_email],
+                    fail_silently=True,
+                )
+                # Send confirmation email to user
+                send_mail(
+                    subject=f'Thank you for registering for {event.title}',
+                    message=f'Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\nEvent Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\nIf you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}',
+                    from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                    recipient_list=[registration.email],
+                    fail_silently=True,
+                )
+                registration_success = True
+                form = EventRegistrationForm()  # Reset form
+        else:
+            form = EventRegistrationForm()
+        
+        # Get past event highlights for this church
+        if event.is_big_event:
+            past_highlights = EventHighlight.objects.filter(event=event, is_public=True).order_by('-year')
+        else:
+            past_highlights = EventHighlight.objects.filter(church=event.church, is_public=True).order_by('-year')[:6]  # Get last 6 highlights
+        
+        # Get registration count if registration is required
+        registration_count = None
+        if event.requires_registration:
+            registration_count = event.registrations.filter(payment_status='paid').count()
+        
+        qr_code_base64 = None
+        if getattr(event, 'show_qr_code', False):
+            qr_url = request.build_absolute_uri()
+            qr = qrcode.QRCode(box_size=8, border=2)
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="#1e3a8a", back_color="white")
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        context = {
+            'church': church,
+            'event': event,
+            'all_events': all_events,
+            'all_ministries': all_ministries,
+            'is_church_site': True,
+            'registration_form': form,
+            'registration_success': registration_success,
+            'past_highlights': past_highlights,
+            'registration_count': registration_count,
+            'qr_code_base64': qr_code_base64,
+        }
+        
+        # Use big event template if marked as big event
+        if event.is_big_event:
+            return render(request, 'core/big_event_detail.html', context)
+        else:
+            return render(request, 'core/church_event_detail.html', context)
+            
+    except Exception as e:
+        # Fallback to simple error page
+        return HttpResponse(f"""
+        <html>
+        <head><title>Event Not Found</title></head>
+        <body>
+            <h1>Event Not Found</h1>
+            <p>The event you're looking for could not be found or there was an error loading it.</p>
+            <p>Error: {str(e)}</p>
+            <a href="/">Go back home</a>
+        </body>
+        </html>
+        """)
 
 def church_ministries(request, church_id):
     """Church-specific ministries page"""
