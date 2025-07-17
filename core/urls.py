@@ -12,7 +12,7 @@ from .views import (
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail, trigger_media_upload, trigger_sync_media_to_cloudinary,
-    simple_trigger_sync, debug_urls, comprehensive_fix, check_media_field_length, debug_media_values, run_migration,
+    simple_trigger_sync,
 )
 
 urlpatterns = [
