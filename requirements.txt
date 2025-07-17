@@ -8,5 +8,4 @@ django-cloudinary-storage==0.3.0
 python-dotenv==1.0.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
-qrcode[pil]==7.4.2
-requests==2.31.0 
+qrcode[pil]==7.4.2 

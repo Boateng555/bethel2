@@ -148,39 +148,33 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
     'web-production-158c.up.railway.app',  # Your specific Railway domain
 ]
 
-# ImageKit removed due to compatibility issues
+# Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 
 # Whitenoise for static files
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ImageKit for media (only if credentials are provided)
-IMAGEKIT_PUBLIC_KEY = os.environ.get('IMAGEKIT_PUBLIC_KEY')
-IMAGEKIT_PRIVATE_KEY = os.environ.get('IMAGEKIT_PRIVATE_KEY')
-IMAGEKIT_URL_ENDPOINT = os.environ.get('IMAGEKIT_URL_ENDPOINT')
-
 # For local development, always use local storage
 if DEBUG:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     print("🔧 Using local storage for development")
-elif all([IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_URL_ENDPOINT]):
-    # ImageKit configuration
-    IMAGEKIT_CONFIG = {
-        'PUBLIC_KEY': IMAGEKIT_PUBLIC_KEY,
-        'PRIVATE_KEY': IMAGEKIT_PRIVATE_KEY,
-        'URL_ENDPOINT': IMAGEKIT_URL_ENDPOINT,
-    }
-    # For now, we'll use local storage but with ImageKit URLs
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+elif all([CLOUDINARY_STORAGE['CLOUD_NAME'], CLOUDINARY_STORAGE['API_KEY'], CLOUDINARY_STORAGE['API_SECRET']]):
+    # Cloudinary configuration for production
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = '/media/'
-    print("🖼️ Using ImageKit for production")
+    print("☁️ Using Cloudinary for production")
 else:
-    # Fallback to local storage if ImageKit not configured
+    # Fallback to local storage if Cloudinary not configured
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
-    print("⚠️ ImageKit not configured, using local storage")
+    print("⚠️ Cloudinary not configured, using local storage")
 
 # Use DATABASE_URL if provided (for Railway Postgres)
 import dj_database_url
