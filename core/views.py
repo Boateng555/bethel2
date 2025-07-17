@@ -160,34 +160,22 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 def events(request):
-    # Show all public events (no approval required) - restored version
-    try:
-        all_events = Event.objects.filter(is_public=True)
-        featured_events = Event.objects.filter(is_public=True, is_featured=True)[:3]
-        all_ministries = Ministry.objects.filter(is_public=True)
-        past_highlights = EventHighlight.objects.filter(is_public=True).order_by('-year')[:6]
-        
-        context = {
-            'all_events': all_events,
-            'featured_events': featured_events,
-            'all_ministries': all_ministries,
-            'past_highlights': past_highlights,
-        }
-        return render(request, 'core/events.html', context)
-    except Exception as e:
-        # Fallback to basic context if there's an error
-        context = {
-            'all_events': [],
-            'featured_events': [],
-            'all_ministries': [],
-            'past_highlights': [],
-            'error': str(e)
-        }
-        return render(request, 'core/events.html', context)
+    # Show all public events (no approval required)
+    all_events = Event.objects.filter(is_public=True).prefetch_related('hero_media')
+    featured_events = Event.objects.filter(is_public=True, is_featured=True).prefetch_related('hero_media')[:3]
+    all_ministries = Ministry.objects.filter(is_public=True)
+    past_highlights = EventHighlight.objects.filter(is_public=True).order_by('-year')[:6]
+    context = {
+        'all_events': all_events,
+        'featured_events': featured_events,
+        'all_ministries': all_ministries,
+        'past_highlights': past_highlights,
+    }
+    return render(request, 'core/events.html', context)
 
 def event_detail(request, event_id):
     # Get individual event detail
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(Event.objects.prefetch_related('hero_media'), id=event_id)
     all_events = Event.objects.filter(is_public=True)  # For navigation dropdown
     all_ministries = Ministry.objects.filter(is_public=True)  # For navigation dropdown
     
@@ -699,9 +687,8 @@ def church_home(request, church_id):
 def church_events(request, church_id):
     """Church-specific events page"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
-    # Get events for this church
-    all_events = Event.objects.filter(church=church, is_public=True)
-    featured_events = Event.objects.filter(church=church, is_featured=True, is_public=True)[:3]
+    all_events = Event.objects.filter(church=church, is_public=True).prefetch_related('hero_media')
+    featured_events = Event.objects.filter(church=church, is_featured=True, is_public=True).prefetch_related('hero_media')[:3]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     
     context = {
@@ -714,43 +701,84 @@ def church_events(request, church_id):
     return render(request, 'core/church_events.html', context)
 
 def church_event_detail(request, church_id, event_id):
-    """Church-specific event detail page - simplified test version"""
-    try:
-        church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
-        event = get_object_or_404(Event, id=event_id, church=church, is_public=True)
-        
-        # Simple HTML response to test if the issue is with template rendering
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>{event.title} - {church.name}</title>
-        </head>
-        <body>
-            <h1>Event Detail Test</h1>
-            <h2>{event.title}</h2>
-            <p><strong>Church:</strong> {church.name}</p>
-            <p><strong>Date:</strong> {event.start_date}</p>
-            <p><strong>Description:</strong> {event.description}</p>
-            <p><strong>Event ID:</strong> {event.id}</p>
-            <p><strong>Church ID:</strong> {church.id}</p>
-            <a href="/">Go back home</a>
-        </body>
-        </html>
-        """
-        return HttpResponse(html_content)
-        
-    except Exception as e:
-        return HttpResponse(f"""
-        <html>
-        <head><title>Error</title></head>
-        <body>
-            <h1>Error Loading Event</h1>
-            <p>Error: {str(e)}</p>
-            <a href="/">Go back home</a>
-        </body>
-        </html>
-        """)
+    """Church-specific event detail page"""
+    church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
+    event = get_object_or_404(Event.objects.prefetch_related('hero_media'), id=event_id, church=church, is_public=True)
+    
+    all_events = Event.objects.filter(church=church, is_public=True)
+    all_ministries = Ministry.objects.filter(church=church, is_active=True)
+    
+    # Handle registration form
+    registration_success = False
+    if request.method == 'POST' and event.requires_registration:
+        form = EventRegistrationForm(request.POST)
+        if form.is_valid():
+            registration = form.save(commit=False)
+            registration.event = event
+            registration.church = church
+            registration.save()
+            # Send notification email to church
+            church_email = event.church.email or 'CHURCH_EMAIL_HERE'  # Set this to your church email
+            send_mail(
+                subject=f'New Event Registration: {event.title}',
+                message=f'New registration for {event.title}:\n\nName: {registration.first_name} {registration.last_name}\nEmail: {registration.email}\nPhone: {registration.phone}',
+                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                recipient_list=[church_email],
+                fail_silently=True,
+            )
+            # Send confirmation email to user
+            send_mail(
+                subject=f'Thank you for registering for {event.title}',
+                message=f'Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\nEvent Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\nIf you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}',
+                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                recipient_list=[registration.email],
+                fail_silently=True,
+            )
+            registration_success = True
+            form = EventRegistrationForm()  # Reset form
+    else:
+        form = EventRegistrationForm()
+    
+    # Get past event highlights for this church
+    if event.is_big_event:
+        past_highlights = EventHighlight.objects.filter(event=event, is_public=True).order_by('-year')
+    else:
+        past_highlights = EventHighlight.objects.filter(church=event.church, is_public=True).order_by('-year')[:6]  # Get last 6 highlights
+    
+    # Get registration count if registration is required
+    registration_count = None
+    if event.requires_registration:
+        registration_count = event.registrations.filter(payment_status='paid').count()
+    
+    qr_code_base64 = None
+    if getattr(event, 'show_qr_code', False):
+        qr_url = request.build_absolute_uri()
+        qr = qrcode.QRCode(box_size=8, border=2)
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#1e3a8a", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    context = {
+        'church': church,
+        'event': event,
+        'all_events': all_events,
+        'all_ministries': all_ministries,
+        'is_church_site': True,
+        'registration_form': form,
+        'registration_success': registration_success,
+        'past_highlights': past_highlights,
+        'registration_count': registration_count,
+        'qr_code_base64': qr_code_base64,
+    }
+    
+    # Use big event template if marked as big event
+    if event.is_big_event:
+        return render(request, 'core/big_event_detail.html', context)
+    else:
+        return render(request, 'core/church_event_detail.html', context)
 
 def church_ministries(request, church_id):
     """Church-specific ministries page"""
@@ -1613,6 +1641,8 @@ def simple_trigger_sync(request):
 def debug_urls(request):
     """Debug view to show current database URLs"""
     try:
+        from core.models import Church, News, Ministry, Sermon, HeroMedia
+        
         output = []
         output.append("<h1>🔍 Database URL Debug</h1>")
         
@@ -1634,6 +1664,15 @@ def debug_urls(request):
             else:
                 output.append(f"<p><strong>{news.title}:</strong> No image</p>")
         
+        # Check HeroMedia images
+        output.append("<h2>📋 HeroMedia Images:</h2>")
+        hero_media = HeroMedia.objects.all()
+        for media in hero_media:
+            if media.image:
+                output.append(f"<p><strong>{media.title}:</strong> {media.image}</p>")
+            else:
+                output.append(f"<p><strong>{media.title}:</strong> No image</p>")
+        
         # Count local vs Cloudinary URLs
         local_count = 0
         cloudinary_count = 0
@@ -1652,12 +1691,20 @@ def debug_urls(request):
                 else:
                     local_count += 1
         
+        for media in hero_media:
+            if media.image:
+                if str(media.image).startswith('http'):
+                    cloudinary_count += 1
+                else:
+                    local_count += 1
+        
         output.append(f"<h2>📊 Summary:</h2>")
         output.append(f"<p><strong>Cloudinary URLs:</strong> {cloudinary_count}</p>")
         output.append(f"<p><strong>Local paths:</strong> {local_count}</p>")
         
         if local_count > 0:
             output.append(f"<p style='color: red;'><strong>❌ Found {local_count} local paths that need to be updated!</strong></p>")
+            output.append("<p><a href='/trigger-sync/' style='background: blue; color: white; padding: 10px; text-decoration: none;'>🔧 Click here to update URLs</a></p>")
         else:
             output.append(f"<p style='color: green;'><strong>✅ All URLs are already Cloudinary URLs!</strong></p>")
         
@@ -1667,9 +1714,11 @@ def debug_urls(request):
         return HttpResponse(f"❌ Error: {str(e)}")
 
 def check_production_status(request):
-    """Check production environment status - simplified version"""
+    """Check production environment status"""
+    import cloudinary
+    from cloudinary import config
+    
     status = {
-        'status': 'working',
         'environment': {
             'DEBUG': settings.DEBUG,
             'DEFAULT_FILE_STORAGE': settings.DEFAULT_FILE_STORAGE,
@@ -1679,13 +1728,33 @@ def check_production_status(request):
             'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
             'api_key_set': bool(os.environ.get('CLOUDINARY_API_KEY')),
             'api_secret_set': bool(os.environ.get('CLOUDINARY_API_SECRET')),
-            'cloudinary_url_set': bool(os.environ.get('CLOUDINARY_URL')),
         },
-        'message': 'Debug view is working!'
+        'sample_media': {}
     }
     
+    # Test Cloudinary connection
+    try:
+        if all([os.environ.get('CLOUDINARY_CLOUD_NAME'), 
+                os.environ.get('CLOUDINARY_API_KEY'), 
+                os.environ.get('CLOUDINARY_API_SECRET')]):
+            config(
+                cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+                api_key=os.environ.get('CLOUDINARY_API_KEY'),
+                api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+            )
+            status['cloudinary_test'] = 'Configured'
+        else:
+            status['cloudinary_test'] = 'Not configured'
+    except Exception as e:
+        status['cloudinary_test'] = f'Error: {str(e)}'
+    
+    # Check sample media URLs
+    if Event.objects.exists():
+        event = Event.objects.first()
+        status['sample_media']['event'] = {
+            'title': event.title,
+            'image_field': str(event.image) if event.image else None,
+            'get_url_method': event.get_image_url() if hasattr(event, 'get_image_url') else 'No method',
+        }
+    
     return JsonResponse(status)
-
-def simple_test(request):
-    """Super simple test view"""
-    return HttpResponse("✅ Django is working!")

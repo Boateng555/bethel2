@@ -32,3 +32,21 @@ def smart_media_url(field):
         # For local files, we need to get the .url property
         # This is a bit tricky in a template filter, so we'll handle it differently
         return field_str 
+
+@register.filter
+def first_with_image(queryset):
+    """
+    Returns the first item from a queryset that has an image.
+    Useful for finding the first media item with an image.
+    """
+    if not queryset:
+        return None
+    
+    for item in queryset:
+        if hasattr(item, 'image') and item.image:
+            return item
+        elif hasattr(item, 'get_image_url') and item.get_image_url():
+            return item
+    
+    # If no item with image found, return the first item
+    return queryset.first() if queryset.exists() else None

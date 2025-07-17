@@ -30,7 +30,11 @@ SECRET_KEY = 'django-insecure-dt1#i48=k*oc^@cwtgj7v1ou(_(n%z=&omp$)fhfh3d)hvv^sg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
+    '.railway.app',
+    'web-production-158c.up.railway.app'
+]
+
 
 
 # Application definition
@@ -45,6 +49,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'core',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -162,19 +168,20 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # For local development, always use local storage
 if DEBUG:
+    print("⚙️ Using local storage for development")
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
-    print("🔧 Using local storage for development")
-elif all([CLOUDINARY_STORAGE['CLOUD_NAME'], CLOUDINARY_STORAGE['API_KEY'], CLOUDINARY_STORAGE['API_SECRET']]):
-    # Cloudinary configuration for production
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'
-    print("☁️ Using Cloudinary for production")
+    MEDIA_ROOT = Path(BASE_DIR) / 'media'
 else:
-    # Fallback to local storage if Cloudinary not configured
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_URL = '/media/'
-    print("⚠️ Cloudinary not configured, using local storage")
+    if all(CLOUDINARY_STORAGE.values()):
+        print("☁️ Using Cloudinary for production")
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    else:
+        print("❌ Cloudinary config missing, fallback to local")
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = Path(BASE_DIR) / 'media'
+
 
 # Use DATABASE_URL if provided (for Railway Postgres)
 import dj_database_url
