@@ -1711,3 +1711,141 @@ def debug_urls(request):
         
     except Exception as e:
         return HttpResponse(f"❌ Error: {str(e)}")
+
+def comprehensive_fix(request):
+    """Comprehensive fix for all media URLs"""
+    try:
+        from core.models import Church, News, Ministry, Sermon, HeroMedia, Event, EventSpeaker, AboutPage, LeadershipPage
+        import os
+        
+        output = []
+        output.append("<h1>🔧 Comprehensive Media Fix</h1>")
+        
+        # Cloudinary base URL
+        cloudinary_base = "https://res.cloudinary.com/dhzdusb5k/image/upload/v1752764497/bethel"
+        
+        updated_count = 0
+        
+        # Update Church logos
+        output.append("<h2>📋 Updating Church logos...</h2>")
+        churches = Church.objects.all()
+        for church in churches:
+            if church.logo and str(church.logo) and not str(church.logo).startswith('http'):
+                filename = os.path.basename(str(church.logo))
+                new_url = f"{cloudinary_base}/churches/logos/{filename}"
+                output.append(f"<p>✅ {church.name}: {church.logo} -> {new_url}</p>")
+                church.logo = new_url
+                church.save()
+                updated_count += 1
+        
+        # Update News images
+        output.append("<h2>📋 Updating News images...</h2>")
+        news_items = News.objects.all()
+        for news in news_items:
+            if news.image and str(news.image) and not str(news.image).startswith('http'):
+                filename = os.path.basename(str(news.image))
+                new_url = f"{cloudinary_base}/news/{filename}"
+                output.append(f"<p>✅ {news.title}: {news.image} -> {new_url}</p>")
+                news.image = new_url
+                news.save()
+                updated_count += 1
+        
+        # Update Ministry images
+        output.append("<h2>📋 Updating Ministry images...</h2>")
+        ministries = Ministry.objects.all()
+        for ministry in ministries:
+            if ministry.image and str(ministry.image) and not str(ministry.image).startswith('http'):
+                filename = os.path.basename(str(ministry.image))
+                new_url = f"{cloudinary_base}/ministries/{filename}"
+                output.append(f"<p>✅ {ministry.name}: {ministry.image} -> {new_url}</p>")
+                ministry.image = new_url
+                ministry.save()
+                updated_count += 1
+        
+        # Update Sermon thumbnails
+        output.append("<h2>📋 Updating Sermon thumbnails...</h2>")
+        sermons = Sermon.objects.all()
+        for sermon in sermons:
+            if sermon.thumbnail and str(sermon.thumbnail) and not str(sermon.thumbnail).startswith('http'):
+                filename = os.path.basename(str(sermon.thumbnail))
+                new_url = f"{cloudinary_base}/sermons/thumbnails/{filename}"
+                output.append(f"<p>✅ {sermon.title}: {sermon.thumbnail} -> {new_url}</p>")
+                sermon.thumbnail = new_url
+                sermon.save()
+                updated_count += 1
+        
+        # Update HeroMedia images
+        output.append("<h2>📋 Updating HeroMedia images...</h2>")
+        hero_media = HeroMedia.objects.all()
+        for media in hero_media:
+            if media.image and str(media.image) and not str(media.image).startswith('http'):
+                filename = os.path.basename(str(media.image))
+                new_url = f"{cloudinary_base}/hero/{filename}"
+                output.append(f"<p>✅ {media.title}: {media.image} -> {new_url}</p>")
+                media.image = new_url
+                media.save()
+                updated_count += 1
+        
+        # Update Event images
+        output.append("<h2>📋 Updating Event images...</h2>")
+        events = Event.objects.all()
+        for event in events:
+            if event.image and str(event.image) and not str(event.image).startswith('http'):
+                filename = os.path.basename(str(event.image))
+                new_url = f"{cloudinary_base}/events/{filename}"
+                output.append(f"<p>✅ {event.title}: {event.image} -> {new_url}</p>")
+                event.image = new_url
+                event.save()
+                updated_count += 1
+        
+        # Update EventSpeaker images
+        output.append("<h2>📋 Updating EventSpeaker images...</h2>")
+        speakers = EventSpeaker.objects.all()
+        for speaker in speakers:
+            if speaker.photo and str(speaker.photo) and not str(speaker.photo).startswith('http'):
+                filename = os.path.basename(str(speaker.photo))
+                new_url = f"{cloudinary_base}/events/speakers/{filename}"
+                output.append(f"<p>✅ {speaker.name}: {speaker.photo} -> {new_url}</p>")
+                speaker.photo = new_url
+                speaker.save()
+                updated_count += 1
+        
+        # Update AboutPage images
+        output.append("<h2>📋 Updating AboutPage images...</h2>")
+        about_pages = AboutPage.objects.all()
+        for page in about_pages:
+            for field_name in ['logo', 'founder_image', 'extra_image']:
+                field = getattr(page, field_name, None)
+                if field and str(field) and not str(field).startswith('http'):
+                    filename = os.path.basename(str(field))
+                    new_url = f"{cloudinary_base}/about/{filename}"
+                    output.append(f"<p>✅ {page.title} {field_name}: {field} -> {new_url}</p>")
+                    setattr(page, field_name, new_url)
+                    updated_count += 1
+            page.save()
+        
+        # Update LeadershipPage images
+        output.append("<h2>📋 Updating LeadershipPage images...</h2>")
+        leadership_pages = LeadershipPage.objects.all()
+        for page in leadership_pages:
+            for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+                              'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+                field = getattr(page, field_name, None)
+                if field and str(field) and not str(field).startswith('http'):
+                    filename = os.path.basename(str(field))
+                    new_url = f"{cloudinary_base}/leadership/{filename}"
+                    output.append(f"<p>✅ {page.title} {field_name}: {field} -> {new_url}</p>")
+                    setattr(page, field_name, new_url)
+                    updated_count += 1
+            page.save()
+        
+        output.append(f"<h2>🎉 Summary:</h2>")
+        output.append(f"<p style='color: green; font-size: 18px;'><strong>✅ Successfully updated {updated_count} URLs to Cloudinary!</strong></p>")
+        output.append(f"<p>All media files now point to Cloudinary URLs.</p>")
+        output.append(f"<p><a href='/' style='background: blue; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🏠 Go to Homepage</a></p>")
+        output.append(f"<p><a href='/admin/' style='background: green; color: white; padding: 10px; text-decoration: none; margin: 10px;'>⚙️ Go to Admin</a></p>")
+        
+        return HttpResponse("".join(output))
+        
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {str(e)}")
