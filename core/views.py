@@ -1636,3 +1636,78 @@ def simple_trigger_sync(request):
         return HttpResponse("✅ Database URLs updated to Cloudinary! Check your site now.")
     except Exception as e:
         return HttpResponse(f"❌ Error: {str(e)}")
+
+def debug_urls(request):
+    """Debug view to show current database URLs"""
+    try:
+        from core.models import Church, News, Ministry, Sermon, HeroMedia
+        
+        output = []
+        output.append("<h1>🔍 Database URL Debug</h1>")
+        
+        # Check Church logos
+        output.append("<h2>📋 Church Logos:</h2>")
+        churches = Church.objects.all()
+        for church in churches:
+            if church.logo:
+                output.append(f"<p><strong>{church.name}:</strong> {church.logo}</p>")
+            else:
+                output.append(f"<p><strong>{church.name}:</strong> No logo</p>")
+        
+        # Check News images
+        output.append("<h2>📋 News Images:</h2>")
+        news_items = News.objects.all()
+        for news in news_items:
+            if news.image:
+                output.append(f"<p><strong>{news.title}:</strong> {news.image}</p>")
+            else:
+                output.append(f"<p><strong>{news.title}:</strong> No image</p>")
+        
+        # Check HeroMedia images
+        output.append("<h2>📋 HeroMedia Images:</h2>")
+        hero_media = HeroMedia.objects.all()
+        for media in hero_media:
+            if media.image:
+                output.append(f"<p><strong>{media.title}:</strong> {media.image}</p>")
+            else:
+                output.append(f"<p><strong>{media.title}:</strong> No image</p>")
+        
+        # Count local vs Cloudinary URLs
+        local_count = 0
+        cloudinary_count = 0
+        
+        for church in churches:
+            if church.logo:
+                if str(church.logo).startswith('http'):
+                    cloudinary_count += 1
+                else:
+                    local_count += 1
+        
+        for news in news_items:
+            if news.image:
+                if str(news.image).startswith('http'):
+                    cloudinary_count += 1
+                else:
+                    local_count += 1
+        
+        for media in hero_media:
+            if media.image:
+                if str(media.image).startswith('http'):
+                    cloudinary_count += 1
+                else:
+                    local_count += 1
+        
+        output.append(f"<h2>📊 Summary:</h2>")
+        output.append(f"<p><strong>Cloudinary URLs:</strong> {cloudinary_count}</p>")
+        output.append(f"<p><strong>Local paths:</strong> {local_count}</p>")
+        
+        if local_count > 0:
+            output.append(f"<p style='color: red;'><strong>❌ Found {local_count} local paths that need to be updated!</strong></p>")
+            output.append("<p><a href='/trigger-sync/' style='background: blue; color: white; padding: 10px; text-decoration: none;'>🔧 Click here to update URLs</a></p>")
+        else:
+            output.append(f"<p style='color: green;'><strong>✅ All URLs are already Cloudinary URLs!</strong></p>")
+        
+        return HttpResponse("".join(output))
+        
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {str(e)}")

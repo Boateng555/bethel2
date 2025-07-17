@@ -12,7 +12,7 @@ from .views import (
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail, trigger_media_upload, trigger_sync_media_to_cloudinary,
-    simple_trigger_sync,
+    simple_trigger_sync, debug_urls,
 )
 
 urlpatterns = [
@@ -86,4 +86,5 @@ urlpatterns = [
 urlpatterns += [
     path('admin/trigger-sync-media/', trigger_sync_media_to_cloudinary, name='trigger_sync_media_to_cloudinary'),
     path('trigger-sync/', simple_trigger_sync, name='simple_trigger_sync'),
+    path('debug-urls/', debug_urls, name='debug_urls'),
 ] 
