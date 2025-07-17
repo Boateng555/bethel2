@@ -1880,8 +1880,57 @@ def debug_media_values(request):
             output.append("<hr>")
         
         output.append("<h2>🔧 Actions:</h2>")
+        output.append("<p><a href='/run-migration/' style='background: red; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🚨 Run Migration</a></p>")
         output.append("<p><a href='/fix-all/' style='background: blue; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🔄 Run Fix Again</a></p>")
         output.append("<p><a href='/' style='background: green; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🏠 Go Home</a></p>")
+        
+        return HttpResponse("".join(output))
+        
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {str(e)}")
+
+def run_migration(request):
+    """Run migrations directly from web interface"""
+    try:
+        from django.core.management import call_command
+        from django.db import connection
+        import io
+        
+        output = []
+        output.append("<h1>🚨 Running Migration</h1>")
+        
+        # Capture the output
+        out = io.StringIO()
+        
+        # Run the specific migration
+        try:
+            call_command('migrate', 'core', '0030', stdout=out, stderr=out)
+            output.append("<p style='color: green;'>✅ Migration command executed successfully!</p>")
+        except Exception as e:
+            output.append(f"<p style='color: red;'>❌ Migration error: {str(e)}</p>")
+        
+        # Get the output
+        migration_output = out.getvalue()
+        output.append(f"<h2>Migration Output:</h2>")
+        output.append(f"<pre>{migration_output}</pre>")
+        
+        # Check if the column was actually altered
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT column_name, data_type, character_maximum_length 
+                FROM information_schema.columns 
+                WHERE table_name = 'core_heromedia' 
+                AND column_name IN ('image', 'video')
+            """)
+            columns = cursor.fetchall()
+            
+            output.append("<h2>Database Column Status:</h2>")
+            for column in columns:
+                output.append(f"<p><strong>{column[0]}:</strong> {column[1]} (max_length: {column[2]})</p>")
+        
+        output.append("<h2>🔧 Next Steps:</h2>")
+        output.append("<p><a href='/debug-media-values/' style='background: blue; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🔍 Check Database Values</a></p>")
+        output.append("<p><a href='/fix-all/' style='background: green; color: white; padding: 10px; text-decoration: none; margin: 10px;'>🔄 Run Fix After Migration</a></p>")
         
         return HttpResponse("".join(output))
         
