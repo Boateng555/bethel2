@@ -189,10 +189,13 @@
             <a href="{% url 'church_news' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">News</a>
             {% if church.shop_url %}
                 <a href="{{ church.shop_url }}" target="_blank" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
+            {% else %}
+                <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
             {% endif %}
             <a href="{% url 'church_donation' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
             <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
             <a href="/?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+            <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
         </nav>
         <!-- Mobile Hamburger Button -->
         <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
@@ -212,10 +215,13 @@
         <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">News</a>
         {% if church.shop_url %}
             <a href="{{ church.shop_url }}" target="_blank" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
+        {% else %}
+            <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
         {% endif %}
         <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Give</a>
         <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
         <a href="/?global=true" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+        <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin</a>
         <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
     </div>
 
