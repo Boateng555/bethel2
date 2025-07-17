@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bethel Prayer Ministry International{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -276,6 +278,54 @@
             if (e.target === mobileMenu) {
                 mobileMenu.classList.add('hidden');
             }
+        });
+
+        // Initialize Swiper carousels
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hero Swiper
+            const heroSwiper = document.querySelector('.hero-swiper');
+            if (heroSwiper) {
+                new Swiper('.hero-swiper', {
+                    loop: true,
+                    autoplay: {
+                        delay: 5000,
+                        disableOnInteraction: false,
+                    },
+                    pagination: {
+                        el: '.swiper-pagination',
+                        clickable: true,
+                    },
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    }
+                });
+            }
+
+            // Auto-scroll sections
+            const autoScrollSections = document.querySelectorAll('.auto-scroll-events, .auto-scroll-sermons, .auto-scroll-news, .auto-scroll-testimonies');
+            autoScrollSections.forEach(section => {
+                if (section.scrollWidth > section.clientWidth) {
+                    // Add scroll indicators
+                    const scrollLeft = document.createElement('button');
+                    scrollLeft.innerHTML = '‹';
+                    scrollLeft.className = 'absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-10 transition-all';
+                    scrollLeft.onclick = () => {
+                        section.scrollBy({ left: -300, behavior: 'smooth' });
+                    };
+
+                    const scrollRight = document.createElement('button');
+                    scrollRight.innerHTML = '›';
+                    scrollRight.className = 'absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-10 transition-all';
+                    scrollRight.onclick = () => {
+                        section.scrollBy({ left: 300, behavior: 'smooth' });
+                    };
+
+                    section.parentElement.style.position = 'relative';
+                    section.parentElement.appendChild(scrollLeft);
+                    section.parentElement.appendChild(scrollRight);
+                }
+            });
         });
     </script>
     

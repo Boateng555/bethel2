@@ -6,6 +6,8 @@
     <title>{{ church.name }} - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -170,7 +172,40 @@
         .relative.z-10 {
           z-index: 10 !important; /* Lower than swipe area */
         }
-}
+        }
+        
+        /* Ensure hero images are visible */
+        .hero-swiper img,
+        .hero-swiper video {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        
+        .swiper-slide {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        /* Ensure hero images are properly displayed */
+        .hero-swiper {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .swiper-slide {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .swiper-slide img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
 </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
@@ -248,6 +283,7 @@
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
     {% if hero %}
+        
         <div id="hero-media-container" class="absolute inset-0 w-full h-full">
             {% if hero.hero_media.all %}
             <!-- Swiper Carousel -->
@@ -497,8 +533,8 @@
 </div>
 
 <!-- Swiper.js CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -508,31 +544,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const swiperElement = document.querySelector('.hero-swiper');
     if (swiperElement) {
         console.log('Swiper element found, initializing...');
+        console.log('Swiper slides found:', swiperElement.querySelectorAll('.swiper-slide').length);
         
         // Initialize Swiper for hero carousel with swipe navigation
         const swiper = new Swiper('.hero-swiper', {
             loop: true,
             autoplay: { delay: 5000, disableOnInteraction: false },
             pagination: { el: '.swiper-pagination', clickable: true },
+            effect: 'fade',
+            fadeEffect: {
+                crossFade: true
+            },
             // Enable touch/swipe navigation
             allowTouchMove: true,
-            touchRatio: 1,
-            touchAngle: 45,
             grabCursor: true,
-            // Enhanced touch settings for mobile
-            touchStartPreventDefault: false,
-            touchMoveStopPropagation: false,
-            shortSwipes: true,
-            longSwipes: true,
-            longSwipesRatio: 0.5,
-            longSwipesMs: 300,
-            // Hide navigation arrows since we're using swipe
-            navigation: false,
         });
         
         console.log('Swiper initialized successfully:', swiper);
     } else {
         console.log('Swiper element not found');
+    }
+    
+    // Debug hero media container
+    const heroContainer = document.getElementById('hero-media-container');
+    if (heroContainer) {
+        console.log('Hero media container found');
+        const images = heroContainer.querySelectorAll('img');
+        console.log('Images found in hero container:', images.length);
+        images.forEach((img, index) => {
+            console.log(`Image ${index}:`, img.src, img.complete ? 'loaded' : 'loading');
+        });
+    } else {
+        console.log('Hero media container not found');
     }
 });
 </script>
