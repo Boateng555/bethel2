@@ -40,8 +40,8 @@ class Church(models.Model):
     description = models.TextField(blank=True)
     
     # Media
-    logo = models.ImageField(upload_to='churches/logos/', blank=True, null=True)
-    banner_image = models.ImageField(upload_to='churches/banners/', blank=True, null=True)
+    logo = models.ImageField(upload_to='churches/logos/', blank=True, null=True, max_length=500)
+    banner_image = models.ImageField(upload_to='churches/banners/', blank=True, null=True, max_length=500)
     
     # Status
     is_active = models.BooleanField(default=True)
@@ -536,7 +536,7 @@ class Ministry(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     
     # Media
-    image = models.ImageField(upload_to='ministries/', blank=True, null=True)
+    image = models.ImageField(upload_to='ministries/', blank=True, null=True, max_length=500)
     
     # Status
     is_active = models.BooleanField(default=True)
@@ -565,7 +565,7 @@ class News(models.Model):
     date = models.DateField()
     
     # Media
-    image = models.ImageField(upload_to='news/', blank=True, null=True)
+    image = models.ImageField(upload_to='news/', blank=True, null=True, max_length=500)
     
     # Status
     is_featured = models.BooleanField(default=False)
@@ -604,9 +604,9 @@ class Sermon(models.Model):
     scripture_text = models.TextField(blank=True)
     
     # Media
-    audio_file = models.FileField(upload_to='sermons/audio/', blank=True, null=True)
-    video_file = models.FileField(upload_to='sermons/video/', blank=True, null=True)
-    thumbnail = models.ImageField(upload_to='sermons/thumbnails/', blank=True, null=True)
+    audio_file = models.FileField(upload_to='sermons/audio/', blank=True, null=True, max_length=500)
+    video_file = models.FileField(upload_to='sermons/video/', blank=True, null=True, max_length=500)
+    thumbnail = models.ImageField(upload_to='sermons/thumbnails/', blank=True, null=True, max_length=500)
     link = models.URLField(max_length=500, blank=True, null=True, help_text="External link to sermon (YouTube, Vimeo, etc.)")
     
     # Details
@@ -704,7 +704,7 @@ class Convention(models.Model):
     registration_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
     # Media
-    banner_image = models.ImageField(upload_to='conventions/', blank=True, null=True)
+    banner_image = models.ImageField(upload_to='conventions/', blank=True, null=True, max_length=500)
     
     # Status
     is_featured = models.BooleanField(default=False)
@@ -855,8 +855,8 @@ class Hero(models.Model):
         ],
         default='image'
     )
-    background_image = models.ImageField(upload_to='hero/', blank=True, null=True)
-    background_video = models.FileField(upload_to='hero/videos/', blank=True, null=True)
+    background_image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    background_video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
     
     # Buttons
     primary_button_text = models.CharField(max_length=50, default='Plan Your Visit')
@@ -890,8 +890,8 @@ class Hero(models.Model):
 
 class HeroMedia(models.Model):
     hero = models.ForeignKey(Hero, on_delete=models.CASCADE, related_name='hero_media')
-    image = models.ImageField(upload_to='hero/', blank=True, null=True)
-    video = models.FileField(upload_to='hero/videos/', blank=True, null=True)
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -1082,9 +1082,9 @@ class AboutPage(models.Model):
     leadership_timeline = models.TextField("Leadership Timeline", blank=True)
     ministry_today = models.TextField("Ministry Today", blank=True)
     quick_facts = models.TextField("Quick Facts", blank=True)
-    logo = models.ImageField(upload_to='about/', blank=True, null=True)
-    founder_image = models.ImageField(upload_to='about/', blank=True, null=True)
-    extra_image = models.ImageField(upload_to='about/', blank=True, null=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -1104,13 +1104,13 @@ class LeadershipPage(models.Model):
     mission_statement = models.TextField("Mission Statement", blank=True)
     
     # Images
-    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman")
-    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman")
-    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members")
-    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team")
-    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1")
-    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2")
-    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3")
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
     
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -1139,13 +1139,13 @@ class LocalLeadershipPage(models.Model):
     mission_statement = models.TextField("Mission Statement", blank=True)
     
     # Images
-    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor")
-    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor")
-    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members")
-    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team")
-    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1")
-    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2")
-    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3")
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
     
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -1174,12 +1174,12 @@ class LocalAboutPage(models.Model):
     quick_facts = models.TextField("Quick Facts", blank=True)
     
     # Images
-    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo")
-    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor")
-    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo")
-    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1")
-    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2")
-    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3")
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
     
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -1267,7 +1267,7 @@ class EventHighlight(models.Model):
     year = models.IntegerField(help_text="Year of the event")
     
     # Media
-    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True)
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
     video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
     
     # Stats (optional)
@@ -1294,7 +1294,7 @@ class EventHighlight(models.Model):
 class EventSpeaker(models.Model):
     event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
     name = models.CharField(max_length=100)
-    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
     title = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
     facebook = models.URLField(blank=True)
@@ -1320,8 +1320,8 @@ class EventScheduleItem(models.Model):
 
 class EventHeroMedia(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
-    image = models.ImageField(upload_to='hero/', blank=True, null=True)
-    video = models.FileField(upload_to='hero/videos/', blank=True, null=True)
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
     order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
