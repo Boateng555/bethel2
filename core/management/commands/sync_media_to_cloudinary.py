@@ -162,12 +162,26 @@ class Command(BaseCommand):
                     else:
                         self.stdout.write(f'    📤 Would upload: {local_path}')
             
-            if sermon.video and hasattr(sermon.video, 'path'):
-                local_path = sermon.video.path
+            if sermon.video_file and hasattr(sermon.video_file, 'path'):
+                local_path = sermon.video_file.path
                 if os.path.exists(local_path):
                     self.stdout.write(f'  Sermon: {sermon.title} - Video exists')
                     if not dry_run:
-                        sermon.video.save(
+                        sermon.video_file.save(
+                            os.path.basename(local_path),
+                            File(open(local_path, 'rb')),
+                            save=True
+                        )
+                        self.stdout.write(f'    ✅ Uploaded to Cloudinary')
+                    else:
+                        self.stdout.write(f'    📤 Would upload: {local_path}')
+            
+            if sermon.audio_file and hasattr(sermon.audio_file, 'path'):
+                local_path = sermon.audio_file.path
+                if os.path.exists(local_path):
+                    self.stdout.write(f'  Sermon: {sermon.title} - Audio exists')
+                    if not dry_run:
+                        sermon.audio_file.save(
                             os.path.basename(local_path),
                             File(open(local_path, 'rb')),
                             save=True
