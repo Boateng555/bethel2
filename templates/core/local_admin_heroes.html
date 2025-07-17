@@ -66,7 +66,7 @@
                                         <div class="flex items-center space-x-2">
                                             {% if media.image %}
                                                 <div class="w-16 h-12 bg-gray-200 rounded overflow-hidden">
-                                                    <img src="{{ media.image.url }}" alt="Hero media" class="w-full h-full object-cover">
+                                                    <img src="{{ media.get_image_url }}" alt="Hero media" class="w-full h-full object-cover">
                                                 </div>
                                                 <span class="text-sm text-gray-600">Image (Order: {{ media.order }})</span>
                                             {% elif media.video %}

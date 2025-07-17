@@ -22,7 +22,7 @@
             {% for speaker in speakers %}
             <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-8">
                 {% if speaker.photo %}
-                <img src="{{ speaker.photo.url }}" alt="{{ speaker.name }}" class="w-32 h-32 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
+                <img src="{{ speaker.photo }}" alt="{{ speaker.name }}" class="w-32 h-32 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
                 {% else %}
                 <div class="w-32 h-32 rounded-full bg-[#1e3a8a] flex items-center justify-center mb-4">
                     <i class="fas fa-user text-white text-5xl"></i>

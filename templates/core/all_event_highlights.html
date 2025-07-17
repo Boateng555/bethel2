@@ -10,7 +10,7 @@
             {% for highlight in highlights %}
             <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                 {% if highlight.image %}
-                <img src="{{ highlight.image.url }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
+                <img src="{{ highlight.image }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
                 {% endif %}
                 <div class="p-6">
                     <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>

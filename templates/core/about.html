@@ -9,7 +9,7 @@
     <div class="absolute inset-0 bg-black opacity-20"></div>
     <div class="relative max-w-6xl mx-auto px-6 text-center">
         {% if about_page and about_page.logo %}
-            <img src="{{ about_page.logo.url }}" alt="Bethel Logo" class="mx-auto mb-8 w-32 h-32 object-contain drop-shadow-lg" />
+            <img src="{{ about_page.logo }}" alt="Bethel Logo" class="mx-auto mb-8 w-32 h-32 object-contain drop-shadow-lg" />
         {% endif %}
         <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
             About <span class="text-white">Bethel</span>
@@ -39,7 +39,7 @@
             <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
                 {% if about_page.founder_image %}
                     <div class="text-center mb-8">
-                        <img src="{{ about_page.founder_image.url }}" alt="Founder" class="mx-auto rounded-full w-48 h-48 object-cover shadow-lg" />
+                        <img src="{{ about_page.founder_image }}" alt="Founder" class="mx-auto rounded-full w-48 h-48 object-cover shadow-lg" />
                     </div>
                 {% endif %}
                 <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
@@ -89,7 +89,7 @@
             <div class="bg-gradient-to-r from-very-white to-white rounded-2xl p-8 md:p-12 shadow-xl">
                 {% if about_page.extra_image %}
                     <div class="text-center mb-8">
-                        <img src="{{ about_page.extra_image.url }}" alt="Ministry Today" class="mx-auto rounded-lg max-w-md shadow-lg" />
+                        <img src="{{ about_page.extra_image }}" alt="Ministry Today" class="mx-auto rounded-lg max-w-md shadow-lg" />
                     </div>
                 {% endif %}
                 <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
@@ -129,47 +129,47 @@
                 <div class="flex flex-wrap justify-center gap-8">
                   {% if leadership_page.chairman_image %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.chairman_image.url }}" alt="Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.chairman_image }}" alt="Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Chairman</h4>
                       <p class="text-gray-500 mb-2">{{ leadership_page.intro|default:"Our Chairman leads with vision and integrity." }}</p>
                     </div>
                   {% endif %}
                   {% if leadership_page.vice_chairman_image %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.vice_chairman_image.url }}" alt="Vice Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.vice_chairman_image }}" alt="Vice Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Vice Chairman</h4>
                       <p class="text-gray-500 mb-2">{{ leadership_page.leadership_team|default:"Supporting the vision and mission of the ministry." }}</p>
                     </div>
                   {% endif %}
                   {% if leadership_page.board_image %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.board_image.url }}" alt="Board Members" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.board_image }}" alt="Board Members" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Board Members</h4>
                       <p class="text-gray-500 mb-2">{{ leadership_page.board_members|default:"Guiding the ministry with wisdom and experience." }}</p>
                     </div>
                   {% endif %}
                   {% if leadership_page.team_image %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.team_image.url }}" alt="Leadership Team" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.team_image }}" alt="Leadership Team" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Leadership Team</h4>
                       <p class="text-gray-500 mb-2">{{ leadership_page.leadership_team|default:"A dedicated team serving the church and community." }}</p>
                     </div>
                   {% endif %}
                   {% if leadership_page.leadership_photo_1 %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.leadership_photo_1.url }}" alt="Leadership Photo 1" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.leadership_photo_1 }}" alt="Leadership Photo 1" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Leadership Photo 1</h4>
                     </div>
                   {% endif %}
                   {% if leadership_page.leadership_photo_2 %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.leadership_photo_2.url }}" alt="Leadership Photo 2" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.leadership_photo_2 }}" alt="Leadership Photo 2" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Leadership Photo 2</h4>
                     </div>
                   {% endif %}
                   {% if leadership_page.leadership_photo_3 %}
                     <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
-                      <img src="{{ leadership_page.leadership_photo_3.url }}" alt="Leadership Photo 3" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <img src="{{ leadership_page.leadership_photo_3 }}" alt="Leadership Photo 3" class="w-24 h-24 rounded-full object-cover mb-4" />
                       <h4 class="font-bold text-lg mb-1">Leadership Photo 3</h4>
                     </div>
                   {% endif %}

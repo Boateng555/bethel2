@@ -68,6 +68,26 @@ class Church(models.Model):
             parts.append(self.postal_code)
         return ", ".join(parts)
     
+    def get_logo_url(self):
+        """Returns the correct URL for the logo field"""
+        if self.logo:
+            logo_str = str(self.logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.logo.url
+        return ''
+    
+    def get_banner_url(self):
+        """Returns the correct URL for the banner_image field"""
+        if self.banner_image:
+            banner_str = str(self.banner_image)
+            if banner_str.startswith('http'):
+                return banner_str
+            else:
+                return self.banner_image.url
+        return ''
+    
     def setup_default_functionality(self):
         """Create default ministries, events, news, sermons, and donation methods for a new church"""
         today = timezone.now().date()
@@ -553,6 +573,16 @@ class Ministry(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.church.name}"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
 
 class News(models.Model):
     """Church news with multi-tenant support"""
@@ -588,6 +618,16 @@ class News(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.church.name}"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
 
 class Sermon(models.Model):
     """Church sermons with multi-tenant support"""
@@ -625,7 +665,39 @@ class Sermon(models.Model):
         ordering = ['-date', '-created_at']
     
     def __str__(self):
-        return f"{self.title} - {self.preacher} ({self.church.name})"
+        return f"{self.title} - {self.preacher} ({self.date})"
+    
+    def get_thumbnail_url(self):
+        """Returns the correct URL for the thumbnail field"""
+        if self.thumbnail:
+            thumb_str = str(self.thumbnail)
+            if thumb_str.startswith('http'):
+                return thumb_str
+            else:
+                return self.thumbnail.url
+        return ''
+    
+    def get_audio_url(self):
+        """Returns the correct URL for the audio_file field"""
+        if self.audio_file:
+            audio_str = str(self.audio_file)
+            if audio_str.startswith('http'):
+                return audio_str
+            else:
+                return self.audio_file.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video_file field"""
+        if self.video_file:
+            video_str = str(self.video_file)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video_file.url
+        return ''
+    
+    @property
 
 class DonationMethod(models.Model):
     """Payment methods for each church"""
@@ -893,22 +965,39 @@ class HeroMedia(models.Model):
     image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
     video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
     order = models.PositiveIntegerField(default=0)
-
+    
     class Meta:
         ordering = ['order', 'id']
         verbose_name = 'Hero Media'
         verbose_name_plural = 'Hero Media'
-
+    
     def __str__(self):
-        return f"HeroMedia for {self.hero.title} (order {self.order})"
-
-    def save(self, *args, **kwargs):
-        import sys
-        print(f"[DEBUG] HeroMedia.save() called: id={self.id}, image={self.image}, video={self.video}", file=sys.stderr)
+        return f"Hero Media {self.id} - Order {self.order}"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
         if self.image:
-            print(f"[DEBUG] Image file name: {self.image.name}", file=sys.stderr)
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
         if self.video:
-            print(f"[DEBUG] Video file name: {self.video.name}", file=sys.stderr)
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one hero media per hero
+        if not self.pk:
+            HeroMedia.objects.filter(hero=self.hero).delete()
         super().save(*args, **kwargs)
 
 class ChurchApplication(models.Model):

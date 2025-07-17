@@ -38,7 +38,7 @@
         <div class="lg:col-span-2">
             <article class="bg-white rounded-xl shadow-md overflow-hidden">
                 {% if news.image %}
-                <div class="h-64 md:h-80 bg-cover bg-center" style="background-image: url('{{ news.image.url }}');">
+                <div class="h-64 md:h-80 bg-cover bg-center" style="background-image: url('{{ news.get_image_url }}');">
                 </div>
                 {% endif %}
                 <div class="p-8">

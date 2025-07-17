@@ -4,7 +4,7 @@
 <a href="{% url 'event_detail' event.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% endif %}
     {% if event.card_image %}
-        <img src="{{ event.card_image.url }}" alt="{{ event.title }}" class="w-full h-32 object-cover">
+        <img src="{{ event.card_image }}" alt="{{ event.title }}" class="w-full h-32 object-cover">
     {% else %}
         <div class="h-32 bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
             <i class="fas fa-calendar text-white text-6xl"></i>

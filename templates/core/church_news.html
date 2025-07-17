@@ -40,7 +40,7 @@
         {% for article in news %}
         <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300">
             {% if article.image %}
-            <div class="h-48 bg-cover bg-center" style="background-image: url('{{ article.image.url }}');">
+            <div class="h-48 bg-cover bg-center" style="background-image: url('{{ article.get_image_url }}');">
             </div>
             {% else %}
             <div class="h-48 bg-gradient-to-r from-indigo-500 to-indigo-200 flex items-center justify-center">

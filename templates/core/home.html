@@ -277,13 +277,13 @@
                         {% for media in hero.hero_media.all|dictsort:'order' %}
                             {% if media.image %}
                             <div class="swiper-slide h-full">
-                                <img src="{{ media.image.url }}" alt="Hero Media" class="w-full h-full object-cover" />
+                                <img src="{{ media.get_image_url }}" alt="Hero Media" class="w-full h-full object-cover" />
                             </div>
                             {% endif %}
                             {% if media.video %}
                             <div class="swiper-slide h-full">
-                                <video autoplay muted loop playsinline class="w-full h-full object-cover">
-                                    <source src="{{ media.video.url }}" type="video/mp4" />
+                                <video class="w-full h-full object-cover" autoplay muted loop>
+                                    <source src="{{ media.get_video_url }}" type="video/mp4" />
                                 </video>
                             </div>
                             {% endif %}
@@ -294,10 +294,10 @@
                 </div>
                 {% elif hero.background_video %}
                     <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
-                        <source src="{{ hero.background_video.url }}" type="video/mp4" />
+                        <source src="{{ hero.background_video }}" type="video/mp4" />
                     </video>
                 {% elif hero.background_image %}
-                    <img src="{{ hero.background_image.url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                    <img src="{{ hero.background_image }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
                 {% else %}
                     <div class="absolute inset-0 bg-gray-500"></div>
                 {% endif %}
@@ -363,7 +363,7 @@
                 {% for ministry in ministries %}
                 <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                     {% if ministry.image %}
-                    <img src="{{ ministry.image.url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
+                    <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
                     {% else %}
                     <div class="h-32 bg-gradient-to-br from-indigo-500 to-indigo-200 flex items-center justify-center">
                         <i class="fas fa-hands-helping text-white text-6xl"></i>
@@ -398,7 +398,7 @@
                 {% for sermon in sermons %}
                 <a href="/sermon/" class="block min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if sermon.thumbnail %}
-                    <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
+                    <img src="{{ sermon.get_thumbnail_url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
                     {% else %}
                     <div class="h-32 bg-gradient-to-br from-blue-500 to-blue-200 flex items-center justify-center">
                         <i class="fas fa-microphone-alt text-white text-6xl"></i>
@@ -436,7 +436,7 @@
                 {% for news_item in news %}
                 <a href="{% url 'news_detail' news_item.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if news_item.image %}
-                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
+                    <img src="{{ news_item.get_image_url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
                     {% else %}
                     <div class="h-32 bg-gradient-to-br from-purple-500 to-purple-200 flex items-center justify-center">
                         <i class="fas fa-newspaper text-white text-6xl"></i>

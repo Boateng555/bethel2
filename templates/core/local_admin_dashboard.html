@@ -5,7 +5,7 @@
     <div class="mb-8 flex items-center space-x-6">
         <a href="{% url 'local_admin_church_settings' %}" class="group">
         {% if church.logo %}
-            <img src="{{ church.logo.url }}" alt="{{ church.name }} Logo" class="w-20 h-20 rounded-full object-cover border-4 border-[#1e3a8a] bg-white transition-transform group-hover:scale-105 group-hover:ring-4 group-hover:ring-[#1e3a8a] cursor-pointer" />
+            <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-20 h-20 rounded-full object-cover border-4 border-[#1e3a8a] bg-white transition-transform group-hover:scale-105 group-hover:ring-4 group-hover:ring-[#1e3a8a] cursor-pointer" />
         {% else %}
             <div class="w-20 h-20 flex items-center justify-center rounded-full bg-[#1e3a8a] text-white text-3xl font-bold border-4 border-[#1e3a8a] transition-transform group-hover:scale-105 group-hover:ring-4 group-hover:ring-[#1e3a8a] cursor-pointer">
                 {{ church.name|slice:":2"|upper }}

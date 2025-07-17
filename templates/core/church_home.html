@@ -292,13 +292,13 @@
                     {% for media in hero.hero_media.all|dictsort:'order' %}
                         {% if media.image %}
                         <div class="swiper-slide h-full">
-                            <img src="{{ media.image.url }}" alt="Hero Media" class="w-full h-full object-cover" />
+                            <img src="{{ media.get_image_url }}" alt="Hero Media" class="w-full h-full object-cover" />
                         </div>
                         {% endif %}
                         {% if media.video %}
                         <div class="swiper-slide h-full">
                             <video autoplay muted loop playsinline class="w-full h-full object-cover">
-                                <source src="{{ media.video.url }}" type="video/mp4" />
+                                <source src="{{ media.get_video_url }}" type="video/mp4" />
                             </video>
                         </div>
                         {% endif %}
@@ -309,10 +309,10 @@
             </div>
             {% elif hero.background_type == 'video' and hero.background_video %}
                 <video autoPlay muted loop playsInline class="absolute inset-0 w-full h-full object-cover">
-                    <source src="{{ hero.background_video.url }}" type="video/mp4" />
+                    <source src="{{ hero.background_video }}" type="video/mp4" />
                 </video>
             {% elif hero.background_type == 'image' and hero.background_image %}
-                <img src="{{ hero.background_image.url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                <img src="{{ hero.background_image }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
             {% endif %}
         </div>
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
@@ -446,7 +446,7 @@
             {% for ministry in ministries %}
             <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
                 {% if ministry.image %}
-                <img src="{{ ministry.image.url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
+                <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
                 {% else %}
                 <div class="h-32 bg-gradient-to-br from-[#6366f1] to-[#1e3a8a] flex items-center justify-center">
                     <i class="fas fa-hands-helping text-white text-6xl"></i>
@@ -499,7 +499,7 @@
             {% for article in news %}
                 <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if article.image %}
-                    <img src="{{ article.image.url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
+                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
                     {% else %}
                     <div class="h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
                         <i class="fas fa-newspaper text-white text-6xl"></i>

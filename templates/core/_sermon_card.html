@@ -4,7 +4,7 @@
 <a href="/sermon" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% endif %}
     {% if sermon.thumbnail %}
-        <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
+        <img src="{{ sermon.get_thumbnail_url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
     {% else %}
         <div class="h-32 bg-gradient-to-r from-indigo-500 to-indigo-200 flex items-center justify-center">
             <i class="fas fa-microphone-alt text-white text-6xl"></i>

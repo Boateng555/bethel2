@@ -275,13 +275,13 @@
                     {% for media in event.hero_media.all|dictsort:'order' %}
                         {% if media.image %}
                         <div class="swiper-slide h-full">
-                            <img src="{{ media.image.url }}" alt="Event Media" class="w-full h-full object-cover" />
+                            <img src="{{ media.get_image_url }}" alt="Event Media" class="w-full h-full object-cover" />
                         </div>
                         {% endif %}
                         {% if media.video %}
                         <div class="swiper-slide h-full">
                             <video autoplay muted loop playsinline class="w-full h-full object-cover">
-                                <source src="{{ media.video.url }}" type="video/mp4" />
+                                <source src="{{ media.get_video_url }}" type="video/mp4" />
                             </video>
                         </div>
                         {% endif %}
@@ -296,7 +296,7 @@
                 {% load custom_filters %}
                 {% with first_media=event.hero_media.all|dictsort:'order'|first_with_image %}
                     {% if first_media %}
-                        <img src="{{ first_media.image.url }}" alt="{{ event.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                        <img src="{{ first_media.get_image_url }}" alt="{{ event.title }}" class="absolute inset-0 w-full h-full object-cover" />
                     {% endif %}
                 {% endwith %}
             {% else %}
@@ -480,7 +480,7 @@
                 {% for highlight in past_highlights|slice:':3' %}
                 <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                     {% if highlight.image %}
-                    <img src="{{ highlight.image.url }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
+                    <img src="{{ highlight.image }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
                     {% endif %}
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
@@ -540,7 +540,7 @@
             {% for speaker in event.speakers.all %}
             <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col items-center p-8">
                 {% if speaker.photo %}
-                <img src="{{ speaker.photo.url }}" alt="{{ speaker.name }}" class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
+                <img src="{{ speaker.photo }}" alt="{{ speaker.name }}" class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-[#1e3a8a]">
                 {% else %}
                 <div class="w-24 h-24 rounded-full bg-[#1e3a8a] flex items-center justify-center mb-4">
                     <i class="fas fa-user text-white text-4xl"></i>

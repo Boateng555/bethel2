@@ -18,11 +18,11 @@
   <p class="mb-4">Over the years, Bethel Prayer Ministry International has blossomed into a dynamic, multi-cultural church family with branches in the United Kingdom, United States, and other nations. The ministry is known for its passionate worship, powerful intercession, and a deep commitment to seeing lives changed by the love of Jesus Christ.</p>
   <div class="flex justify-center mt-6">
     {% if about_page.about_photo_1 %}
-      <img src="{{ about_page.about_photo_1.url }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
+      <img src="{{ about_page.about_photo_1 }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
     {% elif about_page.founder_image %}
-      <img src="{{ about_page.founder_image.url }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
+      <img src="{{ about_page.founder_image }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
     {% elif about_page.extra_image %}
-      <img src="{{ about_page.extra_image.url }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
+      <img src="{{ about_page.extra_image }}" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
     {% else %}
       <img src="/static/img/default-profile.png" alt="Church History" class="rounded-lg shadow-lg max-h-56 object-contain mx-auto" />
     {% endif %}
@@ -90,7 +90,7 @@
   <div class="flex flex-wrap justify-center gap-8">
     {% if leadership_page.pastor_image %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.pastor_image.url }}" alt="{{ leadership_page.pastor_name }}" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.pastor_image }}" alt="{{ leadership_page.pastor_name }}" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">{{ leadership_page.pastor_name }}</h3>
         <p class="text-gray-500 mb-2">Pastor</p>
         <p class="text-xs text-gray-400">{{ leadership_page.pastor_bio }}</p>
@@ -98,7 +98,7 @@
     {% endif %}
     {% if leadership_page.assistant_pastor_image %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.assistant_pastor_image.url }}" alt="{{ leadership_page.assistant_pastor_name }}" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.assistant_pastor_image }}" alt="{{ leadership_page.assistant_pastor_name }}" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">{{ leadership_page.assistant_pastor_name }}</h3>
         <p class="text-gray-500 mb-2">Assistant Pastor</p>
         <p class="text-xs text-gray-400">{{ leadership_page.assistant_pastor_bio }}</p>
@@ -106,31 +106,31 @@
     {% endif %}
     {% if leadership_page.board_image %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.board_image.url }}" alt="Board Members" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.board_image }}" alt="Board Members" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">Board Members</h3>
       </div>
     {% endif %}
     {% if leadership_page.team_image %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.team_image.url }}" alt="Leadership Team" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.team_image }}" alt="Leadership Team" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">Leadership Team</h3>
       </div>
     {% endif %}
     {% if leadership_page.leadership_photo_1 %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.leadership_photo_1.url }}" alt="Leadership Photo 1" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.leadership_photo_1 }}" alt="Leadership Photo 1" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">Leadership Photo 1</h3>
       </div>
     {% endif %}
     {% if leadership_page.leadership_photo_2 %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.leadership_photo_2.url }}" alt="Leadership Photo 2" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.leadership_photo_2 }}" alt="Leadership Photo 2" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">Leadership Photo 2</h3>
       </div>
     {% endif %}
     {% if leadership_page.leadership_photo_3 %}
       <div class="bg-white rounded-xl shadow p-6 w-80 flex flex-col items-center">
-        <img src="{{ leadership_page.leadership_photo_3.url }}" alt="Leadership Photo 3" class="w-24 h-24 rounded-full object-cover mb-4" />
+        <img src="{{ leadership_page.leadership_photo_3 }}" alt="Leadership Photo 3" class="w-24 h-24 rounded-full object-cover mb-4" />
         <h3 class="font-bold text-lg mb-1">Leadership Photo 3</h3>
       </div>
     {% endif %}

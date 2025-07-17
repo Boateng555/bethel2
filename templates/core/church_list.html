@@ -119,12 +119,12 @@
                 <!-- Image Section -->
                 {% if church.logo %}
                 <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.logo.url }}" alt="{{ church.name }} logo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ church.get_logo_url }}" alt="{{ church.name }} logo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
                 {% elif church.banner_image %}
                 <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.banner_image.url }}" alt="{{ church.name }} banner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ church.get_banner_url }}" alt="{{ church.name }} banner" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
                 {% else %}

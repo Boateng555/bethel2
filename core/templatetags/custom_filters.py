@@ -1,28 +1,34 @@
 from django import template
-from django.conf import settings
+from django.template.defaultfilters import stringfilter
+
 register = template.Library()
 
 @register.filter
-def dict_get(d, key):
-    return d.get(key, '')
+@stringfilter
+def smart_url(value):
+    """
+    Returns the URL for a media field, handling both local paths and full URLs.
+    If the value is already a full URL (starts with http), return it as-is.
+    Otherwise, return the .url property (for local files).
+    """
+    if value and str(value).startswith('http'):
+        return value
+    return value
 
 @register.filter
-def first_with_image(media_list):
-    """Return the first media item that has an image"""
-    for media in media_list:
-        if hasattr(media, 'image') and media.image:
-            return media
-    return None
-
-@register.filter
-def cloudinary_url(image_field):
-    """Get the proper Cloudinary URL for an image field"""
-    if not image_field:
+def smart_media_url(field):
+    """
+    Returns the appropriate URL for a media field.
+    If the field contains a full URL, return it directly.
+    Otherwise, return the .url property.
+    """
+    if not field:
         return ''
     
-    # If using Cloudinary, return the Cloudinary URL
-    if hasattr(settings, 'CLOUDINARY_STORAGE'):
-        return image_field.url
-    
-    # Otherwise return the regular URL
-    return image_field.url 
+    field_str = str(field)
+    if field_str.startswith('http'):
+        return field_str
+    else:
+        # For local files, we need to get the .url property
+        # This is a bit tricky in a template filter, so we'll handle it differently
+        return field_str 

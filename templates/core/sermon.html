@@ -126,7 +126,7 @@
             <div class="sermon-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow" data-sermon-id="{{ sermon.id }}">
                 <!-- Sermon thumbnail or fallback banner -->
                 {% if sermon.thumbnail %}
-                <div class="h-48 bg-cover bg-center relative" style="background-image: url('{{ sermon.thumbnail.url }}');">
+                <div class="h-48 bg-cover bg-center relative" style="background-image: url('{{ sermon.get_thumbnail_url }}');">
                     <div class="h-full bg-black bg-opacity-20 flex items-center justify-center">
                         <i class="fas fa-play-circle text-white text-4xl opacity-80"></i>
                     </div>
@@ -166,12 +166,12 @@
                     <!-- Action buttons -->
                     <div class="flex space-x-2">
                         {% if sermon.video_file %}
-                        <a href="{{ sermon.video_file.url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
+                        <a href="{{ sermon.get_video_url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
                             <i class="fas fa-video mr-1"></i>
                             Watch
                         </a>
                         {% elif sermon.audio_file %}
-                        <a href="{{ sermon.audio_file.url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
+                        <a href="{{ sermon.get_audio_url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
                             <i class="fas fa-play mr-1"></i>
                             Listen
                         </a>

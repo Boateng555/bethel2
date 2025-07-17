@@ -92,7 +92,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     {% if ministry.image %}
-                                    <img class="h-10 w-10 rounded-lg object-cover" src="{{ ministry.image.url }}" alt="{{ ministry.name }}">
+                                    <img class="h-10 w-10 rounded-lg object-cover" src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}">
                                     {% else %}
                                     <div class="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
                                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

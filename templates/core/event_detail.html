@@ -86,13 +86,13 @@
                     {% for media in event.hero_media.all|dictsort:'order' %}
                         {% if media.image %}
                         <div class="swiper-slide h-full">
-                            <img src="{{ media.image.url }}" alt="Event Media" class="w-full h-full object-cover" />
+                            <img src="{{ media.get_image_url }}" alt="Event Media" class="w-full h-full object-cover" />
                         </div>
                         {% endif %}
                         {% if media.video %}
                         <div class="swiper-slide h-full">
                             <video autoplay muted loop playsinline class="w-full h-full object-cover">
-                                <source src="{{ media.video.url }}" type="video/mp4" />
+                                <source src="{{ media.get_video_url }}" type="video/mp4" />
                             </video>
                         </div>
                         {% endif %}
