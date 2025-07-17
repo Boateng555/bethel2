@@ -148,9 +148,7 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
     'web-production-158c.up.railway.app',  # Your specific Railway domain
 ]
 
-INSTALLED_APPS += [
-    'imagekitio',
-]
+# ImageKit removed due to compatibility issues
 
 # Whitenoise for static files
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
