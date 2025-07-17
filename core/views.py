@@ -15,6 +15,8 @@ import requests
 import json
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse, HttpResponseForbidden
+from django.core.management import call_command
 from .forms import TestimonyForm, MinistryJoinRequestForm, EventRegistrationForm
 from django.utils.http import urlencode
 import qrcode
@@ -1617,3 +1619,12 @@ def trigger_media_upload(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+@staff_member_required
+def trigger_sync_media_to_cloudinary(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You must be a superuser.")
+    if request.method == "POST":
+        call_command("sync_media_to_cloudinary")
+        return HttpResponse("Media sync to Cloudinary triggered! Check your site in a few minutes.")
+    return HttpResponse("<form method='post'>{% csrf_token %}<button type='submit'>Sync Media to Cloudinary</button></form>")
