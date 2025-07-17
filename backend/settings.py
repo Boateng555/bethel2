@@ -174,13 +174,12 @@ if DEBUG:
     MEDIA_ROOT = Path(BASE_DIR) / 'media'
 else:
     if all(CLOUDINARY_STORAGE.values()):
-        print("☁️ Using Cloudinary for production")
+        print("✅ Using Cloudinary for production")
         DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     else:
         print("❌ Cloudinary config missing, fallback to local")
         DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-        MEDIA_URL = '/media/'
-        MEDIA_ROOT = Path(BASE_DIR) / 'media'
+
 
 
 # Use DATABASE_URL if provided (for Railway Postgres)
