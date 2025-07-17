@@ -1695,8 +1695,9 @@ def debug_urls(request):
         return HttpResponse(f"❌ Error: {str(e)}")
 
 def check_production_status(request):
-    """Check production environment status"""
+    """Check production environment status - simplified version"""
     status = {
+        'status': 'working',
         'environment': {
             'DEBUG': settings.DEBUG,
             'DEFAULT_FILE_STORAGE': settings.DEFAULT_FILE_STORAGE,
@@ -1708,19 +1709,11 @@ def check_production_status(request):
             'api_secret_set': bool(os.environ.get('CLOUDINARY_API_SECRET')),
             'cloudinary_url_set': bool(os.environ.get('CLOUDINARY_URL')),
         },
-        'sample_media': {}
+        'message': 'Debug view is working!'
     }
     
-    # Check sample media URLs
-    try:
-        if Event.objects.exists():
-            event = Event.objects.first()
-            status['sample_media']['event'] = {
-                'title': event.title,
-                'image_field': str(event.image) if event.image else None,
-                'get_url_method': event.get_image_url() if hasattr(event, 'get_image_url') else 'No method',
-            }
-    except Exception as e:
-        status['sample_media']['error'] = str(e)
-    
     return JsonResponse(status)
+
+def simple_test(request):
+    """Super simple test view"""
+    return HttpResponse("✅ Django is working!")
