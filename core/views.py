@@ -1714,9 +1714,9 @@ def debug_urls(request):
         return HttpResponse(f"❌ Error: {str(e)}")
 
 def comprehensive_fix(request):
-    """Comprehensive fix for all media URLs"""
+    """Comprehensive fix for all media URLs - simplified version"""
     try:
-        from core.models import Church, News, Ministry, Sermon, HeroMedia, Event, EventSpeaker, AboutPage, LeadershipPage
+        from core.models import Church, News, Ministry, Sermon, HeroMedia
         import os
         
         output = []
@@ -1727,17 +1727,25 @@ def comprehensive_fix(request):
         
         updated_count = 0
         
-        # Update Church logos
-        output.append("<h2>📋 Updating Church logos...</h2>")
+        # Update Church logos and banner images
+        output.append("<h2>📋 Updating Church media...</h2>")
         churches = Church.objects.all()
         for church in churches:
             if church.logo and str(church.logo) and not str(church.logo).startswith('http'):
                 filename = os.path.basename(str(church.logo))
                 new_url = f"{cloudinary_base}/churches/logos/{filename}"
-                output.append(f"<p>✅ {church.name}: {church.logo} -> {new_url}</p>")
+                output.append(f"<p>✅ {church.name} logo: {church.logo} -> {new_url}</p>")
                 church.logo = new_url
-                church.save()
                 updated_count += 1
+            
+            if church.banner_image and str(church.banner_image) and not str(church.banner_image).startswith('http'):
+                filename = os.path.basename(str(church.banner_image))
+                new_url = f"{cloudinary_base}/churches/banners/{filename}"
+                output.append(f"<p>✅ {church.name} banner: {church.banner_image} -> {new_url}</p>")
+                church.banner_image = new_url
+                updated_count += 1
+            
+            church.save()
         
         # Update News images
         output.append("<h2>📋 Updating News images...</h2>")
@@ -1763,82 +1771,52 @@ def comprehensive_fix(request):
                 ministry.save()
                 updated_count += 1
         
-        # Update Sermon thumbnails
-        output.append("<h2>📋 Updating Sermon thumbnails...</h2>")
+        # Update Sermon media
+        output.append("<h2>📋 Updating Sermon media...</h2>")
         sermons = Sermon.objects.all()
         for sermon in sermons:
             if sermon.thumbnail and str(sermon.thumbnail) and not str(sermon.thumbnail).startswith('http'):
                 filename = os.path.basename(str(sermon.thumbnail))
                 new_url = f"{cloudinary_base}/sermons/thumbnails/{filename}"
-                output.append(f"<p>✅ {sermon.title}: {sermon.thumbnail} -> {new_url}</p>")
+                output.append(f"<p>✅ {sermon.title} thumbnail: {sermon.thumbnail} -> {new_url}</p>")
                 sermon.thumbnail = new_url
-                sermon.save()
                 updated_count += 1
+            
+            if sermon.audio_file and str(sermon.audio_file) and not str(sermon.audio_file).startswith('http'):
+                filename = os.path.basename(str(sermon.audio_file))
+                new_url = f"{cloudinary_base}/sermons/audio/{filename}"
+                output.append(f"<p>✅ {sermon.title} audio: {sermon.audio_file} -> {new_url}</p>")
+                sermon.audio_file = new_url
+                updated_count += 1
+            
+            if sermon.video_file and str(sermon.video_file) and not str(sermon.video_file).startswith('http'):
+                filename = os.path.basename(str(sermon.video_file))
+                new_url = f"{cloudinary_base}/sermons/video/{filename}"
+                output.append(f"<p>✅ {sermon.title} video: {sermon.video_file} -> {new_url}</p>")
+                sermon.video_file = new_url
+                updated_count += 1
+            
+            sermon.save()
         
-        # Update HeroMedia images
-        output.append("<h2>📋 Updating HeroMedia images...</h2>")
+        # Update HeroMedia images and videos
+        output.append("<h2>📋 Updating HeroMedia...</h2>")
         hero_media = HeroMedia.objects.all()
         for media in hero_media:
             if media.image and str(media.image) and not str(media.image).startswith('http'):
                 filename = os.path.basename(str(media.image))
                 new_url = f"{cloudinary_base}/hero/{filename}"
-                output.append(f"<p>✅ {media.title}: {media.image} -> {new_url}</p>")
+                output.append(f"<p>✅ HeroMedia image: {media.image} -> {new_url}</p>")
                 media.image = new_url
-                media.save()
                 updated_count += 1
-        
-        # Update Event images
-        output.append("<h2>📋 Updating Event images...</h2>")
-        events = Event.objects.all()
-        for event in events:
-            if event.image and str(event.image) and not str(event.image).startswith('http'):
-                filename = os.path.basename(str(event.image))
-                new_url = f"{cloudinary_base}/events/{filename}"
-                output.append(f"<p>✅ {event.title}: {event.image} -> {new_url}</p>")
-                event.image = new_url
-                event.save()
+            
+            if media.video and str(media.video) and not str(media.video).startswith('http'):
+                filename = os.path.basename(str(media.video))
+                new_url = f"{cloudinary_base}/hero/videos/{filename}"
+                output.append(f"<p>✅ HeroMedia video: {media.video} -> {new_url}</p>")
+                media.video = new_url
                 updated_count += 1
-        
-        # Update EventSpeaker images
-        output.append("<h2>📋 Updating EventSpeaker images...</h2>")
-        speakers = EventSpeaker.objects.all()
-        for speaker in speakers:
-            if speaker.photo and str(speaker.photo) and not str(speaker.photo).startswith('http'):
-                filename = os.path.basename(str(speaker.photo))
-                new_url = f"{cloudinary_base}/events/speakers/{filename}"
-                output.append(f"<p>✅ {speaker.name}: {speaker.photo} -> {new_url}</p>")
-                speaker.photo = new_url
-                speaker.save()
-                updated_count += 1
-        
-        # Update AboutPage images
-        output.append("<h2>📋 Updating AboutPage images...</h2>")
-        about_pages = AboutPage.objects.all()
-        for page in about_pages:
-            for field_name in ['logo', 'founder_image', 'extra_image']:
-                field = getattr(page, field_name, None)
-                if field and str(field) and not str(field).startswith('http'):
-                    filename = os.path.basename(str(field))
-                    new_url = f"{cloudinary_base}/about/{filename}"
-                    output.append(f"<p>✅ {page.title} {field_name}: {field} -> {new_url}</p>")
-                    setattr(page, field_name, new_url)
-                    updated_count += 1
-            page.save()
-        
-        # Update LeadershipPage images
-        output.append("<h2>📋 Updating LeadershipPage images...</h2>")
-        leadership_pages = LeadershipPage.objects.all()
-        for page in leadership_pages:
-            for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
-                              'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
-                field = getattr(page, field_name, None)
-                if field and str(field) and not str(field).startswith('http'):
-                    filename = os.path.basename(str(field))
-                    new_url = f"{cloudinary_base}/leadership/{filename}"
-                    output.append(f"<p>✅ {page.title} {field_name}: {field} -> {new_url}</p>")
-                    setattr(page, field_name, new_url)
-                    updated_count += 1
-            page.save()
+            
+            media.save()
         
         output.append(f"<h2>🎉 Summary:</h2>")
         output.append(f"<p style='color: green; font-size: 18px;'><strong>✅ Successfully updated {updated_count} URLs to Cloudinary!</strong></p>")
