@@ -31,6 +31,7 @@ import os
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.apps import apps
 
 # Create your views here.
 
@@ -1849,3 +1850,8 @@ def comprehensive_fix(request):
         
     except Exception as e:
         return HttpResponse(f"❌ Error: {str(e)}")
+
+def check_media_field_length(request):
+    HeroMedia = apps.get_model('core', 'HeroMedia')
+    field = HeroMedia._meta.get_field('image')
+    return HttpResponse(f"HeroMedia.image max_length: {field.max_length}")
