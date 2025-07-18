@@ -52,16 +52,16 @@ def get_user_location(request):
         
         # Try ipapi.co first
         try:
-            response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                country = data.get('country_name')
-                city = data.get('city')
+        response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            country = data.get('country_name')
+            city = data.get('city')
                 print(f"DEBUG: ipapi.co result - Country: {country}, City: {city}")
-                return country, city
+            return country, city
             else:
                 print(f"DEBUG: ipapi.co failed with status {response.status_code}")
-        except Exception as e:
+    except Exception as e:
             print(f"DEBUG: ipapi.co error: {e}")
         
         # Fallback: Try ip-api.com
@@ -121,7 +121,7 @@ def smart_home(request):
     """
     # Check if user wants to go to global site (by presence of the parameter)
     go_global = 'global' in request.GET
-    
+
     # If user explicitly wants global site, redirect to global home
     if go_global:
         return redirect('home')
@@ -143,7 +143,7 @@ def smart_home(request):
     # Get all approved and active churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
     church_count = churches.count()
-    
+
     print(f"DEBUG: Found {church_count} active churches")
     
     # If no churches, show global site
@@ -159,12 +159,12 @@ def smart_home(request):
     
     print(f"DEBUG: User location detected - Country: {country}, City: {city}")
     
-    if country:
+        if country:
         # Try to find nearest church based on location
-        nearest_church = find_nearest_church(country, city)
-        if nearest_church:
+            nearest_church = find_nearest_church(country, city)
+            if nearest_church:
             print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
-            return redirect('church_home', church_id=nearest_church.id)
+                return redirect('church_home', church_id=nearest_church.id)
         else:
             print(f"DEBUG: No church found for location: {city}, {country}")
     else:
@@ -186,11 +186,11 @@ def home(request):
     if go_global:
         pass  # Continue to show global homepage
     elif church_count == 1:
-        # Only one church, redirect to it
-        return redirect('church_home', church_id=churches.first().id)
+            # Only one church, redirect to it
+            return redirect('church_home', church_id=churches.first().id)
     elif church_count > 1:
-        # Multiple churches, show choose your church page
-        return redirect('church_list')
+            # Multiple churches, show choose your church page
+            return redirect('church_list')
 
     # If no churches, or user chose global, show the global homepage
     # Show the global site with aggregated content from all churches

@@ -1,37 +1,27 @@
 #!/usr/bin/env python
 """
-Script to upload all media files to ImageKit.io
+Script to upload all media files to ImageKit.io using the new storage backend
 """
 import os
-import imagekitio
-from pathlib import Path
 import django
+from pathlib import Path
 
 # Set up Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-from django.core.files import File
-from core.models import Church, Hero, HeroMedia, News, Ministry, Sermon
+from django.conf import settings
+from core.models import Church, Hero, HeroMedia, News, Ministry, Sermon, EventSpeaker, EventHighlight, AboutPage, LeadershipPage
 
 def upload_media_to_imagekit():
     """
-    Upload all media files to ImageKit.io
+    Upload all media files to ImageKit.io using the new storage backend
     """
     print("🚀 Uploading Media to ImageKit.io...")
     print("=" * 70)
     
-    # Configure ImageKit
-    # You'll need to set these environment variables:
-    # IMAGEKIT_PUBLIC_KEY=your_public_key
-    # IMAGEKIT_PRIVATE_KEY=your_private_key  
-    # IMAGEKIT_URL_ENDPOINT=your_url_endpoint
-    
-    public_key = os.environ.get('IMAGEKIT_PUBLIC_KEY')
-    private_key = os.environ.get('IMAGEKIT_PRIVATE_KEY')
-    url_endpoint = os.environ.get('IMAGEKIT_URL_ENDPOINT')
-    
-    if not all([public_key, private_key, url_endpoint]):
+    # Check if ImageKit is configured
+    if not all(settings.IMAGEKIT_CONFIG.values()):
         print("❌ ImageKit credentials not found!")
         print("Please set these environment variables:")
         print("  IMAGEKIT_PUBLIC_KEY")
@@ -44,14 +34,8 @@ def upload_media_to_imagekit():
         print("4. Copy your Public Key, Private Key, and URL Endpoint")
         return
     
-    # Initialize ImageKit
-    imagekit = imagekitio.ImageKit(
-        public_key=public_key,
-        private_key=private_key,
-        url_endpoint=url_endpoint
-    )
-    
     print("🖼️ ImageKit configured successfully")
+    print(f"Using storage: {settings.DEFAULT_FILE_STORAGE}")
     
     # Process Church Logos
     print("\n🏛️ Processing Church Logos...")
@@ -63,32 +47,12 @@ def upload_media_to_imagekit():
             if os.path.exists(local_path):
                 print(f"    📸 Uploading logo...")
                 try:
-                    # Upload to ImageKit
+                    # Read the file and save using the new storage backend
                     with open(local_path, 'rb') as file:
-                        result = imagekit.upload_file(
-                            file=file,
-                            file_name=f"church_{church.id}_logo{os.path.splitext(local_path)[1]}",
-                            options={
-                                "folder": "bethel/churches/logos",
-                                "use_unique_file_name": False
-                            }
-                        )
-                    
-                    if result.response_metadata.http_status_code == 200:
-                        # Update database with ImageKit URL
                         from django.core.files.base import ContentFile
-                        import requests
-                        
-                        response = requests.get(result.response_metadata.raw.url)
-                        if response.status_code == 200:
-                            cloudinary_file = ContentFile(response.content, name=os.path.basename(local_path))
-                            church.logo.save(os.path.basename(local_path), cloudinary_file, save=True)
-                            print(f"      ✅ Uploaded: {result.response_metadata.raw.url}")
-                        else:
-                            print(f"      ❌ Failed to download")
-                    else:
-                        print(f"      ❌ Upload failed")
-                        
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        church.logo.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {church.logo.url}")
                 except Exception as e:
                     print(f"      ❌ Error: {e}")
             else:
@@ -107,29 +71,10 @@ def upload_media_to_imagekit():
                 print(f"    📸 Uploading image...")
                 try:
                     with open(local_path, 'rb') as file:
-                        result = imagekit.upload_file(
-                            file=file,
-                            file_name=f"news_{news.id}{os.path.splitext(local_path)[1]}",
-                            options={
-                                "folder": "bethel/news",
-                                "use_unique_file_name": False
-                            }
-                        )
-                    
-                    if result.response_metadata.http_status_code == 200:
                         from django.core.files.base import ContentFile
-                        import requests
-                        
-                        response = requests.get(result.response_metadata.raw.url)
-                        if response.status_code == 200:
-                            cloudinary_file = ContentFile(response.content, name=os.path.basename(local_path))
-                            news.image.save(os.path.basename(local_path), cloudinary_file, save=True)
-                            print(f"      ✅ Uploaded: {result.response_metadata.raw.url}")
-                        else:
-                            print(f"      ❌ Failed to download")
-                    else:
-                        print(f"      ❌ Upload failed")
-                        
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        news.image.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {news.image.url}")
                 except Exception as e:
                     print(f"      ❌ Error: {e}")
             else:
@@ -148,29 +93,10 @@ def upload_media_to_imagekit():
                 print(f"    📸 Uploading image...")
                 try:
                     with open(local_path, 'rb') as file:
-                        result = imagekit.upload_file(
-                            file=file,
-                            file_name=f"ministry_{ministry.id}{os.path.splitext(local_path)[1]}",
-                            options={
-                                "folder": "bethel/ministries",
-                                "use_unique_file_name": False
-                            }
-                        )
-                    
-                    if result.response_metadata.http_status_code == 200:
                         from django.core.files.base import ContentFile
-                        import requests
-                        
-                        response = requests.get(result.response_metadata.raw.url)
-                        if response.status_code == 200:
-                            cloudinary_file = ContentFile(response.content, name=os.path.basename(local_path))
-                            ministry.image.save(os.path.basename(local_path), cloudinary_file, save=True)
-                            print(f"      ✅ Uploaded: {result.response_metadata.raw.url}")
-                        else:
-                            print(f"      ❌ Failed to download")
-                    else:
-                        print(f"      ❌ Upload failed")
-                        
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        ministry.image.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {ministry.image.url}")
                 except Exception as e:
                     print(f"      ❌ Error: {e}")
             else:
@@ -189,35 +115,128 @@ def upload_media_to_imagekit():
                 print(f"    📸 Uploading thumbnail...")
                 try:
                     with open(local_path, 'rb') as file:
-                        result = imagekit.upload_file(
-                            file=file,
-                            file_name=f"sermon_{sermon.id}_thumb{os.path.splitext(local_path)[1]}",
-                            options={
-                                "folder": "bethel/sermons",
-                                "use_unique_file_name": False
-                            }
-                        )
-                    
-                    if result.response_metadata.http_status_code == 200:
                         from django.core.files.base import ContentFile
-                        import requests
-                        
-                        response = requests.get(result.response_metadata.raw.url)
-                        if response.status_code == 200:
-                            cloudinary_file = ContentFile(response.content, name=os.path.basename(local_path))
-                            sermon.thumbnail.save(os.path.basename(local_path), cloudinary_file, save=True)
-                            print(f"      ✅ Uploaded: {result.response_metadata.raw.url}")
-                        else:
-                            print(f"      ❌ Failed to download")
-                    else:
-                        print(f"      ❌ Upload failed")
-                        
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        sermon.thumbnail.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {sermon.thumbnail.url}")
                 except Exception as e:
                     print(f"      ❌ Error: {e}")
             else:
                 print(f"    ⚠️ Thumbnail file missing")
         else:
             print(f"    ❌ No thumbnail")
+    
+    # Process Hero Media
+    print("\n🖼️ Processing Hero Media...")
+    heroes = Hero.objects.all()
+    for hero in heroes:
+        print(f"  📤 {hero.title}")
+        hero_media = hero.hero_media.all()
+        for media in hero_media:
+            if media.image and hasattr(media.image, 'path'):
+                local_path = media.image.path
+                if os.path.exists(local_path):
+                    print(f"    📸 Uploading hero image...")
+                    try:
+                        with open(local_path, 'rb') as file:
+                            from django.core.files.base import ContentFile
+                            content = ContentFile(file.read(), name=os.path.basename(local_path))
+                            media.image.save(os.path.basename(local_path), content, save=True)
+                            print(f"      ✅ Uploaded: {media.image.url}")
+                    except Exception as e:
+                        print(f"      ❌ Error: {e}")
+                else:
+                    print(f"    ⚠️ Hero image file missing")
+            else:
+                print(f"    ❌ No hero image")
+    
+    # Process Event Speakers
+    print("\n🎤 Processing Event Speakers...")
+    speakers = EventSpeaker.objects.all()
+    for speaker in speakers:
+        print(f"  📤 {speaker.name}")
+        if speaker.photo and hasattr(speaker.photo, 'path'):
+            local_path = speaker.photo.path
+            if os.path.exists(local_path):
+                print(f"    📸 Uploading speaker photo...")
+                try:
+                    with open(local_path, 'rb') as file:
+                        from django.core.files.base import ContentFile
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        speaker.photo.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {speaker.photo.url}")
+                except Exception as e:
+                    print(f"      ❌ Error: {e}")
+            else:
+                print(f"    ⚠️ Speaker photo file missing")
+        else:
+            print(f"    ❌ No speaker photo")
+    
+    # Process Event Highlights
+    print("\n🌟 Processing Event Highlights...")
+    highlights = EventHighlight.objects.all()
+    for highlight in highlights:
+        print(f"  📤 {highlight.title}")
+        if highlight.image and hasattr(highlight.image, 'path'):
+            local_path = highlight.image.path
+            if os.path.exists(local_path):
+                print(f"    📸 Uploading highlight image...")
+                try:
+                    with open(local_path, 'rb') as file:
+                        from django.core.files.base import ContentFile
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        highlight.image.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {highlight.image.url}")
+                except Exception as e:
+                    print(f"      ❌ Error: {e}")
+            else:
+                print(f"    ⚠️ Highlight image file missing")
+        else:
+            print(f"    ❌ No highlight image")
+    
+    # Process About Pages
+    print("\n📄 Processing About Pages...")
+    about_pages = AboutPage.objects.all()
+    for page in about_pages:
+        print(f"  📤 {page.title}")
+        if page.image and hasattr(page.image, 'path'):
+            local_path = page.image.path
+            if os.path.exists(local_path):
+                print(f"    📸 Uploading about page image...")
+                try:
+                    with open(local_path, 'rb') as file:
+                        from django.core.files.base import ContentFile
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        page.image.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {page.image.url}")
+                except Exception as e:
+                    print(f"      ❌ Error: {e}")
+            else:
+                print(f"    ⚠️ About page image file missing")
+        else:
+            print(f"    ❌ No about page image")
+    
+    # Process Leadership Pages
+    print("\n👥 Processing Leadership Pages...")
+    leadership_pages = LeadershipPage.objects.all()
+    for page in leadership_pages:
+        print(f"  📤 {page.title}")
+        if page.image and hasattr(page.image, 'path'):
+            local_path = page.image.path
+            if os.path.exists(local_path):
+                print(f"    📸 Uploading leadership page image...")
+                try:
+                    with open(local_path, 'rb') as file:
+                        from django.core.files.base import ContentFile
+                        content = ContentFile(file.read(), name=os.path.basename(local_path))
+                        page.image.save(os.path.basename(local_path), content, save=True)
+                        print(f"      ✅ Uploaded: {page.image.url}")
+                except Exception as e:
+                    print(f"      ❌ Error: {e}")
+            else:
+                print(f"    ⚠️ Leadership page image file missing")
+        else:
+            print(f"    ❌ No leadership page image")
     
     print("\n" + "=" * 70)
     print("🎉 ImageKit upload completed!")

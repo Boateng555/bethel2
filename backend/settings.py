@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'cloudinary',
     'cloudinary_storage',
+    'imagekit',
     'rest_framework',
     'corsheaders',
     'core',
@@ -161,6 +162,13 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
+# ImageKit configuration
+IMAGEKIT_CONFIG = {
+    'PUBLIC_KEY': os.environ.get('IMAGEKIT_PUBLIC_KEY'),
+    'PRIVATE_KEY': os.environ.get('IMAGEKIT_PRIVATE_KEY'),
+    'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
+}
+
 # Whitenoise for static files
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
@@ -173,11 +181,15 @@ if DEBUG:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = Path(BASE_DIR) / 'media'
 else:
-    if all(CLOUDINARY_STORAGE.values()):
-        print("✅ Using Cloudinary for production")
+    # Check if ImageKit is configured
+    if all(IMAGEKIT_CONFIG.values()):
+        print("🖼️ Using ImageKit for production")
+        DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+    elif all(CLOUDINARY_STORAGE.values()):
+        print("☁️ Using Cloudinary for production")
         DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     else:
-        print("❌ Cloudinary config missing, fallback to local")
+        print("❌ No cloud storage configured, fallback to local")
         DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 
