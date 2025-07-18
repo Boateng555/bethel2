@@ -327,25 +327,7 @@
         <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
     </div>
 
-<!-- Global Site Navigation Banner -->
-<div class="bg-[#e0e7ff] text-[#1e3a8a] py-3 px-6 church-global-banner">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
-        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="text-sm font-medium">You're viewing {{ church.name }}</span>
-        </div>
-        <div class="flex space-x-3">
-            <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
-                Find Other Churches
-            </a>
-            <a href="{% url 'home' %}?global=1" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
-                Go to Global Site
-            </a>
-        </div>
-    </div>
-</div>
+
 
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
@@ -405,34 +387,11 @@
                 <a href="{% url 'church_about' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Plan Your Visit</a>
                 <a href="{% url 'church_sermons' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
             </div>
-            <div class="mt-6">
-                <a href="{% url 'home' %}?global=1" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-sm">
-                    Go to Global Site
-                </a>
-            </div>
         </div>
     {% endif %}
 </section>
 
-<!-- Global Site Navigation Section -->
-<div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between">
-            <div class="text-center sm:text-left mb-4 sm:mb-0">
-                <h3 class="text-xl font-bold mb-2">You're viewing {{ church.name }}</h3>
-                <p class="text-blue-100">Discover the global Bethel community</p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
-                    Find Other Churches
-                </a>
-                <a href="{% url 'home' %}?global=1" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
-                    Go to Global Site
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Church Info -->
 <div class="container mx-auto px-4 py-12 church-section">
