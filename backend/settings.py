@@ -204,11 +204,20 @@ else:
 # Use DATABASE_URL if provided (for Railway Postgres)
 import dj_database_url
 DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+if DATABASE_URL and not DEBUG:
+    # Only use Railway database in production
     DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
     # Add SSL configuration for Railway Postgres
     DATABASES['default']['OPTIONS'] = {
         'sslmode': 'require',
+    }
+else:
+    # Use local SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
 
 CSRF_TRUSTED_ORIGINS = [
