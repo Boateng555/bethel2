@@ -250,6 +250,8 @@
                     {% if nearest_church %}
                     <p class="text-sm opacity-90">There's a Bethel church near you!</p>
                     {% endif %}
+                    <!-- DEBUG INFO -->
+                    <p class="text-xs opacity-50">DEBUG: is_global_site={{ is_global_site }}, user_country={{ user_country }}, nearest_church={{ nearest_church.name if nearest_church else 'None' }}</p>
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
