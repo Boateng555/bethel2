@@ -207,7 +207,7 @@
             {% endif %}
             <a href="{% url 'church_donation' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Donate</a>
             <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
-            <a href="/" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+            <a href="{% url 'home' %}" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
             <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin Login</a>
         {% else %}
             <!-- Global mobile navigation -->
