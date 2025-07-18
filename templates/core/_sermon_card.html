@@ -1,7 +1,7 @@
 {% if church %}
-<a href="{% url 'church_sermons' church.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+<a href="{% url 'church_sermons' church.id %}" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% else %}
-<a href="/sermon" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+<a href="/sermon" class="block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
 {% endif %}
     {% if sermon.thumbnail %}
         <img src="{{ sermon.get_thumbnail_url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
@@ -15,8 +15,8 @@
             <i class="fas fa-calendar-alt mr-2"></i>
             {{ sermon.date|date:"M d, Y" }}
         </div>
-        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ sermon.title }}</h3>
-        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description|truncatewords:20 }}</p>
-        <span class="text-[#1e3a8a] font-semibold">{{ sermon.preacher }}</span>
+        <h3 class="text-xl font-semibold mb-2 text-deep-blue line-clamp-2">{{ sermon.title }}</h3>
+        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ sermon.description|truncatewords:15 }}</p>
+        <span class="text-[#1e3a8a] font-semibold text-sm">{{ sermon.preacher }}</span>
     </div>
 </a> 

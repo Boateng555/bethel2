@@ -24,7 +24,9 @@
         }
     </script>
 <style>
+/* Mobile-first responsive design */
 @media (max-width: 640px) {
+  /* Hero section fixes */
   section.relative.w-full.h-screen.overflow-hidden {
     height: 100vh !important;
     min-height: 100vh !important;
@@ -62,14 +64,18 @@
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+  
+  /* Section titles and content */
   .church-section-title {
     font-size: 1.25rem !important;
-    margin-bottom: 1rem !important;
+    margin-bottom: 0.75rem !important;
   }
   .church-section-subtitle {
-    font-size: 1rem !important;
-    margin-bottom: 1rem !important;
+    font-size: 0.875rem !important;
+    margin-bottom: 0.75rem !important;
   }
+  
+  /* Card improvements for mobile */
   .church-card, .church-info-card {
     padding: 0.5rem !important;
     font-size: 0.9rem !important;
@@ -83,11 +89,61 @@
     font-size: 0.8rem !important;
     margin-bottom: 0.5rem !important;
   }
+  
+  /* Reduce card heights on mobile */
   .church-card .h-48, .church-card .h-40, .church-card .h-32 {
     height: 6rem !important;
     min-height: 0 !important;
     max-height: 7rem !important;
   }
+  
+  /* Sermon and News card specific fixes */
+  .auto-scroll-sermons > div,
+  .auto-scroll-news > div {
+    min-width: 260px !important;
+    max-width: 280px !important;
+  }
+  
+  /* Reduce card height on mobile */
+  .auto-scroll-sermons a,
+  .auto-scroll-news a {
+    min-height: 280px !important;
+    max-height: 320px !important;
+  }
+  
+  /* Text truncation for mobile */
+  .auto-scroll-sermons .text-xl,
+  .auto-scroll-news .text-xl {
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .auto-scroll-sermons .text-sm,
+  .auto-scroll-news .text-sm {
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Limit text content on mobile */
+  .auto-scroll-sermons p,
+  .auto-scroll-news p {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Reduce padding on mobile */
+  .auto-scroll-sermons .p-6,
+  .auto-scroll-news .p-6 {
+    padding: 0.75rem !important;
+  }
+  
+  /* Grid improvements */
   .church-grid, .church-info-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 0.75rem !important;
@@ -106,6 +162,8 @@
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+  
+  /* Global banner fixes */
   .church-global-banner {
     padding: 0 !important;
     background-color: #e0e7ff !important;
@@ -140,72 +198,81 @@
     gap: 0.05rem !important;
     align-items: center !important;
   }
-          /* Force mobile layout for sermon cards */
-        @media (max-width: 767px) {
-          .auto-scroll-sermons {
-            display: flex !important;
-            flex-direction: row !important;
-            overflow-x: auto !important;
-            gap: 1rem !important;
-            padding-bottom: 1rem !important;
-          }
-          .auto-scroll-sermons > div {
-            min-width: 280px !important;
-            flex-shrink: 0 !important;
-          }
-        }
-        /* Force mobile layout for news cards */
-        @media (max-width: 767px) {
-          .auto-scroll-news {
-            display: flex !important;
-            flex-direction: row !important;
-            overflow-x: auto !important;
-            gap: 1rem !important;
-            padding-bottom: 1rem !important;
-          }
-          .auto-scroll-news > div {
-            min-width: 280px !important;
-            flex-shrink: 0 !important;
-          }
-        }
-        /* Ensure content doesn't interfere with swipe navigation */
-        .relative.z-10 {
-          z-index: 10 !important; /* Lower than swipe area */
-        }
-        }
-        
-        /* Ensure hero images are visible */
-        .hero-swiper img,
-        .hero-swiper video {
-            display: block !important;
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-        }
-        
-        .swiper-slide {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-        
-        /* Ensure hero images are properly displayed */
-        .hero-swiper {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        
-        .swiper-slide {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        
-        .swiper-slide img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-        }
+}
+
+/* Tablet improvements */
+@media (min-width: 641px) and (max-width: 768px) {
+  .auto-scroll-sermons > div,
+  .auto-scroll-news > div {
+    min-width: 300px !important;
+  }
+  
+  .auto-scroll-sermons a,
+  .auto-scroll-news a {
+    min-height: 300px !important;
+  }
+}
+
+/* Force mobile layout for sermon cards */
+@media (max-width: 767px) {
+  .auto-scroll-sermons {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  .auto-scroll-sermons > div {
+    min-width: 260px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* Force mobile layout for news cards */
+@media (max-width: 767px) {
+  .auto-scroll-news {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  .auto-scroll-news > div {
+    min-width: 260px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* Ensure content doesn't interfere with swipe navigation */
+.relative.z-10 {
+  z-index: 10 !important; /* Lower than swipe area */
+}
+
+/* Ensure hero images are visible */
+.hero-swiper img,
+.hero-swiper video {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.swiper-slide {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Ensure hero images are properly displayed */
+.hero-swiper {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.swiper-slide {
+    width: 100% !important;
+    height: 100% !important;
+}
 </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
@@ -497,7 +564,7 @@
         </div>
         <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
             {% for article in news %}
-                <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+                <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if article.image %}
                     <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
                     {% else %}
@@ -506,9 +573,9 @@
                     </div>
                     {% endif %}
                     <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ article.title }}</h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ article.content|truncatewords:20 }}</p>
-                        <span class="text-[#1e3a8a] font-semibold">{{ article.date|date:"M d, Y" }}</span>
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ article.content|truncatewords:15 }}</p>
+                        <span class="text-[#1e3a8a] font-semibold text-sm">{{ article.date|date:"M d, Y" }}</span>
                     </div>
                 </a>
             {% endfor %}
