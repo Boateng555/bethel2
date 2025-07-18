@@ -48,15 +48,44 @@ def get_user_location(request):
         else:
             ip = request.META.get('REMOTE_ADDR')
         
-        # Use ipapi.co for geolocation (free tier)
-        response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            country = data.get('country_name')
-            city = data.get('city')
-            return country, city
+        print(f"DEBUG: User IP: {ip}")
+        
+        # Try ipapi.co first
+        try:
+            response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                country = data.get('country_name')
+                city = data.get('city')
+                print(f"DEBUG: ipapi.co result - Country: {country}, City: {city}")
+                return country, city
+            else:
+                print(f"DEBUG: ipapi.co failed with status {response.status_code}")
+        except Exception as e:
+            print(f"DEBUG: ipapi.co error: {e}")
+        
+        # Fallback: Try ip-api.com
+        try:
+            response = requests.get(f'http://ip-api.com/json/{ip}', timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    country = data.get('country')
+                    city = data.get('city')
+                    print(f"DEBUG: ip-api.com result - Country: {country}, City: {city}")
+                    return country, city
+                else:
+                    print(f"DEBUG: ip-api.com failed with status: {data.get('status')}")
+        except Exception as e:
+            print(f"DEBUG: ip-api.com error: {e}")
+        
+        # For testing: If localhost, return Germany/Hamburg
+        if ip in ['127.0.0.1', 'localhost', '::1']:
+            print("DEBUG: Localhost detected, returning Germany/Hamburg for testing")
+            return 'Germany', 'Hamburg'
+            
     except Exception as e:
-        print(f"Error getting location: {e}")
+        print(f"DEBUG: Error getting location: {e}")
     
     return None, None
 
@@ -97,28 +126,52 @@ def smart_home(request):
     if go_global:
         return redirect('home')
     
+    # Test parameter for manual testing
+    test_location = request.GET.get('test_location')
+    if test_location:
+        print(f"DEBUG: Testing with location: {test_location}")
+        if ',' in test_location:
+            city, country = test_location.split(',', 1)
+            country = country.strip()
+            city = city.strip()
+        else:
+            country = test_location.strip()
+            city = None
+    else:
+        country, city = get_user_location(request)
+    
     # Get all approved and active churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
     church_count = churches.count()
     
+    print(f"DEBUG: Found {church_count} active churches")
+    
     # If no churches, show global site
     if church_count == 0:
+        print("DEBUG: No churches found, redirecting to global home")
         return redirect('home')
     
     # If only one church, redirect to it
     if church_count == 1:
-        return redirect('church_home', church_id=churches.first().id)
+        church = churches.first()
+        print(f"DEBUG: Only one church found: {church.name} in {church.city}, {church.country}")
+        return redirect('church_home', church_id=church.id)
     
-    # Get user's location
-    country, city = get_user_location(request)
+    print(f"DEBUG: User location detected - Country: {country}, City: {city}")
     
     if country:
         # Try to find nearest church based on location
         nearest_church = find_nearest_church(country, city)
         if nearest_church:
+            print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
             return redirect('church_home', church_id=nearest_church.id)
+        else:
+            print(f"DEBUG: No church found for location: {city}, {country}")
+    else:
+        print("DEBUG: Could not determine user location")
     
     # If we can't determine location or no nearby church, show church list
+    print("DEBUG: Redirecting to church list")
     return redirect('church_list')
 
 def home(request):
