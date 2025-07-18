@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    home, events, event_detail, ministries, ministry_detail, newsletter_signup, calendar_view,
+    home, smart_home, events, event_detail, ministries, ministry_detail, newsletter_signup, calendar_view,
     EventListView, MinistryListView, NewsListView, NewsletterSignupCreateView, event_ics,
     about, donation, shop, watch, visit, sermon, church_list, church_detail, church_donation,
     church_home, church_events, church_event_detail, church_ministries, church_ministry_detail,
@@ -16,7 +16,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path('', home, name='home'),
+    path('', smart_home, name='smart_home'),  # New smart home that redirects to nearest church
+    path('global/', home, name='home'),  # Global site moved to /global/
     path('events/', events, name='events'),
     path('events/calendar/', calendar_view, name='calendar'),
     path('events/<uuid:event_id>/', event_detail, name='event_detail'),

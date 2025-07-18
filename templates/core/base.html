@@ -93,7 +93,7 @@
                     <span class="text-sm font-semibold mt-1">{{ church.name }}</span>
                 </a>
             {% else %}
-                <a href="/" class="flex flex-col items-center">
+                <a href="{% url 'home' %}" class="flex flex-col items-center">
                     <span class="text-sm font-semibold mt-1">Bethel Prayer Ministry International</span>
                 </a>
             {% endif %}
@@ -135,7 +135,7 @@
                 {% endif %}
                 <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
                 <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
-                <a href="/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+                <a href="{% url 'home' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
                 <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
             {% else %}
                 <!-- Global navigation -->

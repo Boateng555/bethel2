@@ -86,6 +86,41 @@ def find_nearest_church(country, city):
     
     return None
 
+def smart_home(request):
+    """
+    Smart home view that redirects users to their nearest church based on location
+    """
+    # Check if user wants to go to global site (by presence of the parameter)
+    go_global = 'global' in request.GET
+    
+    # If user explicitly wants global site, redirect to global home
+    if go_global:
+        return redirect('home')
+    
+    # Get all approved and active churches
+    churches = Church.objects.filter(is_active=True, is_approved=True)
+    church_count = churches.count()
+    
+    # If no churches, show global site
+    if church_count == 0:
+        return redirect('home')
+    
+    # If only one church, redirect to it
+    if church_count == 1:
+        return redirect('church_home', church_id=churches.first().id)
+    
+    # Get user's location
+    country, city = get_user_location(request)
+    
+    if country:
+        # Try to find nearest church based on location
+        nearest_church = find_nearest_church(country, city)
+        if nearest_church:
+            return redirect('church_home', church_id=nearest_church.id)
+    
+    # If we can't determine location or no nearby church, show church list
+    return redirect('church_list')
+
 def home(request):
     # Check if user wants to go to global site (by presence of the parameter)
     go_global = 'global' in request.GET
