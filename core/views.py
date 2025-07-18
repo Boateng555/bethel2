@@ -1846,3 +1846,19 @@ def check_production_status(request):
         }
     
     return JsonResponse(status)
+
+def debug_env(request):
+    """Debug endpoint to check environment variables"""
+    if not settings.DEBUG:
+        return JsonResponse({
+            'error': 'Debug endpoint only available in development'
+        }, status=403)
+    
+    return JsonResponse({
+        'debug': settings.DEBUG,
+        'storage_backend': str(settings.DEFAULT_FILE_STORAGE),
+        'imagekit_public_key': 'Set' if os.environ.get('IMAGEKIT_PUBLIC_KEY') else 'Not set',
+        'imagekit_private_key': 'Set' if os.environ.get('IMAGEKIT_PRIVATE_KEY') else 'Not set',
+        'imagekit_url_endpoint': 'Set' if os.environ.get('IMAGEKIT_URL_ENDPOINT') else 'Not set',
+        'cloudinary_cloud_name': 'Set' if os.environ.get('CLOUDINARY_CLOUD_NAME') else 'Not set',
+    })
