@@ -188,10 +188,18 @@
                     
                     <!-- Location Info -->
                     <div class="flex items-center text-gray-600 mb-3">
-                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                         </svg>
-                        <span class="text-sm font-medium">{{ church.city }}{% if church.city and church.country %}, {% endif %}{{ church.country }}</span>
+                        <span class="text-sm">
+                            {{ church.city }}, {{ church.country }}
+                            {% if church.latitude and church.longitude %}
+                            <span class="distance-info ml-2 text-xs text-blue-600" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}">
+                                <i class="fas fa-location-arrow mr-1"></i>
+                                <span class="distance-text">Calculating...</span>
+                            </span>
+                            {% endif %}
+                        </span>
                     </div>
                     
                     <!-- Pastor Info -->
@@ -250,12 +258,60 @@
 
 <!-- Add geolocation JS at the end of content block -->
 <script>
+// Calculate distance between two points using Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c; // Distance in kilometers
+    return distance;
+}
+
+// Format distance for display
+function formatDistance(distance) {
+    if (distance < 1) {
+        return Math.round(distance * 1000) + ' m';
+    } else if (distance < 10) {
+        return distance.toFixed(1) + ' km';
+    } else {
+        return Math.round(distance) + ' km';
+    }
+}
+
+// Update distance displays
+function updateDistances(userLat, userLng) {
+    const distanceElements = document.querySelectorAll('.distance-info');
+    
+    distanceElements.forEach(element => {
+        const churchLat = parseFloat(element.dataset.lat);
+        const churchLng = parseFloat(element.dataset.lng);
+        const distanceText = element.querySelector('.distance-text');
+        
+        if (!isNaN(churchLat) && !isNaN(churchLng)) {
+            const distance = calculateDistance(userLat, userLng, churchLat, churchLng);
+            distanceText.textContent = formatDistance(distance);
+        } else {
+            distanceText.textContent = 'Location unavailable';
+        }
+    });
+}
+
 // Try to auto-select city/country based on browser geolocation
 window.addEventListener('DOMContentLoaded', function() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            // Update distances immediately
+            updateDistances(userLat, userLng);
+            
             // Use a free geocoding API to get city/country from lat/lng
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`)
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.address) {
@@ -286,6 +342,19 @@ window.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
+        }, function(error) {
+            // Handle geolocation errors
+            console.log('Geolocation error:', error);
+            const distanceElements = document.querySelectorAll('.distance-text');
+            distanceElements.forEach(element => {
+                element.textContent = 'Location access denied';
+            });
+        });
+    } else {
+        // Browser doesn't support geolocation
+        const distanceElements = document.querySelectorAll('.distance-text');
+        distanceElements.forEach(element => {
+            element.textContent = 'Location not supported';
         });
     }
 });
