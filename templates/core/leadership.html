@@ -212,8 +212,8 @@
         margin-bottom: 0.5rem;
     }
     
-    /* Ensure images display properly */
-    img {
+    /* Ensure images display properly - but don't override object-cover */
+    img:not(.object-cover) {
         max-width: 100%;
         height: auto;
     }
