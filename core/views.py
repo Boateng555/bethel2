@@ -1849,11 +1849,6 @@ def check_production_status(request):
 
 def debug_env(request):
     """Debug endpoint to check environment variables"""
-    if not settings.DEBUG:
-        return JsonResponse({
-            'error': 'Debug endpoint only available in development'
-        }, status=403)
-    
     return JsonResponse({
         'debug': settings.DEBUG,
         'storage_backend': str(settings.DEFAULT_FILE_STORAGE),
