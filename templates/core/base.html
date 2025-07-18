@@ -135,7 +135,7 @@
                 {% endif %}
                 <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
                 <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
-                <a href="{% url 'home' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+                <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
                 <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
             {% else %}
                 <!-- Global navigation -->
@@ -207,7 +207,7 @@
             {% endif %}
             <a href="{% url 'church_donation' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Donate</a>
             <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
-            <a href="{% url 'home' %}" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+            <a href="{% url 'home' %}?global=1" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
             <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin Login</a>
         {% else %}
             <!-- Global mobile navigation -->

@@ -322,7 +322,7 @@
         {% endif %}
         <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Give</a>
         <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
-        <a href="{% url 'home' %}" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
+        <a href="{% url 'home' %}?global=1" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
         <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin</a>
         <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
     </div>
@@ -340,7 +340,7 @@
             <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
                 Find Other Churches
             </a>
-            <a href="{% url 'home' %}" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
+            <a href="{% url 'home' %}?global=1" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
                 Go to Global Site
             </a>
         </div>
@@ -406,7 +406,7 @@
                 <a href="{% url 'church_sermons' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
             </div>
             <div class="mt-6">
-                <a href="{% url 'home' %}" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-sm">
+                <a href="{% url 'home' %}?global=1" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-sm">
                     Go to Global Site
                 </a>
             </div>
@@ -426,7 +426,7 @@
                 <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
                     Find Other Churches
                 </a>
-                <a href="{% url 'home' %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
+                <a href="{% url 'home' %}?global=1" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
                     Go to Global Site
                 </a>
             </div>
