@@ -994,9 +994,7 @@ class HeroMedia(models.Model):
         return ''
     
     def save(self, *args, **kwargs):
-        # Ensure only one hero media per hero
-        if not self.pk:
-            HeroMedia.objects.filter(hero=self.hero).delete()
+        # Allow multiple hero media per hero (for carousel functionality)
         super().save(*args, **kwargs)
 
 class ChurchApplication(models.Model):
