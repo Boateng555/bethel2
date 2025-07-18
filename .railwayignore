@@ -1,0 +1,38 @@
+# Exclude large media files
+media/
+staticfiles/
+logs/
+
+# Exclude Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Exclude database files
+*.db
+*.sqlite3
+
+# Exclude test files
+test_*.py
+debug_*.py
+*_test.py
+
+# Exclude temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Exclude large images (keep only essential ones)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Keep only essential static files
+static/img/bethel_logo.png
+static/img/default-profile.png 

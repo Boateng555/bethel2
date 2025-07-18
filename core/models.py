@@ -5,10 +5,11 @@ from django.utils import timezone
 import uuid
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from datetime import datetime, timedelta
 import requests
+from .image_utils import resize_image_field, optimize_image_for_web
 
 # Create your models here.
 
@@ -1413,3 +1414,96 @@ class EventHeroMedia(models.Model):
 
     def __str__(self):
         return f"Media for {self.event.title} ({self.id})"
+
+# Image resizing signals
+@receiver(pre_save, sender=Church)
+def resize_church_images(sender, instance, **kwargs):
+    """Resize church images before saving"""
+    if instance.logo:
+        resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+    if instance.banner_image:
+        resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+
+
+
+@receiver(pre_save, sender=Ministry)
+def resize_ministry_images(sender, instance, **kwargs):
+    """Resize ministry images before saving"""
+    if instance.image:
+        resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+
+@receiver(pre_save, sender=News)
+def resize_news_images(sender, instance, **kwargs):
+    """Resize news images before saving"""
+    if instance.image:
+        resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+
+@receiver(pre_save, sender=Sermon)
+def resize_sermon_images(sender, instance, **kwargs):
+    """Resize sermon images before saving"""
+    if instance.thumbnail:
+        resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+
+@receiver(pre_save, sender=Hero)
+def resize_hero_images(sender, instance, **kwargs):
+    """Resize hero images before saving"""
+    if instance.background_image:
+        resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+
+@receiver(pre_save, sender=HeroMedia)
+def resize_hero_media_images(sender, instance, **kwargs):
+    """Resize hero media images before saving"""
+    if instance.image:
+        resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+
+@receiver(pre_save, sender=EventHighlight)
+def resize_event_highlight_images(sender, instance, **kwargs):
+    """Resize event highlight images before saving"""
+    if instance.image:
+        resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+
+@receiver(pre_save, sender=EventSpeaker)
+def resize_event_speaker_images(sender, instance, **kwargs):
+    """Resize event speaker images before saving"""
+    if instance.photo:
+        resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+
+@receiver(pre_save, sender=AboutPage)
+def resize_about_page_images(sender, instance, **kwargs):
+    """Resize about page images before saving"""
+    for field_name in ['logo', 'founder_image', 'extra_image']:
+        field = getattr(instance, field_name)
+        if field:
+            resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+
+@receiver(pre_save, sender=LeadershipPage)
+def resize_leadership_page_images(sender, instance, **kwargs):
+    """Resize leadership page images before saving"""
+    for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+                       'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+        field = getattr(instance, field_name)
+        if field:
+            resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+
+@receiver(pre_save, sender=LocalLeadershipPage)
+def resize_local_leadership_page_images(sender, instance, **kwargs):
+    """Resize local leadership page images before saving"""
+    for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image',
+                       'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+        field = getattr(instance, field_name)
+        if field:
+            resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+
+@receiver(pre_save, sender=LocalAboutPage)
+def resize_local_about_page_images(sender, instance, **kwargs):
+    """Resize local about page images before saving"""
+    for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+        field = getattr(instance, field_name)
+        if field:
+            resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+
+@receiver(pre_save, sender=EventHeroMedia)
+def resize_event_hero_media_images(sender, instance, **kwargs):
+    """Resize event hero media images before saving"""
+    if instance.image:
+        resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
