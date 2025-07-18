@@ -1857,3 +1857,49 @@ def debug_env(request):
         'imagekit_url_endpoint': 'Set' if os.environ.get('IMAGEKIT_URL_ENDPOINT') else 'Not set',
         'cloudinary_cloud_name': 'Set' if os.environ.get('CLOUDINARY_CLOUD_NAME') else 'Not set',
     })
+
+def test_imagekit_upload_endpoint(request):
+    """Test endpoint to upload an image to ImageKit"""
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    from django.http import JsonResponse
+    
+    try:
+        # Create a test image
+        svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="200" fill="url(#grad1)"/>
+  <circle cx="150" cy="100" r="60" fill="#ffffff" opacity="0.9"/>
+  <text x="150" y="95" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#3b82f6" text-anchor="middle">BETHEL</text>
+  <text x="150" y="115" font-family="Arial, sans-serif" font-size="14" fill="#1e3a8a" text-anchor="middle">IMAGEKIT</text>
+  <text x="150" y="135" font-family="Arial, sans-serif" font-size="12" fill="#1e3a8a" text-anchor="middle">TEST</text>
+  <text x="150" y="175" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" text-anchor="middle">Uploaded via Django</text>
+</svg>'''
+        
+        test_image = ContentFile(svg_content.encode('utf-8'), name='bethel_imagekit_test.svg')
+        
+        # Upload to ImageKit
+        file_path = default_storage.save('bethel/test_image.svg', test_image)
+        file_url = default_storage.url(file_path)
+        
+        return JsonResponse({
+            'success': True,
+            'file_path': file_path,
+            'file_url': file_url,
+            'is_imagekit': 'ik.imagekit.io' in file_url,
+            'storage_backend': str(settings.DEFAULT_FILE_STORAGE),
+            'message': 'Image uploaded successfully! Check your ImageKit dashboard.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'storage_backend': str(settings.DEFAULT_FILE_STORAGE)
+        }, status=500)
