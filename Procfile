@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn backend.wsgi 
+web: python railway_setup.py && python manage.py collectstatic --noinput && gunicorn backend.wsgi 
