@@ -6,6 +6,33 @@
 # Media files (local storage)
 media/
 
+# Large media files (exclude to keep deployment small)
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Large files by name pattern
+*WhatsApp*
+*2F65BF77*
+
+# Test and debug files
+test_*.py
+debug_*.py
+*_test.py
+update_cloudinary_credentials.py
+setup_railway_env.py
+
 # Database
 db.sqlite3
 

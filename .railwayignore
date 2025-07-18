@@ -17,6 +17,8 @@ __pycache__/
 test_*.py
 debug_*.py
 *_test.py
+update_cloudinary_credentials.py
+setup_railway_env.py
 
 # Exclude temporary files
 *.tmp
@@ -24,7 +26,7 @@ debug_*.py
 .DS_Store
 Thumbs.db
 
-# Exclude large images (keep only essential ones)
+# Exclude ALL media files (images, videos, etc.)
 *.jpg
 *.jpeg
 *.png
@@ -32,7 +34,21 @@ Thumbs.db
 *.bmp
 *.tiff
 *.webp
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+
+# Exclude large files by name pattern
+*WhatsApp*
+*2F65BF77*
 
 # Keep only essential static files
-static/img/bethel_logo.png
-static/img/default-profile.png 
+!static/img/bethel_logo.png
+!static/img/default-profile.png
+
+# Exclude any file larger than 1MB
+# (This is handled by the file extensions above) 
