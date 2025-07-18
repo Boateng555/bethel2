@@ -19,12 +19,16 @@ class ImageKitStorage(Storage):
         self.location = location or ''
         self.base_url = base_url
         
-        # Initialize ImageKit client
-        self.imagekit = imagekitio.ImageKit(
-            public_key=settings.IMAGEKIT_CONFIG['PUBLIC_KEY'],
-            private_key=settings.IMAGEKIT_CONFIG['PRIVATE_KEY'],
-            url_endpoint=settings.IMAGEKIT_CONFIG['URL_ENDPOINT']
-        )
+        # Initialize ImageKit client with error handling
+        try:
+            self.imagekit = imagekitio.ImageKit(
+                public_key=settings.IMAGEKIT_CONFIG['PUBLIC_KEY'],
+                private_key=settings.IMAGEKIT_CONFIG['PRIVATE_KEY'],
+                url_endpoint=settings.IMAGEKIT_CONFIG['URL_ENDPOINT']
+            )
+        except Exception as e:
+            print(f"❌ Failed to initialize ImageKit: {e}")
+            raise Exception(f"ImageKit initialization failed: {e}")
     
     def _open(self, name, mode='rb'):
         """Open a file from ImageKit"""

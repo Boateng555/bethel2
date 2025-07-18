@@ -182,15 +182,22 @@ if DEBUG:
     MEDIA_ROOT = Path(BASE_DIR) / 'media'
 else:
     # Check if ImageKit is configured
-    if all(IMAGEKIT_CONFIG.values()):
-        print("🖼️ Using ImageKit for production")
-        DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
-    elif all(CLOUDINARY_STORAGE.values()):
-        print("☁️ Using Cloudinary for production")
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    else:
-        print("❌ No cloud storage configured, fallback to local")
-        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    try:
+        if all(IMAGEKIT_CONFIG.values()):
+            print("🖼️ Using ImageKit for production")
+            DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+        elif all(CLOUDINARY_STORAGE.values()):
+            print("☁️ Using Cloudinary for production")
+            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        else:
+            print("❌ No cloud storage configured, fallback to local")
+            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    except Exception as e:
+        print(f"⚠️ Error checking storage config: {e}, using Cloudinary fallback")
+        if all(CLOUDINARY_STORAGE.values()):
+            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        else:
+            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 
 
