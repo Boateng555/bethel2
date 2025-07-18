@@ -12,7 +12,7 @@ from .views import (
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail, trigger_media_upload, trigger_sync_media_to_cloudinary,
-    simple_trigger_sync, check_production_status, debug_env, test_imagekit_upload_endpoint,
+    simple_trigger_sync, check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
 )
 
 urlpatterns = [
@@ -86,6 +86,7 @@ urlpatterns = [
     path('check-production-status/', check_production_status, name='check_production_status'),
     path('debug-env/', debug_env, name='debug_env'),
     path('test-imagekit-upload/', test_imagekit_upload_endpoint, name='test_imagekit_upload'),
+    path('upload-test/', upload_test_endpoint, name='upload_test'),
 ]
 
 urlpatterns += [

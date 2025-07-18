@@ -32,6 +32,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
+import imagekitio
 
 # Create your views here.
 
@@ -1902,4 +1903,76 @@ def test_imagekit_upload_endpoint(request):
             'success': False,
             'error': str(e),
             'storage_backend': str(settings.DEFAULT_FILE_STORAGE)
+        }, status=500)
+
+def upload_test_endpoint(request):
+    """Proper ImageKit upload endpoint using the Python SDK"""
+    from django.http import JsonResponse
+    from django.views.decorators.csrf import csrf_exempt
+    from django.views.decorators.http import require_http_methods
+    import imagekitio
+    import os
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        # Get the uploaded file
+        if 'image' not in request.FILES:
+            return JsonResponse({'error': 'No image file provided'}, status=400)
+        
+        uploaded_file = request.FILES['image']
+        
+        # Initialize ImageKit with your credentials
+        imagekit = imagekitio.ImageKit(
+            public_key=settings.IMAGEKIT_CONFIG['PUBLIC_KEY'],
+            private_key=settings.IMAGEKIT_CONFIG['PRIVATE_KEY'],
+            url_endpoint=settings.IMAGEKIT_CONFIG['URL_ENDPOINT']
+        )
+        
+        # Upload the file to ImageKit
+        upload = imagekit.upload_file(
+            file=uploaded_file,
+            file_name=f"bethel_{uploaded_file.name}",
+            options={
+                "folder": "bethel/uploads",
+                "use_unique_file_name": True,
+                "tags": ["bethel", "church", "upload"]
+            }
+        )
+        
+        # Check if upload was successful
+        if upload.response_metadata.http_status_code == 200:
+            # Get the image URL
+            image_url = imagekit.url({
+                "path": upload.file_path,
+                "transformation": [{
+                    "height": "300",
+                    "width": "400"
+                }]
+            })
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'File uploaded successfully to ImageKit!',
+                'file_id': upload.file_id,
+                'file_name': upload.name,
+                'file_path': upload.file_path,
+                'url': upload.url,
+                'image_url': image_url,
+                'size': upload.size,
+                'is_imagekit': True
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': f'Upload failed with status: {upload.response_metadata.http_status_code}',
+                'raw_response': upload.response_metadata.raw
+            }, status=500)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'message': 'Upload failed due to an error'
         }, status=500)
