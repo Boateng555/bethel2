@@ -148,7 +148,7 @@ MEDIA_ROOT = Path(BASE_DIR) / 'media'
 
 # Use environment variables for secrets and production
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
     '.up.railway.app',  # Allow all Railway subdomains
     '.railway.app',     # Allow Railway domains
