@@ -56,7 +56,13 @@ else:
 
 # Memory optimization: Database connection pooling
 if IS_RAILWAY:
-    DATABASES['default']['CONN_MAX_AGE'] = 300
+    DATABASES['default']['CONN_MAX_AGE'] = 60  # Reduced from 300
+    # Add more aggressive database optimizations
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
+        'read_timeout': 10,
+        'write_timeout': 10,
+    }
 
 # Apps
 INSTALLED_APPS = [
@@ -72,7 +78,7 @@ INSTALLED_APPS = [
     'core',
 ]
 
-# Middleware
+# Middleware - Optimized for Railway
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -101,6 +107,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            # Memory optimization: Disable template caching in development
+            'debug': DEBUG,
         },
     },
 ]
@@ -146,17 +154,18 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Memory optimization: Session settings
 if IS_RAILWAY:
     SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-    SESSION_COOKIE_AGE = 3600  # 1 hour
+    SESSION_COOKIE_AGE = 1800  # Reduced to 30 minutes
     SESSION_SAVE_EVERY_REQUEST = False
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Memory optimization: Cache settings (simple in-memory cache)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes
+        'TIMEOUT': 60,  # Reduced to 1 minute
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            'MAX_ENTRIES': 100,  # Reduced from 1000
         }
     }
 }
@@ -179,12 +188,17 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'WARNING',  # Reduced from INFO
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'WARNING',  # Reduced from INFO
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'ERROR',  # Only show database errors
             'propagate': False,
         },
     },

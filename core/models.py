@@ -11,6 +11,12 @@ from datetime import datetime, timedelta
 import requests
 from .image_utils import resize_image_field, optimize_image_for_web
 
+# Memory optimization: Lazy imports
+def get_image_utils():
+    """Lazy import for image utils to reduce startup memory"""
+    from .image_utils import resize_image_field, optimize_image_for_web
+    return resize_image_field, optimize_image_for_web
+
 # Create your models here.
 
 class Church(models.Model):
@@ -56,6 +62,13 @@ class Church(models.Model):
     class Meta:
         verbose_name_plural = "Churches"
         ordering = ['name']
+        # Memory optimization: Add database indexes
+        indexes = [
+            models.Index(fields=['is_active']),
+            models.Index(fields=['is_approved']),
+            models.Index(fields=['is_featured']),
+            models.Index(fields=['city', 'country']),
+        ]
     
     def __str__(self):
         return f"{self.name} - {self.city}, {self.country}"
@@ -88,6 +101,17 @@ class Church(models.Model):
             else:
                 return self.banner_image.url
         return ''
+    
+    # Memory optimization: Lazy loading methods
+    @classmethod
+    def get_active_churches(cls):
+        """Get only active churches with minimal fields"""
+        return cls.objects.filter(is_active=True).only('id', 'name', 'slug', 'city', 'country')
+    
+    @classmethod
+    def get_featured_churches(cls):
+        """Get featured churches with minimal fields"""
+        return cls.objects.filter(is_active=True, is_featured=True).only('id', 'name', 'slug', 'city', 'country')
     
     def setup_default_functionality(self):
         """Create default ministries, events, news, sermons, and donation methods for a new church"""
