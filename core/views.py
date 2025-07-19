@@ -1932,18 +1932,9 @@ def upload_test_endpoint(request):
         )
         
         # Upload the file to ImageKit
-        from imagekitio.models.UploadFileRequestOptions import UploadFileRequestOptions
-        
-        options = UploadFileRequestOptions(
-            folder="bethel/uploads",
-            use_unique_file_name=True,
-            tags=["bethel", "church", "upload"]
-        )
-        
         upload = imagekit.upload_file(
             file=uploaded_file,
-            file_name=f"bethel_{uploaded_file.name}",
-            options=options
+            file_name=f"bethel_{uploaded_file.name}"
         )
         
         # Check if upload was successful
