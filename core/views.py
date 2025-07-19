@@ -1926,20 +1926,24 @@ def upload_test_endpoint(request):
         
         # Initialize ImageKit with your credentials
         imagekit = imagekitio.ImageKit(
-            public_key=settings.IMAGEKIT_CONFIG['PUBLIC_KEY'],
-            private_key=settings.IMAGEKIT_CONFIG['PRIVATE_KEY'],
-            url_endpoint=settings.IMAGEKIT_CONFIG['URL_ENDPOINT']
+            public_key=settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY'),
+            private_key=settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY'),
+            url_endpoint=settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')
         )
         
         # Upload the file to ImageKit
+        from imagekitio.models.UploadFileRequestOptions import UploadFileRequestOptions
+        
+        options = UploadFileRequestOptions(
+            folder="bethel/uploads",
+            use_unique_file_name=True,
+            tags=["bethel", "church", "upload"]
+        )
+        
         upload = imagekit.upload_file(
             file=uploaded_file,
             file_name=f"bethel_{uploaded_file.name}",
-            options={
-                "folder": "bethel/uploads",
-                "use_unique_file_name": True,
-                "tags": ["bethel", "church", "upload"]
-            }
+            options=options
         )
         
         # Check if upload was successful
@@ -1972,8 +1976,15 @@ def upload_test_endpoint(request):
             }, status=500)
             
     except Exception as e:
+        import traceback
         return JsonResponse({
             'success': False,
             'error': str(e),
-            'message': 'Upload failed due to an error'
+            'traceback': traceback.format_exc(),
+            'message': 'Upload failed due to an error',
+            'imagekit_config': {
+                'has_public_key': bool(settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY')),
+                'has_private_key': bool(settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY')),
+                'has_url_endpoint': bool(settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')),
+            }
         }, status=500)
