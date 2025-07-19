@@ -30,13 +30,15 @@ IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT_NAME") is not None
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
 # Database: PostgreSQL on Railway or local SQLite
+# Database: PostgreSQL on Railway or local SQLite
 if IS_RAILWAY or USE_PROD_DB:
     raw_db_url = os.environ.get("DATABASE_URL", "")
     if raw_db_url.startswith("postgres://"):
         raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+
     DATABASES = {
-        'default': dj_database_url.config(
-            default=raw_db_url,
+        'default': dj_database_url.parse(
+            raw_db_url,
             conn_max_age=600,
             ssl_require=True
         )
@@ -48,6 +50,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 # Apps
 INSTALLED_APPS = [
