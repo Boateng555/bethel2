@@ -25,6 +25,27 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
     'web-production-158c.up.railway.app'
 ]
 
+# Detect if running on Railway
+IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT_NAME") is not None
+USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
+
+# Database: PostgreSQL on Railway or local SQLite
+if IS_RAILWAY or USE_PROD_DB:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
 # Apps
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -75,25 +96,6 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database: Railway Postgres or local SQLite
-USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
-
-if USE_PROD_DB:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -131,7 +133,7 @@ IMAGEKIT_CONFIG = {
     'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
 }
 
-# File storage (ImageKit if available, fallback to local)
+# File storage (ImageKit if configured, fallback to local)
 try:
     if all(IMAGEKIT_CONFIG.values()):
         print("🖼️ Using ImageKit for storage")
