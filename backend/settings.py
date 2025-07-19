@@ -20,25 +20,18 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dt1#i48=k*oc^@cwtgj7v1ou(_(n%z=&omp$)fhfh3d)hvv^sg'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dt1#i48=k*oc^@cwtgj7v1ou(_(n%z=&omp$)fhfh3d)hvv^sg')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
     '.railway.app',
     'web-production-158c.up.railway.app'
 ]
 
-
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,8 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',
-    'cloudinary_storage',
     'imagekit',
     'rest_framework',
     'corsheaders',
@@ -57,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,134 +77,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CORS_ALLOW_ALL_ORIGINS = True  # For development only!
-MEDIA_URL = '/media/'
-MEDIA_ROOT = Path(BASE_DIR) / 'media'
-
-# Use environment variables for secrets and production
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
-    '.up.railway.app',  # Allow all Railway subdomains
-    '.railway.app',     # Allow Railway domains
-    'web-production-158c.up.railway.app',  # Your specific Railway domain
-]
-
-# Cloudinary configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-}
-
-# ImageKit configuration
-IMAGEKIT_CONFIG = {
-    'PUBLIC_KEY': os.environ.get('IMAGEKIT_PUBLIC_KEY'),
-    'PRIVATE_KEY': os.environ.get('IMAGEKIT_PRIVATE_KEY'),
-    'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
-}
-
-# Whitenoise for static files
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# For local development, always use local storage
-if DEBUG:
-    print("⚙️ Using local storage for development")
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = Path(BASE_DIR) / 'media'
-else:
-    # Check if ImageKit is configured
-    try:
-        if all(IMAGEKIT_CONFIG.values()):
-            print("🖼️ Using ImageKit for production")
-            DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
-        elif all(CLOUDINARY_STORAGE.values()):
-            print("☁️ Using Cloudinary for production")
-            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-        else:
-            print("❌ No cloud storage configured, fallback to local")
-            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    except Exception as e:
-        print(f"⚠️ Error checking storage config: {e}, using Cloudinary fallback")
-        if all(CLOUDINARY_STORAGE.values()):
-            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-        else:
-            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-
-
-# Use DATABASE_URL if provided (for Railway Postgres)
-import dj_database_url
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and not DEBUG:
-    # Only use Railway database in production
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
-    # Add SSL configuration for Railway Postgres
-    DATABASES['default']['OPTIONS'] = {
-        'sslmode': 'require',
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
     }
+    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
 else:
-    # Use local SQLite for development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -220,6 +93,76 @@ else:
         }
     }
 
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# Internationalization
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+
+# ImageKit settings
+IMAGEKIT_CONFIG = {
+    'PUBLIC_KEY': os.environ.get('IMAGEKIT_PUBLIC_KEY'),
+    'PRIVATE_KEY': os.environ.get('IMAGEKIT_PRIVATE_KEY'),
+    'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
+}
+
+# Cloudinary settings (for existing images)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+# Storage setting
+if DEBUG:
+    # In development, try to use ImageKit if configured, otherwise use local storage
+    try:
+        if all(IMAGEKIT_CONFIG.values()):
+            print("🖼️ Using ImageKit for development")
+            DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+        else:
+            print("⚙️ Using local storage for development")
+            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    except Exception as e:
+        print(f"⚠️ Error checking ImageKit config: {e}, using local storage")
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+else:
+    try:
+        if all(IMAGEKIT_CONFIG.values()):
+            print("🖼️ Using ImageKit for production")
+            DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+        else:
+            print("❌ No cloud storage configured, fallback to local")
+            DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    except Exception as e:
+        print(f"⚠️ Error checking storage config: {e}, using fallback")
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# CSRF settings
 CSRF_TRUSTED_ORIGINS = [
     "https://web-production-158c.up.railway.app",
     "https://*.up.railway.app",

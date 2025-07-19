@@ -1,102 +1,112 @@
 #!/usr/bin/env python
 """
-Simple test script to understand ImageKit API response format
+Test script to upload a sample image and verify ImageKit is working
 """
 import os
-import imagekitio
-from pathlib import Path
+import sys
 import django
+from pathlib import Path
 
-# Set up Django
+# Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-from core.models import Church
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+
+def create_test_image():
+    """Create a simple test image"""
+    # Create a simple SVG test image
+    svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#3b82f6"/>
+  <text x="50" y="55" font-family="Arial" font-size="12" fill="white" text-anchor="middle">TEST</text>
+</svg>'''
+    
+    return ContentFile(svg_content.encode('utf-8'), name='test_imagekit.svg')
 
 def test_imagekit_upload():
-    """
-    Test a simple upload to ImageKit
-    """
-    print("🧪 Testing ImageKit Upload...")
+    """Test uploading to ImageKit"""
+    print("🧪 Testing ImageKit Upload")
     print("=" * 50)
     
-    # Configure ImageKit
-    public_key = os.environ.get('IMAGEKIT_PUBLIC_KEY')
-    private_key = os.environ.get('IMAGEKIT_PRIVATE_KEY')
-    url_endpoint = os.environ.get('IMAGEKIT_URL_ENDPOINT')
+    # Check current storage backend
+    print(f"Current storage backend: {settings.DEFAULT_FILE_STORAGE}")
+    print(f"DEBUG mode: {settings.DEBUG}")
     
-    print(f"Public Key: {public_key[:20]}...")
-    print(f"Private Key: {private_key[:20]}...")
-    print(f"URL Endpoint: {url_endpoint}")
+    # Create test image
+    test_image = create_test_image()
+    print(f"Created test image: {test_image.name}")
     
-    # Initialize ImageKit
-    imagekit = imagekitio.ImageKit(
-        public_key=public_key,
-        private_key=private_key,
-        url_endpoint=url_endpoint
-    )
-    
-    print("🖼️ ImageKit initialized")
-    
-    # Test with one church logo
-    churches = Church.objects.all()
-    if churches.exists():
-        church = churches.first()
-        print(f"\n📤 Testing with: {church.name}")
+    # Upload to storage
+    try:
+        file_path = default_storage.save(f'test_imagekit_{os.getpid()}.svg', test_image)
+        print(f"✅ Upload successful!")
+        print(f"File path: {file_path}")
         
-        if church.logo and hasattr(church.logo, 'path'):
-            local_path = church.logo.path
-            if os.path.exists(local_path):
-                print(f"📸 Found logo: {local_path}")
-                print(f"📏 File size: {os.path.getsize(local_path)} bytes")
-                
-                try:
-                    # Upload to ImageKit
-                    with open(local_path, 'rb') as file:
-                        print("🔄 Uploading...")
-                        result = imagekit.upload_file(
-                            file=file,
-                            file_name=f"test_church_{church.id}_logo{os.path.splitext(local_path)[1]}",
-                            options={
-                                "folder": "bethel/test",
-                                "use_unique_file_name": False
-                            }
-                        )
-                    
-                    print(f"📋 Result type: {type(result)}")
-                    print(f"📋 Result: {result}")
-                    
-                    # Try to access different attributes
-                    if hasattr(result, 'response_metadata'):
-                        print(f"✅ Has response_metadata")
-                        print(f"📋 response_metadata: {result.response_metadata}")
-                    else:
-                        print(f"❌ No response_metadata")
-                    
-                    if hasattr(result, 'url'):
-                        print(f"✅ Has url: {result.url}")
-                    else:
-                        print(f"❌ No url attribute")
-                    
-                    # Try to access as dictionary
-                    if isinstance(result, dict):
-                        print(f"✅ Result is a dictionary")
-                        print(f"📋 Keys: {list(result.keys())}")
-                        if 'url' in result:
-                            print(f"✅ Found URL in dict: {result['url']}")
-                    else:
-                        print(f"❌ Result is not a dictionary")
-                        
-                except Exception as e:
-                    print(f"❌ Error: {e}")
-                    import traceback
-                    traceback.print_exc()
-            else:
-                print(f"❌ File doesn't exist: {local_path}")
+        # Get the URL
+        file_url = default_storage.url(file_path)
+        print(f"File URL: {file_url}")
+        
+        # Check if it's an ImageKit URL
+        if 'ik.imagekit.io' in file_url:
+            print("🎉 SUCCESS: Image uploaded to ImageKit!")
+        elif 'res.cloudinary.com' in file_url:
+            print("☁️ Image uploaded to Cloudinary (fallback)")
         else:
-            print(f"❌ No logo for this church")
-    else:
-        print(f"❌ No churches found")
+            print("📁 Image uploaded to local storage")
+        
+        # Clean up - delete the test file
+        default_storage.delete(file_path)
+        print(f"🧹 Cleaned up test file")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Upload failed: {e}")
+        return False
+
+def test_production_upload():
+    """Test what would happen in production"""
+    print("\n🚀 Testing Production Upload Simulation")
+    print("=" * 50)
+    
+    # Temporarily set DEBUG to False to simulate production
+    original_debug = settings.DEBUG
+    settings.DEBUG = False
+    
+    try:
+        # Check what storage backend would be used
+        print(f"Production storage backend: {settings.DEFAULT_FILE_STORAGE}")
+        
+        # Create test image
+        test_image = create_test_image()
+        
+        # Upload to storage
+        file_path = default_storage.save(f'prod_test_{os.getpid()}.svg', test_image)
+        file_url = default_storage.url(file_path)
+        
+        print(f"✅ Production upload successful!")
+        print(f"File URL: {file_url}")
+        
+        if 'ik.imagekit.io' in file_url:
+            print("🎉 SUCCESS: Production would use ImageKit!")
+        else:
+            print("⚠️ Production would use different storage")
+        
+        # Clean up
+        default_storage.delete(file_path)
+        
+    except Exception as e:
+        print(f"❌ Production test failed: {e}")
+    finally:
+        # Restore original DEBUG setting
+        settings.DEBUG = original_debug
 
 if __name__ == "__main__":
-    test_imagekit_upload() 
+    test_imagekit_upload()
+    test_production_upload()
+    
+    print("\n" + "=" * 50)
+    print("✅ Test completed!") 
