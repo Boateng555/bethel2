@@ -31,18 +31,23 @@ USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
 # Database: PostgreSQL on Railway or local SQLite
 # Database: PostgreSQL on Railway or local SQLite
+# Database: PostgreSQL on Railway or local SQLite
 if IS_RAILWAY or USE_PROD_DB:
     raw_db_url = os.environ.get("DATABASE_URL", "")
     if raw_db_url.startswith("postgres://"):
         raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 
-    DATABASES = {
-        'default': dj_database_url.parse(
-            raw_db_url,
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(
+                raw_db_url,
+                conn_max_age=600,
+                ssl_require=True
+            )
+        }
+    except Exception as e:
+        print("❌ DATABASE ERROR:", e)
+        raise e
 else:
     DATABASES = {
         'default': {
@@ -50,6 +55,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 
 # Apps
