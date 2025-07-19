@@ -1,1 +1,1 @@
-web: gunicorn backend.wsgi:application --workers=1 --threads=2 --timeout=120 --max-requests=1000 --max-requests-jitter=100 
+web: gunicorn backend.wsgi:application --config gunicorn.conf.py 

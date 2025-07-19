@@ -30,8 +30,6 @@ IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT_NAME") is not None
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
 # Database: PostgreSQL on Railway or local SQLite
-# Database: PostgreSQL on Railway or local SQLite
-# Database: PostgreSQL on Railway or local SQLite
 if IS_RAILWAY or USE_PROD_DB:
     raw_db_url = os.environ.get("DATABASE_URL", "")
     if raw_db_url.startswith("postgres://"):
@@ -41,8 +39,13 @@ if IS_RAILWAY or USE_PROD_DB:
         DATABASES = {
             'default': dj_database_url.parse(
                 raw_db_url,
-                conn_max_age=600,
-                ssl_require=True
+                conn_max_age=300,  # Reduced from 600 for memory efficiency
+                ssl_require=True,
+                # Memory optimization settings
+                options={
+                    'MAX_CONNS': 10,  # Limit connection pool
+                    'MIN_CONNS': 1,
+                }
             )
         }
     except Exception as e:
@@ -56,7 +59,13 @@ else:
         }
     }
 
-
+# Memory optimization: Database connection pooling
+if IS_RAILWAY:
+    DATABASES['default']['CONN_MAX_AGE'] = 300
+    DATABASES['default']['OPTIONS'] = {
+        'MAX_CONNS': 10,
+        'MIN_CONNS': 1,
+    }
 
 # Apps
 INSTALLED_APPS = [
@@ -122,11 +131,16 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files with memory optimization
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Memory optimization: Use simpler static file storage
+if IS_RAILWAY:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -137,6 +151,53 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Memory optimization: Session settings
+if IS_RAILWAY:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+    SESSION_COOKIE_AGE = 3600  # 1 hour
+    SESSION_SAVE_EVERY_REQUEST = False
+
+# Memory optimization: Cache settings (simple in-memory cache)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Memory optimization: Logging (reduce verbosity)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 # ImageKit settings
 IMAGEKIT_CONFIG = {
@@ -163,3 +224,17 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.up.railway.app",
     "https://*.railway.app",
 ]
+
+# Memory optimization: REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,  # Limit page size
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
+}
