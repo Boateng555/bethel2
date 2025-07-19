@@ -40,12 +40,7 @@ if IS_RAILWAY or USE_PROD_DB:
             'default': dj_database_url.parse(
                 raw_db_url,
                 conn_max_age=300,  # Reduced from 600 for memory efficiency
-                ssl_require=True,
-                # Memory optimization settings
-                options={
-                    'MAX_CONNS': 10,  # Limit connection pool
-                    'MIN_CONNS': 1,
-                }
+                ssl_require=True
             )
         }
     except Exception as e:
@@ -62,10 +57,6 @@ else:
 # Memory optimization: Database connection pooling
 if IS_RAILWAY:
     DATABASES['default']['CONN_MAX_AGE'] = 300
-    DATABASES['default']['OPTIONS'] = {
-        'MAX_CONNS': 10,
-        'MIN_CONNS': 1,
-    }
 
 # Apps
 INSTALLED_APPS = [
