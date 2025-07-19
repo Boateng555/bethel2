@@ -1905,6 +1905,7 @@ def test_imagekit_upload_endpoint(request):
             'storage_backend': str(settings.DEFAULT_FILE_STORAGE)
         }, status=500)
 
+@csrf_exempt
 def upload_test_endpoint(request):
     """Proper ImageKit upload endpoint using the Python SDK"""
     from django.http import JsonResponse
