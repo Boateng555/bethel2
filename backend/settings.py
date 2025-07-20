@@ -35,17 +35,32 @@ if IS_RAILWAY or USE_PROD_DB:
     if raw_db_url.startswith("postgres://"):
         raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 
-    try:
+    if raw_db_url:
+        try:
+            DATABASES = {
+                'default': dj_database_url.parse(
+                    raw_db_url,
+                    conn_max_age=300,  # Reduced from 600 for memory efficiency
+                    ssl_require=True
+                )
+            }
+        except Exception as e:
+            print("❌ DATABASE ERROR:", e)
+            # Fallback to SQLite if database URL is invalid
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': BASE_DIR / 'db.sqlite3',
+                }
+            }
+    else:
+        print("⚠️ No DATABASE_URL found, using SQLite")
         DATABASES = {
-            'default': dj_database_url.parse(
-                raw_db_url,
-                conn_max_age=300,  # Reduced from 600 for memory efficiency
-                ssl_require=True
-            )
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
-    except Exception as e:
-        print("❌ DATABASE ERROR:", e)
-        raise e
 else:
     DATABASES = {
         'default': {

@@ -22,8 +22,12 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Make startup script executable
+COPY start.sh .
+RUN chmod +x start.sh
+
 # Expose port
 EXPOSE 8080
 
 # Start command
-CMD ["gunicorn", "backend.wsgi:application", "--config", "gunicorn.conf.py"] 
+CMD ["./start.sh"] 
