@@ -2106,3 +2106,24 @@ def retry_database_operation(operation, max_retries=3, delay=1):
             else:
                 raise
     return None
+
+def startup_health_check(request):
+    """Simple health check that doesn't require database access"""
+    from django.http import JsonResponse
+    import os
+    
+    health_status = {
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'environment': {
+            'railway': bool(os.getenv('RAILWAY_ENVIRONMENT_NAME')),
+            'debug': settings.DEBUG,
+            'database_engine': settings.DATABASES['default']['ENGINE'],
+        },
+        'services': {
+            'django': 'running',
+            'static_files': 'available',
+        }
+    }
+    
+    return JsonResponse(health_status)

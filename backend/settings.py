@@ -40,7 +40,7 @@ if IS_RAILWAY or USE_PROD_DB:
             DATABASES = {
                 'default': dj_database_url.parse(
                     raw_db_url,
-                    conn_max_age=300,  # Increased for better connection pooling
+                    conn_max_age=60,  # Reduced for faster startup
                     ssl_require=True
                 )
             }
@@ -73,10 +73,10 @@ else:
 
 # Memory optimization: Database connection pooling
 if IS_RAILWAY:
-    DATABASES['default']['CONN_MAX_AGE'] = 300  # Increased for better stability
+    DATABASES['default']['CONN_MAX_AGE'] = 60  # Reduced for faster startup
     # Add database optimizations (only valid options for PostgreSQL)
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 30,  # Increased timeout
+        'connect_timeout': 10,  # Reduced for faster startup
         'sslmode': 'require',   # Ensure SSL is required
     }
     print("🔧 Railway database optimizations applied")
