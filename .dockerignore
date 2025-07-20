@@ -64,6 +64,9 @@ Thumbs.db
 *.txt
 *.docx
 
+# Keep requirements.txt for Docker build
+!requirements.txt
+
 # Test files
 test_*.py
 debug_*.py
