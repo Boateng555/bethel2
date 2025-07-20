@@ -40,12 +40,13 @@ if IS_RAILWAY or USE_PROD_DB:
             DATABASES = {
                 'default': dj_database_url.parse(
                     raw_db_url,
-                    conn_max_age=300,  # Reduced from 600 for memory efficiency
+                    conn_max_age=300,  # Increased for better connection pooling
                     ssl_require=True
                 )
             }
+            print(f"✅ Database configured: {DATABASES['default']['ENGINE']}")
         except Exception as e:
-            print("❌ DATABASE ERROR:", e)
+            print(f"❌ DATABASE ERROR: {e}")
             # Fallback to SQLite if database URL is invalid
             DATABASES = {
                 'default': {
@@ -53,6 +54,7 @@ if IS_RAILWAY or USE_PROD_DB:
                     'NAME': BASE_DIR / 'db.sqlite3',
                 }
             }
+            print("⚠️ Falling back to SQLite database")
     else:
         print("⚠️ No DATABASE_URL found, using SQLite")
         DATABASES = {
@@ -71,11 +73,13 @@ else:
 
 # Memory optimization: Database connection pooling
 if IS_RAILWAY:
-    DATABASES['default']['CONN_MAX_AGE'] = 60  # Reduced from 300
+    DATABASES['default']['CONN_MAX_AGE'] = 300  # Increased for better stability
     # Add database optimizations (only valid options for PostgreSQL)
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
+        'connect_timeout': 30,  # Increased timeout
+        'sslmode': 'require',   # Ensure SSL is required
     }
+    print("🔧 Railway database optimizations applied")
 
 # Apps
 INSTALLED_APPS = [

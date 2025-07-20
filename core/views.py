@@ -33,6 +33,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
 import imagekitio
+import time
+from django.db import connection
+from django.db.utils import OperationalError
 
 # Create your views here.
 
@@ -2082,3 +2085,24 @@ def health_check(request):
         health_status['database']['error'] = str(e)
     
     return JsonResponse(health_status)
+
+def retry_database_operation(operation, max_retries=3, delay=1):
+    """
+    Retry a database operation with exponential backoff
+    """
+    for attempt in range(max_retries):
+        try:
+            return operation()
+        except OperationalError as e:
+            if "timeout" in str(e).lower() or "connection" in str(e).lower():
+                if attempt < max_retries - 1:
+                    print(f"DEBUG: Database connection attempt {attempt + 1} failed, retrying in {delay} seconds...")
+                    time.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    print(f"DEBUG: Database connection failed after {max_retries} attempts: {e}")
+                    raise
+            else:
+                raise
+    return None
