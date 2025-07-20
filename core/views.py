@@ -120,75 +120,94 @@ def smart_home(request):
     """
     Smart home view that redirects users to their nearest church based on location
     """
-    # Check if user wants to go to global site (by presence of the parameter)
-    go_global = 'global' in request.GET
+    try:
+        # Check if user wants to go to global site (by presence of the parameter)
+        go_global = 'global' in request.GET
 
-    # If user explicitly wants global site, redirect to global home
-    if go_global:
-        return redirect('home')
-    
-    # Test parameter for manual testing
-    test_location = request.GET.get('test_location')
-    if test_location:
-        print(f"DEBUG: Testing with location: {test_location}")
-        if ',' in test_location:
-            city, country = test_location.split(',', 1)
-            country = country.strip()
-            city = city.strip()
+        # If user explicitly wants global site, redirect to global home
+        if go_global:
+            return redirect('home')
+        
+        # Test parameter for manual testing
+        test_location = request.GET.get('test_location')
+        if test_location:
+            print(f"DEBUG: Testing with location: {test_location}")
+            if ',' in test_location:
+                city, country = test_location.split(',', 1)
+                country = country.strip()
+                city = city.strip()
+            else:
+                country = test_location.strip()
+                city = None
         else:
-            country = test_location.strip()
-            city = None
-    else:
-        country, city = get_user_location(request)
-    
-    # Get all approved and active churches
-    churches = Church.objects.filter(is_active=True, is_approved=True)
-    church_count = churches.count()
-
-    print(f"DEBUG: Found {church_count} active churches")
-    
-    # If no churches, show global site
-    if church_count == 0:
-        print("DEBUG: No churches found, redirecting to global home")
-        return redirect('home')
-    
-    # If only one church, redirect to it
-    if church_count == 1:
-        church = churches.first()
-        print(f"DEBUG: Only one church found: {church.name} in {church.city}, {church.country}")
-        return redirect('church_home', church_id=church.id)
-    
-    print(f"DEBUG: User location detected - Country: {country}, City: {city}")
-    
-    if country:
-        # Try to find nearest church based on location
-        nearest_church = find_nearest_church(country, city)
-        if nearest_church:
-            print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
-            return redirect('church_home', church_id=nearest_church.id)
+            country, city = get_user_location(request)
+        
+        # Get all approved and active churches with error handling
+        try:
+            churches = Church.objects.filter(is_active=True, is_approved=True)
+            church_count = churches.count()
+            print(f"DEBUG: Found {church_count} active churches")
+        except Exception as db_error:
+            print(f"DEBUG: Database error in smart_home: {db_error}")
+            # If database is not available, redirect to global home
+            return redirect('home')
+        
+        # If no churches, show global site
+        if church_count == 0:
+            print("DEBUG: No churches found, redirecting to global home")
+            return redirect('home')
+        
+        # If only one church, redirect to it
+        if church_count == 1:
+            church = churches.first()
+            print(f"DEBUG: Only one church found: {church.name} in {church.city}, {church.country}")
+            return redirect('church_home', church_id=church.id)
+        
+        print(f"DEBUG: User location detected - Country: {country}, City: {city}")
+        
+        if country:
+            # Try to find nearest church based on location
+            nearest_church = find_nearest_church(country, city)
+            if nearest_church:
+                print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
+                return redirect('church_home', church_id=nearest_church.id)
+            else:
+                print(f"DEBUG: No church found for location: {city}, {country}")
         else:
-            print(f"DEBUG: No church found for location: {city}, {country}")
-    else:
-        print("DEBUG: Could not determine user location")
-    
-    # If we can't determine location or no nearby church, show church list
-    print("DEBUG: Redirecting to church list")
-    return redirect('church_list')
+            print("DEBUG: Could not determine user location")
+        
+        # If we can't determine location or no nearby church, show church list
+        print("DEBUG: Redirecting to church list")
+        return redirect('church_list')
+        
+    except Exception as e:
+        print(f"DEBUG: Unexpected error in smart_home: {e}")
+        # Fallback to global home if anything goes wrong
+        return redirect('home')
 
 def home(request):
     # Check if user wants to go to global site (by presence of the parameter)
     go_global = 'global' in request.GET
 
-    # Get all approved and active churches
-    churches = Church.objects.filter(is_active=True, is_approved=True)
-    church_count = churches.count()
+    # Get all approved and active churches with error handling
+    try:
+        churches = Church.objects.filter(is_active=True, is_approved=True)
+        church_count = churches.count()
+    except Exception as db_error:
+        print(f"DEBUG: Database error in home view: {db_error}")
+        # If database is not available, continue to show global homepage
+        church_count = 0
 
     # If user explicitly wants global site, show it
     if go_global:
         pass  # Continue to show global homepage
     elif church_count == 1:
             # Only one church, redirect to it
-            return redirect('church_home', church_id=churches.first().id)
+            try:
+                return redirect('church_home', church_id=churches.first().id)
+            except Exception as e:
+                print(f"DEBUG: Error redirecting to church: {e}")
+                pass  # Continue to show global homepage
     elif church_count > 1:
             # Multiple churches, show choose your church page
             return redirect('church_list')
@@ -197,40 +216,77 @@ def home(request):
     # Show the global site with aggregated content from all churches
     
     # Get active hero content (global hero, not church-specific) - RELAXED FILTER
-    hero = Hero.objects.filter(
-        is_active=True,
-        church__isnull=True
-    ).prefetch_related('hero_media').order_by('order', '-created_at').first()
+    try:
+        hero = Hero.objects.filter(
+            is_active=True,
+            church__isnull=True
+        ).prefetch_related('hero_media').order_by('order', '-created_at').first()
+    except Exception as e:
+        print(f"DEBUG: Error getting hero: {e}")
+        hero = None
     
     # Get public content from all churches for the global site
     # Events, News, Sermons, Ministries appear immediately when public (no approval needed)
-    upcoming_events = Event.objects.filter(
-        is_public=True,
-        start_date__gte=timezone.now()
-    ).prefetch_related('hero_media').order_by('start_date')[:6]
+    try:
+        upcoming_events = Event.objects.filter(
+            is_public=True,
+            start_date__gte=timezone.now()
+        ).prefetch_related('hero_media').order_by('start_date')[:6]
+    except Exception as e:
+        print(f"DEBUG: Error getting upcoming events: {e}")
+        upcoming_events = []
     
-    featured_events = Event.objects.filter(
-        is_public=True,
-        is_featured=True
-    ).prefetch_related('hero_media').order_by('-start_date')[:3]
+    try:
+        featured_events = Event.objects.filter(
+            is_public=True,
+            is_featured=True
+        ).prefetch_related('hero_media').order_by('-start_date')[:3]
+    except Exception as e:
+        print(f"DEBUG: Error getting featured events: {e}")
+        featured_events = []
     
-    public_ministries = Ministry.objects.filter(
-        is_public=True
-    ).order_by('name')[:6]  # 6 ministries
+    try:
+        public_ministries = Ministry.objects.filter(
+            is_public=True
+        ).order_by('name')[:6]  # 6 ministries
+    except Exception as e:
+        print(f"DEBUG: Error getting ministries: {e}")
+        public_ministries = []
     
-    latest_news = News.objects.filter(
-        is_public=True
-    ).order_by('-date')[:4]  # 4 latest news articles
+    try:
+        latest_news = News.objects.filter(
+            is_public=True
+        ).order_by('-date')[:4]  # 4 latest news articles
+    except Exception as e:
+        print(f"DEBUG: Error getting news: {e}")
+        latest_news = []
     
-    latest_sermons = Sermon.objects.filter(
-        is_public=True
-    ).order_by('-date')[:4]  # 4 latest sermons
+    try:
+        latest_sermons = Sermon.objects.filter(
+            is_public=True
+        ).order_by('-date')[:4]  # 4 latest sermons
+    except Exception as e:
+        print(f"DEBUG: Error getting sermons: {e}")
+        latest_sermons = []
     
     # Get user location for display
     country, city = get_user_location(request)
     nearest_church = None
     if country:
-        nearest_church = find_nearest_church(country, city)
+        try:
+            nearest_church = find_nearest_church(country, city)
+        except Exception as e:
+            print(f"DEBUG: Error finding nearest church: {e}")
+    
+    try:
+        all_events = Event.objects.filter(is_public=True)[:10]
+        all_ministries = Ministry.objects.filter(is_public=True)[:10]
+        recent_testimonies = Testimony.objects.filter(is_approved=True).order_by('-created_at')[:3]
+    except Exception as e:
+        print(f"DEBUG: Error getting additional data: {e}")
+        all_events = []
+        all_ministries = []
+        recent_testimonies = []
     
     context = {
         'hero': hero,
@@ -238,13 +294,13 @@ def home(request):
         'ministries': public_ministries,
         'sermons': latest_sermons,
         'news': latest_news,
-        'all_events': Event.objects.filter(is_public=True)[:10],
-        'all_ministries': Ministry.objects.filter(is_public=True)[:10],
+        'all_events': all_events,
+        'all_ministries': all_ministries,
         'user_country': country,
         'user_city': city,
         'nearest_church': nearest_church,
         'is_global_site': True,
-        'recent_testimonies': Testimony.objects.filter(is_approved=True).order_by('-created_at')[:3],
+        'recent_testimonies': recent_testimonies,
     }
     return render(request, 'core/home.html', context)
 
@@ -1979,3 +2035,50 @@ def upload_test_endpoint(request):
                 'has_url_endpoint': bool(settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')),
             }
         }, status=500)
+
+def health_check(request):
+    """Health check endpoint to diagnose database and application status"""
+    from django.http import JsonResponse
+    from django.db import connection
+    
+    health_status = {
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'database': {
+            'connected': False,
+            'error': None
+        },
+        'models': {
+            'churches': 0,
+            'events': 0,
+            'ministries': 0
+        }
+    }
+    
+    # Test database connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            health_status['database']['connected'] = True
+            
+            # Test model queries
+            try:
+                health_status['models']['churches'] = Church.objects.count()
+            except Exception as e:
+                health_status['models']['churches'] = f"Error: {str(e)}"
+            
+            try:
+                health_status['models']['events'] = Event.objects.count()
+            except Exception as e:
+                health_status['models']['events'] = f"Error: {str(e)}"
+            
+            try:
+                health_status['models']['ministries'] = Ministry.objects.count()
+            except Exception as e:
+                health_status['models']['ministries'] = f"Error: {str(e)}"
+                
+    except Exception as e:
+        health_status['status'] = 'unhealthy'
+        health_status['database']['error'] = str(e)
+    
+    return JsonResponse(health_status)

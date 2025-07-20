@@ -13,6 +13,7 @@ from .views import (
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail, trigger_media_upload, trigger_sync_media_to_cloudinary,
     simple_trigger_sync, check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
+    health_check,
 )
 
 urlpatterns = [
@@ -87,6 +88,7 @@ urlpatterns = [
     path('debug-env/', debug_env, name='debug_env'),
     path('test-imagekit-upload/', test_imagekit_upload_endpoint, name='test_imagekit_upload'),
     path('upload-test/', upload_test_endpoint, name='upload_test'),
+    path('health/', health_check, name='health_check'),
 ]
 
 urlpatterns += [
