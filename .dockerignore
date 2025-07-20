@@ -1,0 +1,108 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Railway
+.railway/
+.railwayignore
+
+# Documentation
+*.md
+*.txt
+*.docx
+
+# Test files
+test_*.py
+debug_*.py
+check_*.py
+upload_*.py
+fix_*.py
+setup_*.py
+get_*.py
+create_*.py
+migrate_*.py
+update_*.py
+export_*.py
+simple_*.py
+comprehensive_*.py
+cloudinary_*.py
+manual_*.py
+prepare_*.py
+copy_*.py
+
+# Media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log 
