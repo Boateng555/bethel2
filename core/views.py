@@ -2184,23 +2184,32 @@ def static_fallback(request):
     return HttpResponse(html_content, content_type='text/html')
 
 def startup_health_check(request):
-    """Simple health check that doesn't require database access"""
-    from django.http import JsonResponse
+    """Lightweight health check for startup - no database required"""
     import os
+    import time
     
     health_status = {
         'status': 'healthy',
-        'timestamp': timezone.now().isoformat(),
-        'environment': {
-            'railway': bool(os.getenv('RAILWAY_ENVIRONMENT_NAME')),
-            'debug': settings.DEBUG,
-            'database_engine': settings.DATABASES['default']['ENGINE'],
-        },
+        'timestamp': time.time(),
+        'environment': os.environ.get('RAILWAY_ENVIRONMENT_NAME', 'unknown'),
+        'database_independent_mode': os.environ.get('DATABASE_INDEPENDENT_MODE', '0') == '1',
         'services': {
-            'django': 'running',
-            'static_files': 'available',
-        }
+            'application': 'running',
+            'database': 'unknown',  # Will be checked separately
+            'storage': 'configured',
+        },
+        'message': 'Application is starting up'
     }
+    
+    # Check database status in background (non-blocking)
+    try:
+        db_available, db_error = get_database_status()
+        health_status['services']['database'] = 'available' if db_available else 'unavailable'
+        if not db_available:
+            health_status['message'] = f'Database unavailable: {db_error}'
+    except Exception as e:
+        health_status['services']['database'] = 'error'
+        health_status['message'] = f'Database check failed: {str(e)}'
     
     return JsonResponse(health_status)
 
