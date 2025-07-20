@@ -72,11 +72,9 @@ else:
 # Memory optimization: Database connection pooling
 if IS_RAILWAY:
     DATABASES['default']['CONN_MAX_AGE'] = 60  # Reduced from 300
-    # Add more aggressive database optimizations
+    # Add database optimizations (only valid options for PostgreSQL)
     DATABASES['default']['OPTIONS'] = {
         'connect_timeout': 10,
-        'read_timeout': 10,
-        'write_timeout': 10,
     }
 
 # Apps
