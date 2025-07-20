@@ -36,6 +36,8 @@ import imagekitio
 import time
 from django.db import connection
 from django.db.utils import OperationalError
+import threading
+import queue
 
 # Create your views here.
 
@@ -144,6 +146,14 @@ def smart_home(request):
                 city = None
         else:
             country, city = get_user_location(request)
+        
+        # Check database availability without blocking
+        db_available, db_error = get_database_status()
+        
+        if not db_available:
+            print(f"DEBUG: Database unavailable in smart_home: {db_error}")
+            # If database is not available, redirect to global home
+            return redirect('home')
         
         # Get all approved and active churches with error handling
         try:
@@ -2107,6 +2117,72 @@ def retry_database_operation(operation, max_retries=3, delay=1):
                 raise
     return None
 
+def static_fallback(request):
+    """Static fallback page when database is unavailable"""
+    from django.http import HttpResponse
+    
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bethel Prayer Ministry International</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { font-size: 2em; color: #1e3a8a; font-weight: bold; margin-bottom: 10px; }
+            .subtitle { color: #666; margin-bottom: 20px; }
+            .message { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 20px; border-radius: 5px; margin-bottom: 30px; }
+            .contact { background: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 5px; }
+            .contact h3 { margin-top: 0; color: #92400e; }
+            .contact p { margin: 5px 0; }
+            .refresh-btn { background: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+            .refresh-btn:hover { background: #1e40af; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏛️ Bethel Prayer Ministry International</div>
+                <div class="subtitle">Connecting believers worldwide through prayer and fellowship</div>
+            </div>
+            
+            <div class="message">
+                <h3>🔄 Service Temporarily Unavailable</h3>
+                <p>We're currently experiencing technical difficulties with our database connection. Our team is working to restore full service as quickly as possible.</p>
+                <p>Please try refreshing the page in a few moments, or contact us if you need immediate assistance.</p>
+            </div>
+            
+            <div class="contact">
+                <h3>📞 Contact Information</h3>
+                <p><strong>Email:</strong> info@bethelprayer.org</p>
+                <p><strong>Emergency Contact:</strong> Available through our prayer network</p>
+                <p><strong>Prayer Requests:</strong> We're still accepting prayer requests via email</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="refresh-btn" onclick="window.location.reload()">🔄 Refresh Page</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+                <p>© 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+            </div>
+        </div>
+        
+        <script>
+            // Auto-refresh every 30 seconds
+            setTimeout(function() {
+                window.location.reload();
+            }, 30000);
+        </script>
+    </body>
+    </html>
+    """
+    
+    return HttpResponse(html_content, content_type='text/html')
+
 def startup_health_check(request):
     """Simple health check that doesn't require database access"""
     from django.http import JsonResponse
@@ -2127,3 +2203,45 @@ def startup_health_check(request):
     }
     
     return JsonResponse(health_status)
+
+def is_database_available():
+    """Check if database is available without blocking"""
+    try:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            return True
+    except Exception:
+        return False
+
+def get_database_status():
+    """Get database status with timeout"""
+    import threading
+    import queue
+    
+    result_queue = queue.Queue()
+    
+    def check_db():
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                result_queue.put(('success', None))
+        except Exception as e:
+            result_queue.put(('error', str(e)))
+    
+    # Start database check in a separate thread
+    thread = threading.Thread(target=check_db)
+    thread.daemon = True
+    thread.start()
+    
+    # Wait for result with timeout
+    try:
+        thread.join(timeout=5)  # 5 second timeout
+        if thread.is_alive():
+            return False, "Database check timed out"
+        
+        status, error = result_queue.get_nowait()
+        return status == 'success', error
+    except queue.Empty:
+        return False, "Database check failed"
