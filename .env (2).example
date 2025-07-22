@@ -1,4 +1,4 @@
-puch for me DJANGO_SECRET_KEY=your-django-secret-key
+DJANGO_SECRET_KEY=your-django-secret-key
 DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=yourdomain.railway.app
 localhost

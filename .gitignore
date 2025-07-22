@@ -80,3 +80,9 @@ htmlcov/
 coverage.xml
 *.cover
 .hypothesis/ 
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z 
