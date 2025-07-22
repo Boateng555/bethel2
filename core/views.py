@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+efrom django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
 from rest_framework import generics
@@ -355,13 +355,13 @@ def event_detail(request, event_id):
                 recipient_list=[church_email],
                 fail_silently=True,
             )
-            # Send confirmation email to user
-            send_mail(
-                subject=f'Thank you for registering for {event.title}',
-                message=f'Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\nEvent Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\nIf you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}',
-                from_email=None,  # Uses DEFAULT_FROM_EMAIL
-                recipient_list=[registration.email],
-                fail_silently=True,
+            # Send confirmation email to us
+                message=(
+       f"Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\n"
+       f"Event Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\n"
+       f"If you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}"
+   ),
+
             )
             registration_success = True
             form = EventRegistrationForm()  # Reset form
@@ -886,12 +886,16 @@ def church_event_detail(request, church_id, event_id):
             )
             # Send confirmation email to user
             send_mail(
-                subject=f'Thank you for registering for {event.title}',
-                message=f'Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\nEvent Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\nIf you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}',
-                from_email=None,  # Uses DEFAULT_FROM_EMAIL
-                recipient_list=[registration.email],
-                fail_silently=True,
-            )
+                 subject=f'Thank you for registering for {event.title}',
+                 message=(
+                      f"Dear {registration.first_name},\n\nThank you for registering for {event.title} at {event.church.name}. We have received your registration.\n\n"
+                      f"Event Details:\nTitle: {event.title}\nDate: {event.start_date.strftime('%Y-%m-%d %H:%M')}\nLocation: {event.location or event.address}\n\n"
+                      f"If you have any questions, reply to this email.\n\nBlessings,\n{event.church.name}"
+            ),
+            from_email=None,  # Uses DEFAULT_FROM_EMAIL
+            recipient_list=[registration.email],
+            fail_silently=True,
+)
             registration_success = True
             form = EventRegistrationForm()  # Reset form
     else:
