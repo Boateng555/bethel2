@@ -22,9 +22,9 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
     '.railway.app',
-    'web-production-158c.up.railway.app'
+    'web-production-158c.up.railway.app',
+    '91.99.232.214',  # CyberPanel server IP
 ]
-
 # Detect if running on Railway
 IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT_NAME") is not None
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
