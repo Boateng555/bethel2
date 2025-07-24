@@ -16,15 +16,15 @@ echo ""
 # Configuration - UPDATE THESE VALUES
 # =============================================================================
 
-SERVER_IP="YOUR_HETZNER_IP"
+SERVER_IP="91.99.232.214"
 DOMAIN="your-domain.com"
-DB_PASSWORD="your_secure_db_password"
+DB_PASSWORD="bethel_secure_password_2024"
 SECRET_KEY="your_super_secret_django_key"
 
 # ImageKit credentials (get from ImageKit dashboard)
-IMAGEKIT_PUBLIC_KEY="your_imagekit_public_key"
-IMAGEKIT_PRIVATE_KEY="your_imagekit_private_key"
-IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/144671b7r"
+IMAGEKIT_PUBLIC_KEY="public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU="
+IMAGEKIT_PRIVATE_KEY="private_Dnsrj2VW7uJakaeMaNYaav+P784="
+IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/9buar9mbp"
 
 # =============================================================================
 # Step 1: Generate Secret Key
