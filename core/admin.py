@@ -113,7 +113,8 @@ class EventHighlightInline(admin.StackedInline):
         # Override the save_new method to automatically set the church
         original_save_new = formset.save_new
         
-        def save_new(form, commit=True):
+        def save_new(form, *args, **kwargs):
+            commit = kwargs.get('commit', True)
             instance = original_save_new(form, commit=False)
             if obj and hasattr(obj, 'church'):
                 instance.church = obj.church

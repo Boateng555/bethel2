@@ -33,7 +33,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
 import imagekitio
-import time
+import time as time_module
 from django.db import connection
 from django.db.utils import OperationalError
 import threading
@@ -2115,7 +2115,7 @@ def retry_database_operation(operation, max_retries=3, delay=1):
             if "timeout" in str(e).lower() or "connection" in str(e).lower():
                 if attempt < max_retries - 1:
                     print(f"DEBUG: Database connection attempt {attempt + 1} failed, retrying in {delay} seconds...")
-                    time.sleep(delay)
+                    time_module.sleep(delay)
                     delay *= 2  # Exponential backoff
                     continue
                 else:
@@ -2194,11 +2194,10 @@ def static_fallback(request):
 def startup_health_check(request):
     """Lightweight health check for startup - no database required"""
     import os
-    import time
     
     health_status = {
         'status': 'healthy',
-        'timestamp': time.time(),
+        'timestamp': time_module.time(),
         'environment': os.environ.get('RAILWAY_ENVIRONMENT_NAME', 'unknown'),
         'database_independent_mode': os.environ.get('DATABASE_INDEPENDENT_MODE', '0') == '1',
         'services': {

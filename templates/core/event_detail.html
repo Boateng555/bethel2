@@ -22,6 +22,107 @@
             }
         }
     </script>
+    <style>
+        /* Mobile responsive fixes */
+        @media (max-width: 640px) {
+            /* Fix grid layout for mobile */
+            .grid.grid-cols-2.lg\:grid-cols-3 {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            /* Make content sections stack properly on mobile */
+            .lg\:col-span-2 {
+                grid-column: 1 !important;
+            }
+            
+            .lg\:col-span-1 {
+                grid-column: 1 !important;
+            }
+            
+            /* Adjust spacing and padding for mobile */
+            .py-16 {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            .px-6 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            .gap-12 {
+                gap: 1rem !important;
+            }
+            
+            /* Adjust text sizes for mobile */
+            .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            .text-2xl {
+                font-size: 1.25rem !important;
+            }
+            
+            .text-xl {
+                font-size: 1.125rem !important;
+            }
+            
+            .text-lg {
+                font-size: 1rem !important;
+            }
+            
+            /* Adjust margins for mobile */
+            .mb-8 {
+                margin-bottom: 1rem !important;
+            }
+            
+            .mb-6 {
+                margin-bottom: 0.75rem !important;
+            }
+            
+            /* Make the sticky sidebar work better on mobile */
+            .sticky.top-6 {
+                position: relative !important;
+                top: auto !important;
+            }
+            
+            /* Adjust card padding for mobile */
+            .p-8 {
+                padding: 1rem !important;
+            }
+            
+            /* Make share buttons more touch-friendly */
+            .flex.space-x-3 {
+                gap: 0.5rem !important;
+            }
+            
+            .flex.space-x-3 a {
+                padding: 0.75rem !important;
+            }
+            
+            /* Ensure proper spacing between sections */
+            .space-y-6 > * + * {
+                margin-top: 1rem !important;
+            }
+        }
+        
+        /* Tablet improvements */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .grid.grid-cols-2.lg\:grid-cols-3 {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+            }
+            
+            .lg\:col-span-2 {
+                grid-column: 1 / -1 !important;
+            }
+            
+            .lg\:col-span-1 {
+                grid-column: 1 / -1 !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans">
     <!-- NAVBAR -->
@@ -134,8 +235,8 @@
     <!-- EVENT DETAILS -->
     <section id="details" class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-12">
-                <div class="lg:col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <div class="md:col-span-2 lg:col-span-2">
                     <h2 class="text-3xl font-bold text-deep-blue mb-8">Event Details</h2>
                     <div class="prose prose-lg max-w-none text-gray-700">
                         <p class="text-xl leading-relaxed">{{ event.description }}</p>
@@ -156,7 +257,7 @@
                     {% endif %}
                 </div>
                 
-                <div class="lg:col-span-1">
+                <div class="md:col-span-1 lg:col-span-1">
                     <div class="bg-white rounded-xl shadow-lg p-8 sticky top-6 border border-gray-200">
                         <h3 class="text-2xl font-bold text-deep-blue mb-6">Event Information</h3>
                         <div class="space-y-6">
