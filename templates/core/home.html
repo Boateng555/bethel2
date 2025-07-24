@@ -156,40 +156,27 @@
     </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
+{% load static %}
     <!-- NAVBAR -->
     <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
+            {% if global_settings.global_nav_logo %}
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+            {% else %}
+                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+            {% endif %}
             <span class="text-2xl font-bold font-serif">Bethel Prayer Ministry</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
         <nav class="hidden md:flex space-x-6 text-sm">
-            <div class="dropdown-container">
-                <button class="hover:text-white transition-colors">Church ▾</button>
-                <div class="dropdown-menu">
-                    <a href="/churches/" class="block py-1 hover:text-[#1e3a8a]">Find Churches</a>
-                    <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
-                </div>
-            </div>
+            <a href="/churches/" class="hover:text-white transition-colors font-semibold">Find a Bethel Church</a>
             <a href="/about" class="hover:text-white transition-colors">About Us</a>
-            <div class="dropdown-container">
-                <button class="hover:text-white transition-colors">Get Involved ▾</button>
-                <div class="dropdown-menu">
-                    <a href="/ministries/" class="all-link">All Ministries</a>
-                    {% for ministry in all_ministries %}
-                    <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
-                    {% empty %}
-                    <span class="no-items">No ministries available</span>
-                    {% endfor %}
-                    <div class="divider">
-                        <a href="/volunteer" class="text-sm">Volunteer</a>
-                        <a href="/serve" class="text-sm">Serve</a>
-                    </div>
-                </div>
-            </div>
+            <a href="/sermon" class="hover:text-white transition-colors">Sermons</a>
             <div class="dropdown-container">
                 <button class="hover:text-white transition-colors">Events ▾</button>
                 <div class="dropdown-menu">
                     <a href="/events/" class="all-link">All Events</a>
+                    <a href="/events/calendar/" class="text-sm">Calendar</a>
                     {% for event in all_events %}
                     <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
                     {% empty %}
@@ -197,12 +184,20 @@
                     {% endfor %}
                 </div>
             </div>
-            <a href="/sermon" class="hover:text-white transition-colors">Sermon</a>
-            <a href="/resources" class="hover:text-white transition-colors">Resources</a>
-            <!-- <a href="/testimonies" class="hover:text-white transition-colors">Testimonies</a> -->
-            <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
+            <div class="dropdown-container">
+                <button class="hover:text-white transition-colors">Ministries ▾</button>
+                <div class="dropdown-menu">
+                    <a href="/ministries/" class="all-link">All Ministries</a>
+                    {% for ministry in all_ministries %}
+                    <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                    {% empty %}
+                    <span class="no-items">No ministries available</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/leadership" class="hover:text-white transition-colors">Leadership</a>
             <a href="/shop" class="hover:text-white transition-colors">Shop</a>
-            <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+            <a href="/donation" class="hover:text-white transition-colors font-semibold">Donation</a>
         </nav>
         <!-- Mobile Hamburger Button -->
         <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none" aria-label="Open menu">
@@ -213,17 +208,25 @@
     </header>
     
     <!-- Mobile Menu (separate from header) -->
-    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-[#1e3a8a] hidden">
-        <a href="/" class="hover:text-[#1e3a8a] w-full text-center py-2">Home</a>
-        <a href="/about" class="hover:text-[#1e3a8a] w-full text-center py-2">About Us</a>
-        <a href="/churches/" class="hover:text-[#1e3a8a] w-full text-center py-2">Find Churches</a>
-        <a href="/events/" class="hover:text-[#1e3a8a] w-full text-center py-2">Events</a>
-        <a href="/events/calendar/" class="hover:text-[#1e3a8a] w-full text-center py-2">Calendar</a>
-        <a href="/ministries/" class="hover:text-[#1e3a8a] w-full text-center py-2">Get Involved</a>
-        <a href="/sermon" class="hover:text-[#1e3a8a] w-full text-center py-2">Sermon</a>
-        <a href="/shop" class="hover:text-[#1e3a8a] w-full text-center py-2">Shop</a>
-        <a href="/donation" class="hover:text-[#1e3a8a] w-full text-center py-2">Donation</a>
-        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-400 hover:text-[#1e3a8a]" aria-label="Close menu">&times;</button>
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col text-lg font-semibold text-[#1e3a8a] hidden">
+        <!-- Close button at the top (fixed) -->
+        <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-[#1e3a8a] hover:text-gray-600 p-2 z-10" aria-label="Close menu">&times;</button>
+        
+        <!-- Scrollable navigation links container -->
+        <div class="flex-1 overflow-y-auto pt-16 pb-8">
+            <div class="w-full max-w-sm mx-auto px-4">
+                <a href="/" class="block w-full text-center py-3 bg-[#1e3a8a] bg-opacity-20 rounded-lg mb-2">Home</a>
+                <a href="/churches/" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2 font-bold">Find a Bethel Church</a>
+                <a href="/about" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">About Us</a>
+                <a href="/sermon" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Sermons</a>
+                <a href="/events/" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Events</a>
+                <a href="/events/calendar/" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Calendar</a>
+                <a href="/ministries/" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Ministries</a>
+                <a href="/leadership" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Leadership</a>
+                <a href="/shop" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                <a href="/donation" class="block w-full text-center py-3 hover:bg-[#1e3a8a] hover:bg-opacity-20 rounded-lg mb-2 font-bold">Donation</a>
+            </div>
+        </div>
     </div>
 
     <!-- Messages -->
@@ -551,15 +554,22 @@
             const menu = document.getElementById('mobile-menu');
             const closeBtn = document.getElementById('mobile-menu-close');
             
-            console.log('Mobile menu elements:', { menuBtn, menu, closeBtn }); // Debug
+            function openMobileMenu() {
+                menu.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+            
+            function closeMobileMenu() {
+                menu.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
             
             // Open menu
             if (menuBtn) {
                 menuBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Menu button clicked'); // Debug
-                    menu.classList.remove('hidden');
+                    openMobileMenu();
                 });
             }
             
@@ -568,8 +578,7 @@
                 closeBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Close button clicked'); // Debug
-                    menu.classList.add('hidden');
+                    closeMobileMenu();
                 });
             }
             
@@ -577,22 +586,22 @@
             if (menu) {
                 menu.querySelectorAll('a').forEach(link => {
                     link.addEventListener('click', function() {
-                        menu.classList.add('hidden');
+                        closeMobileMenu();
                     });
                 });
             }
             
             // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (menu && !menu.contains(e.target) && e.target !== menuBtn && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
+            menu.addEventListener('click', function(e) {
+                if (e.target === menu) {
+                    closeMobileMenu();
                 }
             });
             
             // Close menu on escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+                    closeMobileMenu();
                 }
             });
         });

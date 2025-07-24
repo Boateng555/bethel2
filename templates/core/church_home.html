@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -279,7 +280,16 @@
     <!-- NAVBAR -->
     <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
-            <span class="text-2xl font-bold font-serif">{{ church.name }}</span>
+            {% if global_settings.global_nav_logo %}
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+            {% elif church.nav_logo %}
+                <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+            {% elif church.logo %}
+                <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+            {% else %}
+                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+            {% endif %}
+            <span class="text-xs md:text-lg font-semibold font-serif leading-tight">{{ church.name }}</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
         <nav class="hidden md:flex space-x-6 text-sm">
@@ -308,23 +318,30 @@
     </header>
     
     <!-- Mobile Menu (separate from header) -->
-    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-white hidden">
-        <a href="{% url 'church_home' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
-        <a href="{% url 'church_about' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">About</a>
-        <a href="{% url 'church_events' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Events</a>
-        <a href="{% url 'church_ministries' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Ministries</a>
-        <a href="{% url 'church_sermons' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Sermons</a>
-        <a href="{% url 'church_news' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">News</a>
-        {% if church.shop_url %}
-            <a href="{{ church.shop_url }}" target="_blank" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
-        {% else %}
-            <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
-        {% endif %}
-        <a href="{% url 'church_donation' church.id %}?global=true" class="hover:text-gray-200 w-full text-center py-2">Give</a>
-        <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
-        <a href="{% url 'home' %}?global=1" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
-        <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin</a>
-        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">
+        <!-- Close button at the top (fixed) -->
+        <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-white hover:text-gray-300 p-2 z-10" aria-label="Close menu">&times;</button>
+        
+        <!-- Scrollable navigation links container -->
+        <div class="flex-1 overflow-y-auto pt-16 pb-8">
+            <div class="w-full max-w-sm mx-auto px-4">
+                <a href="{% url 'church_home' church.id %}?global=true" class="block w-full text-center py-3 bg-white bg-opacity-20 rounded-lg mb-2">Home</a>
+                <a href="{% url 'church_about' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">About</a>
+                <a href="{% url 'church_events' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Events</a>
+                <a href="{% url 'church_ministries' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Ministries</a>
+                <a href="{% url 'church_sermons' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Sermons</a>
+                <a href="{% url 'church_news' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">News</a>
+                {% if church.shop_url %}
+                    <a href="{{ church.shop_url }}" target="_blank" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                {% else %}
+                    <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                {% endif %}
+                <a href="{% url 'church_donation' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Give</a>
+                <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Find Other Churches</a>
+                <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Global Site</a>
+                <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin</a>
+            </div>
+        </div>
     </div>
 
 <!-- Global Site Navigation Banner -->
@@ -414,25 +431,7 @@
     {% endif %}
 </section>
 
-<!-- Global Site Navigation Section -->
-<div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between">
-            <div class="text-center sm:text-left mb-4 sm:mb-0">
-                <h3 class="text-xl font-bold mb-2">You're viewing {{ church.name }}</h3>
-                <p class="text-blue-100">Discover the global Bethel community</p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
-                    Find Other Churches
-                </a>
-                <a href="{% url 'home' %}?global=1" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-6 py-3 rounded-lg font-semibold transition duration-200 text-center">
-                    Go to Global Site
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Church Info -->
 <div class="container mx-auto px-4 py-12 church-section">
@@ -534,9 +533,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Our Ministries</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Discover ways to get involved and grow in your faith</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6">
             {% for ministry in ministries %}
-            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[280px] md:min-h-[340px] h-full">
                 {% if ministry.image %}
                 <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
                 {% else %}
@@ -544,9 +543,9 @@
                     <i class="fas fa-hands-helping text-white text-6xl"></i>
                 </div>
                 {% endif %}
-                <div class="p-6 flex flex-col flex-1">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
-                    <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ ministry.description }}</p>
+                <div class="p-4 md:p-6 flex flex-col flex-1">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
+                    <p class="text-gray-700 text-sm mb-3 md:mb-4 line-clamp-2">{{ ministry.description }}</p>
                     <a href="{% url 'church_ministry_detail' church.id ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Learn More →</a>
                 </div>
             </div>
@@ -599,7 +598,7 @@
                     {% endif %}
                     <div class="p-6 flex flex-col flex-1">
                         <h3 class="text-xl font-semibold mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ article.content|truncatewords:15 }}</p>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ article.content|striptags|truncatewords:15 }}</p>
                         <span class="text-[#1e3a8a] font-semibold text-sm">{{ article.date|date:"M d, Y" }}</span>
                     </div>
                 </a>
@@ -628,6 +627,33 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
+<style>
+/* Ensure hero section is touch-enabled */
+.hero-section-outer {
+    touch-action: pan-y pinch-zoom;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.hero-swiper {
+    touch-action: pan-y pinch-zoom;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.swiper-slide {
+    touch-action: pan-y pinch-zoom;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing Swiper...');
@@ -647,12 +673,45 @@ document.addEventListener('DOMContentLoaded', function() {
             fadeEffect: {
                 crossFade: true
             },
-            // Enable touch/swipe navigation
+            // Enhanced touch/swipe navigation
             allowTouchMove: true,
             grabCursor: true,
+            touchRatio: 1,
+            touchAngle: 45,
+            touchMoveStopPropagation: false,
+            touchStartPreventDefault: false,
+            touchStartForcePreventDefault: false,
+            touchMoveForcePreventDefault: false,
+            // Enable swipe gestures
+            shortSwipes: true,
+            longSwipes: true,
+            longSwipesRatio: 0.5,
+            longSwipesMs: 300,
+            followFinger: true,
+            threshold: 5,
+            // Prevent conflicts with page scrolling
+            preventInteractionOnTransition: false,
         });
         
         console.log('Swiper initialized successfully:', swiper);
+        
+        // Test touch events
+        swiper.on('touchStart', function() {
+            console.log('Touch start detected');
+        });
+        
+        swiper.on('touchMove', function() {
+            console.log('Touch move detected');
+        });
+        
+        swiper.on('slideChange', function() {
+            console.log('Slide changed to:', swiper.activeIndex);
+        });
+        
+        // Test if touch is enabled
+        console.log('Touch enabled:', swiper.allowTouchMove);
+        console.log('Touch ratio:', swiper.touchRatio);
+        
     } else {
         console.log('Swiper element not found');
     }
@@ -704,12 +763,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const menu = document.getElementById('mobile-menu');
             const closeBtn = document.getElementById('mobile-menu-close');
             
+            function openMobileMenu() {
+                menu.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+            
+            function closeMobileMenu() {
+                menu.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+            
             // Open menu
             if (menuBtn) {
                 menuBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    menu.classList.remove('hidden');
+                    openMobileMenu();
                 });
             }
             
@@ -718,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    menu.classList.add('hidden');
+                    closeMobileMenu();
                 });
             }
             
@@ -726,22 +795,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (menu) {
                 menu.querySelectorAll('a').forEach(link => {
                     link.addEventListener('click', function() {
-                        menu.classList.add('hidden');
+                        closeMobileMenu();
                     });
                 });
             }
             
             // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (menu && !menu.contains(e.target) && e.target !== menuBtn && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
+            menu.addEventListener('click', function(e) {
+                if (e.target === menu) {
+                    closeMobileMenu();
                 }
             });
             
             // Close menu on escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+                    closeMobileMenu();
                 }
             });
         });

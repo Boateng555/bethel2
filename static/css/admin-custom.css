@@ -44,6 +44,134 @@
     font-family: inherit;
 }
 
+/* Help text styling */
+.admin-interface .help {
+    color: #1e3a8a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    background: #e6eefe !important;
+    border-left: 3px solid #1e3a8a !important;
+    padding: 8px 12px !important;
+    margin: 4px 0 8px 0 !important;
+    border-radius: 0 4px 4px 0 !important;
+    line-height: 1.4 !important;
+}
+
+.admin-interface .help:before {
+    content: "💡 ";
+    margin-right: 4px;
+}
+
+/* Field labels styling */
+.admin-interface .form-row label {
+    font-weight: 600 !important;
+    color: #374151 !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+}
+
+/* Required field indicators */
+.admin-interface .form-row label.required:after {
+    content: " *";
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* Form field grouping */
+.admin-interface .form-row {
+    margin-bottom: 20px !important;
+    padding: 12px 0 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.admin-interface .form-row:last-child {
+    border-bottom: none !important;
+}
+
+/* Fieldset descriptions */
+.admin-interface .description {
+    color: #6b7280 !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+    margin: 8px 0 16px 0 !important;
+    padding: 8px 12px !important;
+    background: #f9fafb !important;
+    border-radius: 4px !important;
+    border-left: 3px solid #d1d5db !important;
+}
+
+/* Fieldset headers */
+.admin-interface fieldset h2 {
+    color: #1e3a8a !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid #e5e7eb !important;
+}
+
+/* Inline form styling */
+.admin-interface .inline-related h3 {
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.admin-interface .inline-related .help {
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+}
+
+/* Stacked inline form improvements */
+.admin-interface .inline-related .inline-related {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px !important;
+    overflow: hidden !important;
+}
+
+.admin-interface .inline-related .inline-related h3 {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+}
+
+.admin-interface .inline-related .inline-related .form-row {
+    padding: 8px 12px !important;
+    margin-bottom: 8px !important;
+    border-bottom: none !important;
+}
+
+.admin-interface .inline-related .inline-related .form-row:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Add visual separation between inline forms */
+.admin-interface .inline-related .inline-related + .inline-related {
+    margin-top: 20px !important;
+}
+
+/* Better spacing for inline form fields */
+.admin-interface .inline-related .form-row label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    margin-bottom: 4px !important;
+}
+
+.admin-interface .inline-related .help {
+    font-size: 12px !important;
+    margin-top: 2px !important;
+    margin-bottom: 8px !important;
+}
+
 /* Date and time inputs */
 .admin-interface .form-row input[type="date"],
 .admin-interface .form-row input[type="time"],

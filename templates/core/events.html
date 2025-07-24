@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,35 +87,23 @@
     <!-- NAVBAR -->
     <header class="bg-deep-blue text-white shadow-lg sticky top-0 z-50 border-b border-white">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="/" class="text-2xl font-serif font-bold">Bethel Prayer Ministry</a>
+            <div class="flex items-center space-x-4">
+                {% if global_settings.global_nav_logo %}
+                    <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                {% else %}
+                    <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                {% endif %}
+                <a href="/" class="text-2xl font-serif font-bold">Bethel Prayer Ministry</a>
+            </div>
             <nav class="hidden md:flex space-x-6 text-sm">
-                <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Church ▾</button>
-                    <div class="dropdown-menu">
-                        <a href="/locations" class="block py-1 hover:text-[#1e3a8a]">Locations</a>
-                        <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
-                    </div>
-                </div>
+                <a href="/churches/" class="hover:text-white transition-colors font-semibold">Find a Bethel Church</a>
                 <a href="/about" class="hover:text-white transition-colors">About Us</a>
-                <div class="dropdown-container">
-                    <button class="hover:text-white transition-colors">Get Involved ▾</button>
-                    <div class="dropdown-menu">
-                        <a href="/ministries/" class="all-link">All Ministries</a>
-                        {% for ministry in all_ministries %}
-                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
-                        {% empty %}
-                        <span class="no-items">No ministries available</span>
-                        {% endfor %}
-                        <div class="divider">
-                            <a href="/volunteer" class="text-sm">Volunteer</a>
-                            <a href="/serve" class="text-sm">Serve</a>
-                        </div>
-                    </div>
-                </div>
+                <a href="/sermon" class="hover:text-white transition-colors">Sermons</a>
                 <div class="dropdown-container">
                     <button class="hover:text-white transition-colors">Events ▾</button>
                     <div class="dropdown-menu">
                         <a href="/events/" class="all-link">All Events</a>
+                        <a href="/events/calendar/" class="text-sm">Calendar</a>
                         {% for event in all_events %}
                         <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
                         {% empty %}
@@ -122,12 +111,20 @@
                         {% endfor %}
                     </div>
                 </div>
-                <a href="/resources" class="hover:text-white transition-colors">Resources</a>
-                <a href="/testimonies" class="hover:text-white transition-colors">Testimonies</a>
-                <a href="{% url 'donation' %}" class="hover:text-white transition-colors">Give</a>
+                <div class="dropdown-container">
+                    <button class="hover:text-white transition-colors">Ministries ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/ministries/" class="all-link">All Ministries</a>
+                        {% for ministry in all_ministries %}
+                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                        {% empty %}
+                        <span class="no-items">No ministries available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="/leadership" class="hover:text-white transition-colors">Leadership</a>
                 <a href="/shop" class="hover:text-white transition-colors">Shop</a>
-                <a href="/donation" class="hover:text-white transition-colors">Donation</a>
-                <a href="/events/calendar/" class="hover:text-white transition-colors">Calendar</a>
+                <a href="/donation" class="hover:text-white transition-colors font-semibold">Donation</a>
             </nav>
             <button class="md:hidden">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

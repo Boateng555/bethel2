@@ -57,7 +57,7 @@
                     {% if article.excerpt %}
                         {{ article.excerpt|truncatewords:25 }}
                     {% else %}
-                        {{ article.content|truncatewords:25 }}
+                        {{ article.content|striptags|truncatewords:25 }}
                     {% endif %}
                 </p>
                 <div class="flex items-center justify-between">

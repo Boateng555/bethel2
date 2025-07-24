@@ -48,6 +48,7 @@ class Church(models.Model):
     
     # Media
     logo = models.ImageField(upload_to='churches/logos/', blank=True, null=True, max_length=500)
+    nav_logo = models.ImageField(upload_to='churches/nav_logos/', blank=True, null=True, max_length=500, help_text="Logo specifically for navigation bar (small, circular)")
     banner_image = models.ImageField(upload_to='churches/banners/', blank=True, null=True, max_length=500)
     
     # Status
@@ -90,6 +91,16 @@ class Church(models.Model):
                 return logo_str
             else:
                 return self.logo.url
+        return ''
+    
+    def get_nav_logo_url(self):
+        """Returns the correct URL for the navigation logo field"""
+        if self.nav_logo:
+            nav_logo_str = str(self.nav_logo)
+            if nav_logo_str.startswith('http'):
+                return nav_logo_str
+            else:
+                return self.nav_logo.url
         return ''
     
     def get_banner_url(self):
@@ -1547,3 +1558,57 @@ def resize_event_hero_media_images(sender, instance, **kwargs):
     # Skip resizing in production with Cloudinary to avoid conflicts
     if settings.DEBUG and instance.image and not str(instance.image).startswith('http'):
         resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings

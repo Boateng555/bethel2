@@ -89,12 +89,26 @@
     <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if is_church_site and church %}
-                <a href="{% url 'church_home' church.id %}" class="flex flex-col items-center">
-                    <span class="text-sm font-semibold mt-1">{{ church.name }}</span>
+                <a href="{% url 'church_home' church.id %}" class="flex items-center space-x-2">
+                    {% if global_settings.global_nav_logo %}
+                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                    {% elif church.nav_logo %}
+                        <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                    {% elif church.logo %}
+                        <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                    {% else %}
+                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                    {% endif %}
+                    <span class="text-sm font-semibold">{{ church.name }}</span>
                 </a>
             {% else %}
-                <a href="{% url 'home' %}" class="flex flex-col items-center">
-                    <span class="text-sm font-semibold mt-1">Bethel Prayer Ministry International</span>
+                <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                    {% if global_settings.global_nav_logo %}
+                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                    {% else %}
+                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                    {% endif %}
+                    <span class="text-sm font-semibold">Bethel Prayer Ministry International</span>
                 </a>
             {% endif %}
         </div>
@@ -139,29 +153,9 @@
                 <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
             {% else %}
                 <!-- Global navigation -->
-                <div class="dropdown-container">
-                    <button class="text-white hover:text-gray-200 transition-colors">Church ▾</button>
-                    <div class="dropdown-menu">
-                        <a href="/churches/" class="block py-1 hover:text-[#1e3a8a]">Find Churches</a>
-                        <a href="/leadership" class="block py-1 hover:text-[#1e3a8a]">Leadership</a>
-                    </div>
-                </div>
+                <a href="/churches/" class="text-white hover:text-gray-200 transition-colors font-semibold">Find a Bethel Church</a>
                 <a href="/about" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About Us</a>
-                <div class="dropdown-container">
-                    <button class="text-white hover:text-gray-200 transition-colors">Get Involved ▾</button>
-                    <div class="dropdown-menu">
-                        <a href="/ministries/" class="all-link">All Ministries</a>
-                        {% for ministry in all_ministries %}
-                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
-                        {% empty %}
-                        <span class="no-items">No ministries available</span>
-                        {% endfor %}
-                        <div class="divider">
-                            <a href="/volunteer" class="text-sm">Volunteer</a>
-                            <a href="/serve" class="text-sm">Serve</a>
-                        </div>
-                    </div>
-                </div>
+                <a href="/sermon" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Sermons</a>
                 <div class="dropdown-container">
                     <button class="text-white hover:text-gray-200 transition-colors">Events ▾</button>
                     <div class="dropdown-menu">
@@ -174,12 +168,20 @@
                         {% endfor %}
                     </div>
                 </div>
-                <a href="/sermon" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Sermon</a>
-                <a href="/resources" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Resources</a>
-                <a href="{% url 'testimonies' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Testimonies</a>
-                <a href="{% url 'donation' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
+                <div class="dropdown-container">
+                    <button class="text-white hover:text-gray-200 transition-colors">Ministries ▾</button>
+                    <div class="dropdown-menu">
+                        <a href="/ministries/" class="all-link">All Ministries</a>
+                        {% for ministry in all_ministries %}
+                        <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
+                        {% empty %}
+                        <span class="no-items">No ministries available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="/leadership" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Leadership</a>
                 <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
-                <a href="/donation" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donation</a>
+                <a href="/donation" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white font-semibold">Donation</a>
             {% endif %}
         </nav>
         <!-- Mobile Hamburger Button -->
@@ -191,40 +193,45 @@
     </header>
     
     <!-- Mobile Menu (separate from header) -->
-    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col items-center justify-start pt-24 space-y-6 text-lg font-semibold text-white hidden">
-        {% if is_church_site and church %}
-            <!-- Church-specific mobile navigation -->
-            <a href="{% url 'church_home' church.id %}" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
-            <a href="{% url 'church_about' church.id %}" class="hover:text-gray-200 w-full text-center py-2">About Us</a>
-            <a href="{% url 'church_events' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Events</a>
-            <a href="{% url 'church_calendar' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Calendar</a>
-            <a href="{% url 'church_ministries' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Ministries</a>
-            <a href="{% url 'church_sermons' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Sermons</a>
-            {% if church.shop_url %}
-                <a href="{{ church.shop_url }}" target="_blank" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
-            {% else %}
-                <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
-            {% endif %}
-            <a href="{% url 'church_donation' church.id %}" class="hover:text-gray-200 w-full text-center py-2">Donate</a>
-            <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Other Churches</a>
-            <a href="{% url 'home' %}?global=1" class="hover:text-gray-200 w-full text-center py-2">Global Site</a>
-            <a href="/local-admin/" class="hover:text-gray-200 w-full text-center py-2">Admin Login</a>
-        {% else %}
-            <!-- Global mobile navigation -->
-            <a href="/" class="hover:text-gray-200 w-full text-center py-2 bg-white bg-opacity-20 rounded">Home</a>
-            <a href="/about" class="hover:text-gray-200 w-full text-center py-2">About Us</a>
-            <a href="/leadership" class="hover:text-gray-200 w-full text-center py-2">Leadership</a>
-            <a href="/resources" class="hover:text-gray-200 w-full text-center py-2">Resources</a>
-            <a href="{% url 'testimonies' %}" class="hover:text-gray-200 w-full text-center py-2">Testimonies</a>
-            <a href="/churches/" class="hover:text-gray-200 w-full text-center py-2">Find Churches</a>
-            <a href="/events/" class="hover:text-gray-200 w-full text-center py-2">Events</a>
-            <a href="/events/calendar/" class="hover:text-gray-200 w-full text-center py-2">Calendar</a>
-            <a href="/ministries/" class="hover:text-gray-200 w-full text-center py-2">Get Involved</a>
-            <a href="/sermon" class="hover:text-gray-200 w-full text-center py-2">Sermon</a>
-            <a href="/shop" class="hover:text-gray-200 w-full text-center py-2">Shop</a>
-            <a href="/donation" class="hover:text-gray-200 w-full text-center py-2">Donation</a>
-        {% endif %}
-        <button id="mobile-menu-close" class="mt-8 text-2xl text-gray-300 hover:text-white" aria-label="Close menu">&times;</button>
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">
+        <!-- Close button at the top (fixed) -->
+        <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-white hover:text-gray-300 p-2 z-10" aria-label="Close menu">&times;</button>
+        
+        <!-- Scrollable navigation links container -->
+        <div class="flex-1 overflow-y-auto pt-16 pb-8">
+            <div class="w-full max-w-sm mx-auto px-4">
+                {% if is_church_site and church %}
+                    <!-- Church-specific mobile navigation -->
+                    <a href="{% url 'church_home' church.id %}" class="block w-full text-center py-3 bg-white bg-opacity-20 rounded-lg mb-2">Home</a>
+                    <a href="{% url 'church_about' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">About Us</a>
+                    <a href="{% url 'church_events' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Events</a>
+                    <a href="{% url 'church_calendar' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Calendar</a>
+                    <a href="{% url 'church_ministries' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Ministries</a>
+                    <a href="{% url 'church_sermons' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Sermons</a>
+                    {% if church.shop_url %}
+                        <a href="{{ church.shop_url }}" target="_blank" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                    {% else %}
+                        <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                    {% endif %}
+                    <a href="{% url 'church_donation' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Donate</a>
+                    <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Find Other Churches</a>
+                    <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Global Site</a>
+                    <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin Login</a>
+                {% else %}
+                    <!-- Global mobile navigation -->
+                    <a href="/" class="block w-full text-center py-3 bg-white bg-opacity-20 rounded-lg mb-2">Home</a>
+                    <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Find a Bethel Church</a>
+                    <a href="/about" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">About Us</a>
+                    <a href="/sermon" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Sermons</a>
+                    <a href="/events/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Events</a>
+                    <a href="/events/calendar/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Calendar</a>
+                    <a href="/ministries/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Ministries</a>
+                    <a href="/leadership" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Leadership</a>
+                    <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                    <a href="/donation" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Donation</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <!-- Messages -->
@@ -265,19 +272,39 @@
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileMenuClose = document.getElementById('mobile-menu-close');
 
-        mobileMenuButton.addEventListener('click', () => {
+        function openMobileMenu() {
             mobileMenu.classList.remove('hidden');
-        });
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
 
-        mobileMenuClose.addEventListener('click', () => {
+        function closeMobileMenu() {
             mobileMenu.classList.add('hidden');
-        });
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
 
         // Close mobile menu when clicking outside
         mobileMenu.addEventListener('click', (e) => {
             if (e.target === mobileMenu) {
-                mobileMenu.classList.add('hidden');
+                closeMobileMenu();
             }
+        });
+
+        // Close mobile menu with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+                closeMobileMenu();
+            }
+        });
+
+        // Close mobile menu when clicking on a link
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                closeMobileMenu();
+            });
         });
 
         // Initialize Swiper carousels

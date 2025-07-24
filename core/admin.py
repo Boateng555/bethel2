@@ -11,7 +11,7 @@ from .models import (
     Church, ChurchAdmin, Event, Ministry, News, Sermon, 
     DonationMethod, Convention,
     NewsletterSignup, Hero, LocalHero, ChurchApplication, GlobalFeatureRequest, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, MinistryJoinRequest,
-    EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia
+    EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, GlobalSettings
 )
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -32,30 +32,63 @@ class HeroMediaForm(forms.ModelForm):
         return cleaned_data
 
 # --- CORRECT INLINE DEFINITIONS ---
-class EventSpeakerInline(admin.TabularInline):
+class EventSpeakerForm(forms.ModelForm):
+    class Meta:
+        model = EventSpeaker
+        fields = ('name', 'photo', 'title', 'bio')
+        help_texts = {
+            'name': 'Enter the speaker\'s full name (e.g., "Rev. John Doe")',
+            'photo': 'Upload a professional photo of the speaker (recommended size: 400x400px)',
+            'title': 'Speaker\'s title or role (e.g., "Senior Pastor", "Guest Speaker", "Youth Minister")',
+            'bio': 'Brief biography or description of the speaker (what they do, their background, etc.)'
+        }
+        labels = {
+            'name': 'Speaker Name',
+            'photo': 'Speaker Photo',
+            'title': 'Speaker Title/Role',
+            'bio': 'Speaker Biography'
+        }
+
+class EventSpeakerInline(admin.StackedInline):
     model = EventSpeaker
+    form = EventSpeakerForm
     extra = 1
     fields = ('name', 'photo', 'title', 'bio')
-    help_texts = {
-        'name': 'Required. Enter the speaker\'s name.',
-        'photo': 'Optional. Upload a photo of the speaker.',
-        'title': 'Optional. Speaker\'s title or role.',
-        'bio': 'Optional. Short bio for the speaker.'
-    }
+    verbose_name = "Event Speaker"
+    verbose_name_plural = "Event Speakers"
+    help_text = "Add speakers for your event. Each speaker can have a name, photo, title/role, and biography."
 
-class EventScheduleItemInline(admin.TabularInline):
+class EventScheduleItemForm(forms.ModelForm):
+    class Meta:
+        model = EventScheduleItem
+        fields = ('day', 'start_time', 'end_time', 'title', 'description', 'speaker', 'location')
+        help_texts = {
+            'day': 'Which day of the event? (e.g., "Sunday", "Monday", "Day 1", "Opening Day")',
+            'start_time': 'What time does this session/activity start?',
+            'end_time': 'What time does this session/activity end?',
+            'title': 'Name of this session or activity (e.g., "Opening Prayer", "Main Session", "Break")',
+            'description': 'Details about what will happen during this session',
+            'speaker': 'Who will be speaking or leading this session? (select from event speakers)',
+            'location': 'Where will this session take place? (e.g., "Main Hall", "Room 101", "Outdoor Area")'
+        }
+        labels = {
+            'day': 'Day',
+            'start_time': 'Start Time',
+            'end_time': 'End Time',
+            'title': 'Session Title',
+            'description': 'Session Description',
+            'speaker': 'Speaker/Leader',
+            'location': 'Session Location'
+        }
+
+class EventScheduleItemInline(admin.StackedInline):
     model = EventScheduleItem
+    form = EventScheduleItemForm
     extra = 1
     fields = ('day', 'start_time', 'end_time', 'title', 'description', 'speaker', 'location')
-    help_texts = {
-        'day': 'Required. E.g., Sunday, Monday.',
-        'start_time': 'Required. When this item starts.',
-        'end_time': 'Required. When this item ends.',
-        'title': 'Required. E.g., Opening Prayer.',
-        'description': 'Optional. Details about this item.',
-        'speaker': 'Optional. Link to a speaker.',
-        'location': 'Optional. Where this item happens.'
-    }
+    verbose_name = "Schedule Item"
+    verbose_name_plural = "Schedule Items"
+    help_text = "Add schedule items for your event. Each item can have a day, time, title, description, speaker, and location."
 
 class EventHighlightInline(admin.StackedInline):
     model = EventHighlight
@@ -232,12 +265,16 @@ class ChurchModelAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'is_approved', 'is_featured', 'country', 'created_at']
     search_fields = ['name', 'city', 'country', 'pastor_name', 'email']
     prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['id', 'created_at', 'updated_at']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'logo_preview', 'nav_logo_preview']
     actions = ['setup_default_functionality', 'add_hero_media_to_churches']
     
     fieldsets = (
         ('Church Information', {
-            'fields': ('name', 'slug', 'description', 'pastor_name', 'email', 'phone', 'logo')
+            'fields': ('name', 'slug', 'description', 'pastor_name', 'email', 'phone', 'logo', 'logo_preview')
+        }),
+        ('Navigation Logo', {
+            'fields': ('nav_logo', 'nav_logo_preview'),
+            'description': 'Upload a specific logo for the navigation bar (small, circular format recommended)'
         }),
         ('Location', {
             'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
@@ -375,6 +412,26 @@ class ChurchModelAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context['show_setup_button'] = True
         return super().change_view(request, object_id, form_url, extra_context)
+    
+    def logo_preview(self, obj):
+        """Display a preview of the church logo"""
+        if obj.logo:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                obj.get_logo_url()
+            )
+        return "No logo uploaded"
+    logo_preview.short_description = "Logo Preview"
+    
+    def nav_logo_preview(self, obj):
+        """Display a preview of the navigation logo"""
+        if obj.nav_logo:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                obj.get_nav_logo_url()
+            )
+        return "No navigation logo uploaded"
+    nav_logo_preview.short_description = "Navigation Logo Preview"
 
 class ChurchAdminModelAdmin(LocalAdminMixin, admin.ModelAdmin):
     list_display = ['user', 'church', 'role', 'is_active', 'created_at']
@@ -395,12 +452,29 @@ class ChurchAdminModelAdmin(LocalAdminMixin, admin.ModelAdmin):
         }),
     )
 
-class EventHeroMediaInline(admin.TabularInline):
+class EventHeroMediaForm(forms.ModelForm):
+    class Meta:
+        model = EventHeroMedia
+        fields = ('image', 'video', 'order')
+        help_texts = {
+            'image': 'Upload an image for this event (recommended size: 1200x800px). This will be used on event cards and in the hero carousel.',
+            'video': 'Upload a video file (MP4 recommended). Videos will appear in the hero carousel and take priority over images.',
+            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first.'
+        }
+        labels = {
+            'image': 'Event Image',
+            'video': 'Event Video',
+            'order': 'Display Order'
+        }
+
+class EventHeroMediaInline(admin.StackedInline):
     model = EventHeroMedia
+    form = EventHeroMediaForm
     extra = 1
     fields = ('image', 'video', 'order')
-    verbose_name_plural = "Event Hero Medias"
-    help_text = "Images added here will be used for the event card and hero carousel. Videos will appear in the hero carousel."
+    verbose_name = "Event Media"
+    verbose_name_plural = "Event Media"
+    help_text = "Add images and videos for your event. Images will be used on event cards and in the hero carousel. Videos will appear in the hero carousel."
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -409,7 +483,51 @@ class EventHeroMediaInline(admin.TabularInline):
 
 # Remove @admin.register decorators for these models
 # @admin.register(Event)
+class EventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = '__all__'
+        help_texts = {
+            'title': 'Enter the name of your event (e.g., "Sunday Service", "Youth Conference")',
+            'description': 'Provide a detailed description of what this event is about, who should attend, and what to expect',
+            'start_date': 'When does this event begin? Include both date and time',
+            'end_date': 'When does this event end? Include both date and time',
+            'location': 'Where is this event taking place? (e.g., "Main Auditorium", "Youth Hall")',
+            'address': 'Full address where people can find this event',
+            'event_type': 'What type of event is this? Choose the most appropriate category',
+            'requires_registration': 'Check this if people need to register before attending',
+            'max_attendees': 'Maximum number of people who can attend (leave blank if unlimited)',
+            'registration_deadline': 'Last date people can register for this event',
+            'registration_fee': 'How much does it cost to attend? (leave blank if free)',
+            'is_featured': 'Feature this event prominently on your church website',
+            'is_public': 'Show this event to visitors on your website',
+            'is_big_event': 'Use special professional template with registration, countdown, and detailed sections',
+            'is_global_featured': 'Request to show this event on the global Bethel website',
+            'global_feature_status': 'Current status of your global feature request',
+            'show_qr_code': 'Display a QR code on the event page for easy sharing',
+        }
+        labels = {
+            'title': 'Event Title',
+            'description': 'Event Description',
+            'start_date': 'Start Date & Time',
+            'end_date': 'End Date & Time',
+            'location': 'Event Location',
+            'address': 'Full Address',
+            'event_type': 'Event Type',
+            'requires_registration': 'Requires Registration',
+            'max_attendees': 'Maximum Attendees',
+            'registration_deadline': 'Registration Deadline',
+            'registration_fee': 'Registration Fee',
+            'is_featured': 'Featured Event',
+            'is_public': 'Public Event',
+            'is_big_event': 'Big Event (Professional Template)',
+            'is_global_featured': 'Request Global Feature',
+            'global_feature_status': 'Global Feature Status',
+            'show_qr_code': 'Show QR Code',
+        }
+
 class EventAdmin(LocalAdminMixin, admin.ModelAdmin):
+    form = EventForm
     list_display = ['title', 'church', 'start_date', 'end_date', 'is_big_event', 'is_featured', 'is_global_featured', 'global_feature_status', 'created_at']
     list_filter = ['is_big_event', 'is_featured', 'start_date', 'created_at']
     search_fields = ['title', 'description', 'church__name']
@@ -417,38 +535,41 @@ class EventAdmin(LocalAdminMixin, admin.ModelAdmin):
     
     fieldsets = (
         ('Event Information', {
-            'fields': ('church', 'title', 'description')
+            'fields': ('church', 'title', 'description'),
+            'description': 'Basic information about your event including the title and description that visitors will see.'
         }),
         ('Schedule', {
-            'fields': ('start_date', 'end_date', 'event_type')
+            'fields': ('start_date', 'end_date', 'event_type'),
+            'description': 'When your event takes place and what type of event it is.'
         }),
         ('Location', {
-            'fields': ('location', 'address')
+            'fields': ('location', 'address'),
+            'description': 'Where people can find your event. Include both the venue name and full address.'
         }),
         ('Media', {
             'fields': (),  # No direct fields, managed via EventHeroMediaInline
+            'description': 'Add images and videos for your event using the "Event Media" section below.'
         }),
-        ('Registration', {
-            'fields': ('requires_registration', 'max_attendees', 'registration_deadline', 'registration_fee')
+        ('Registration Settings', {
+            'fields': ('requires_registration', 'max_attendees', 'registration_deadline', 'registration_fee'),
+            'description': 'Configure if people need to register for your event and any associated costs.'
         }),
-        ('QR Code', {
-            'fields': ('show_qr_code',),
-            'description': 'Enable to show a QR code for this event on the detail page.'
+        ('Event Display', {
+            'fields': ('is_featured', 'is_public', 'show_qr_code'),
+            'description': 'Control how your event appears on the website and whether to show a QR code for easy sharing.'
         }),
-        ('Event Type', {
+        ('Big Event Template', {
             'fields': ('is_big_event',),
-            'description': 'Mark as big event to use special professional template with registration, countdown, and detailed sections.'
-        }),
-        ('Status', {
-            'fields': ('is_featured', 'is_public')
+            'description': 'Enable the professional big event template with registration forms, countdown timer, and detailed sections.'
         }),
         ('Global Feature Request', {
             'fields': ('is_global_featured', 'global_feature_status'),
-            'description': 'Request to feature this event on the global site. Only global admins can approve requests.'
+            'description': 'Request to feature this event on the global Bethel website. Only global admins can approve requests.'
         }),
-        ('System', {
+        ('System Information', {
             'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
+            'classes': ('collapse',),
+            'description': 'Technical information about this event record.'
         }),
     )
 
@@ -490,7 +611,37 @@ class MinistryJoinRequestInline(admin.TabularInline):
     verbose_name = 'Join Request'
     verbose_name_plural = 'Join Requests'
 
+class MinistryForm(forms.ModelForm):
+    class Meta:
+        model = Ministry
+        fields = '__all__'
+        help_texts = {
+            'name': 'Name of your ministry (e.g., "Youth Ministry", "Women\'s Fellowship", "Prayer Team")',
+            'description': 'Describe what this ministry does, who it serves, and how people can get involved',
+            'ministry_type': 'What type of ministry is this? Choose the most appropriate category',
+            'leader_name': 'Who leads this ministry? (e.g., "John Doe", "Sister Mary")',
+            'contact_email': 'Email address for ministry inquiries',
+            'contact_phone': 'Phone number for ministry inquiries',
+            'image': 'Upload a photo representing this ministry (recommended size: 800x600px)',
+            'is_active': 'Is this ministry currently active and accepting new members?',
+            'is_featured': 'Feature this ministry prominently on your church website',
+            'is_public': 'Show this ministry on the global Bethel website',
+        }
+        labels = {
+            'name': 'Ministry Name',
+            'description': 'Ministry Description',
+            'ministry_type': 'Ministry Type',
+            'leader_name': 'Ministry Leader',
+            'contact_email': 'Contact Email',
+            'contact_phone': 'Contact Phone',
+            'image': 'Ministry Image',
+            'is_active': 'Active Ministry',
+            'is_featured': 'Featured Ministry',
+            'is_public': 'Public Ministry',
+        }
+
 class MinistryAdmin(LocalAdminMixin, admin.ModelAdmin):
+    form = MinistryForm
     list_display = ['name', 'church', 'leader_name', 'is_active', 'created_at']
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description', 'church__name']
@@ -517,7 +668,35 @@ class MinistryAdmin(LocalAdminMixin, admin.ModelAdmin):
             return False
 
 # @admin.register(News)
+class NewsForm(forms.ModelForm):
+    class Meta:
+        model = News
+        fields = '__all__'
+        help_texts = {
+            'title': 'Headline for your news article (e.g., "New Youth Ministry Launched", "Easter Service Schedule")',
+            'content': 'The full news article content. You can include details, quotes, and important information.',
+            'excerpt': 'Brief summary of the article (optional). If left blank, the first 300 characters will be used.',
+            'date': 'When did this news happen or when should it be published?',
+            'image': 'Upload a photo related to this news (recommended size: 1200x800px)',
+            'is_featured': 'Feature this news prominently on your church website',
+            'is_public': 'Show this news to visitors on your website',
+            'is_global_featured': 'Request to show this news on the global Bethel website',
+            'global_feature_status': 'Current status of your global feature request',
+        }
+        labels = {
+            'title': 'News Title',
+            'content': 'News Content',
+            'excerpt': 'News Excerpt',
+            'date': 'News Date',
+            'image': 'News Image',
+            'is_featured': 'Featured News',
+            'is_public': 'Public News',
+            'is_global_featured': 'Request Global Feature',
+            'global_feature_status': 'Global Feature Status',
+        }
+
 class NewsAdmin(LocalAdminMixin, admin.ModelAdmin):
+    form = NewsForm
     list_display = ['title', 'church', 'date', 'is_featured', 'is_global_featured', 'global_feature_status', 'created_at']
     list_filter = ['is_featured', 'date', 'created_at']
     search_fields = ['title', 'content', 'church__name']
@@ -551,7 +730,45 @@ class NewsAdmin(LocalAdminMixin, admin.ModelAdmin):
             return False
 
 # @admin.register(Sermon)
+class SermonForm(forms.ModelForm):
+    class Meta:
+        model = Sermon
+        fields = '__all__'
+        help_texts = {
+            'title': 'Title of the sermon (e.g., "Walking in Faith", "The Power of Prayer")',
+            'preacher': 'Who preached this sermon? (e.g., "Rev. John Doe", "Pastor Mary Smith")',
+            'description': 'Brief description of what the sermon was about',
+            'date': 'When was this sermon preached?',
+            'scripture_reference': 'Bible passage(s) referenced (e.g., "John 3:16", "Matthew 6:9-13")',
+            'scripture_text': 'Full text of the scripture passage(s)',
+            'audio_file': 'Upload the audio recording of the sermon (MP3 recommended)',
+            'video_file': 'Upload the video recording of the sermon (MP4 recommended)',
+            'thumbnail': 'Upload a thumbnail image for the sermon (recommended size: 800x600px)',
+            'link': 'External link to the sermon (YouTube, Vimeo, etc.)',
+            'duration': 'How long is the sermon? (e.g., "45:30", "1:15:20")',
+            'language': 'What language is the sermon in?',
+            'is_featured': 'Feature this sermon prominently on your church website',
+            'is_public': 'Show this sermon to visitors on your website',
+        }
+        labels = {
+            'title': 'Sermon Title',
+            'preacher': 'Preacher',
+            'description': 'Sermon Description',
+            'date': 'Sermon Date',
+            'scripture_reference': 'Scripture Reference',
+            'scripture_text': 'Scripture Text',
+            'audio_file': 'Audio File',
+            'video_file': 'Video File',
+            'thumbnail': 'Thumbnail Image',
+            'link': 'External Link',
+            'duration': 'Duration',
+            'language': 'Language',
+            'is_featured': 'Featured Sermon',
+            'is_public': 'Public Sermon',
+        }
+
 class SermonAdmin(LocalAdminMixin, admin.ModelAdmin):
+    form = SermonForm
     list_display = ['title', 'church', 'preacher', 'date', 'created_at']
     list_filter = ['date', 'created_at']
     search_fields = ['title', 'description', 'preacher', 'church__name']
@@ -1269,3 +1486,45 @@ class MinistryJoinRequestAdmin(LocalAdminMixin, admin.ModelAdmin):
     mark_as_reviewed.short_description = "Mark selected requests as reviewed"
 
 admin.site.register(MinistryJoinRequest, MinistryJoinRequestAdmin)
+
+class GlobalSettingsAdmin(admin.ModelAdmin):
+    """Admin for global settings"""
+    list_display = ['site_name', 'updated_at']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview']
+    
+    def global_nav_logo_preview(self, obj):
+        """Display a preview of the global navigation logo"""
+        if obj.global_nav_logo:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                obj.get_global_nav_logo_url()
+            )
+        return "No global navigation logo uploaded"
+    global_nav_logo_preview.short_description = "Global Navigation Logo Preview"
+    
+    def has_add_permission(self, request):
+        """Only allow one global settings instance"""
+        return not GlobalSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of global settings"""
+        return False
+    
+    fieldsets = (
+        ('Global Navigation Logo', {
+            'fields': ('global_nav_logo', 'global_nav_logo_preview'),
+            'description': 'Upload a global navigation logo that will appear on ALL church pages. This overrides individual church navigation logos.'
+        }),
+        ('Site Information', {
+            'fields': ('site_name', 'site_description')
+        }),
+        ('Contact Information', {
+            'fields': ('global_contact_email', 'global_contact_phone')
+        }),
+        ('System', {
+            'fields': ('id', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+admin.site.register(GlobalSettings, GlobalSettingsAdmin)
