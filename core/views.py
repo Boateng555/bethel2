@@ -312,7 +312,7 @@ def home(request):
         'user_country': country,
         'user_city': city,
         'nearest_church': nearest_church,
-        'is_global_site': True,
+        'is_global_site': go_global,  # Only True if user explicitly requested global site
         'recent_testimonies': recent_testimonies,
     }
     return render(request, 'core/home.html', context)
@@ -833,6 +833,15 @@ def church_home(request, church_id):
     news = News.objects.filter(church=church, is_public=True)[:3]
     sermons = Sermon.objects.filter(church=church, is_featured=True, is_public=True)[:3]
     
+    # Get user location for location detection banner
+    country, city = get_user_location(request)
+    nearest_church = None
+    if country:
+        try:
+            nearest_church = find_nearest_church(country, city)
+        except Exception as e:
+            print(f"DEBUG: Error finding nearest church: {e}")
+    
     context = {
         'church': church,
         'hero': hero,
@@ -843,6 +852,9 @@ def church_home(request, church_id):
         'news': news,
         'sermons': sermons,
         'is_church_site': True,  # Flag to indicate this is a church-specific page
+        'user_country': country,
+        'user_city': city,
+        'nearest_church': nearest_church,
     }
     return render(request, 'core/church_home.html', context)
 
@@ -853,12 +865,24 @@ def church_events(request, church_id):
     featured_events = Event.objects.filter(church=church, is_featured=True, is_public=True).prefetch_related('hero_media')[:3]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     
+    # Get user location for location detection banner
+    country, city = get_user_location(request)
+    nearest_church = None
+    if country:
+        try:
+            nearest_church = find_nearest_church(country, city)
+        except Exception as e:
+            print(f"DEBUG: Error finding nearest church: {e}")
+    
     context = {
         'church': church,
         'all_events': all_events,
         'featured_events': featured_events,
         'all_ministries': all_ministries,
         'is_church_site': True,
+        'user_country': country,
+        'user_city': city,
+        'nearest_church': nearest_church,
     }
     return render(request, 'core/church_events.html', context)
 
@@ -927,6 +951,15 @@ def church_event_detail(request, church_id, event_id):
         img.save(buffer, format="PNG")
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
+    # Get user location for location detection banner
+    country, city = get_user_location(request)
+    nearest_church = None
+    if country:
+        try:
+            nearest_church = find_nearest_church(country, city)
+        except Exception as e:
+            print(f"DEBUG: Error finding nearest church: {e}")
+    
     context = {
         'church': church,
         'event': event,
@@ -938,6 +971,9 @@ def church_event_detail(request, church_id, event_id):
         'past_highlights': past_highlights,
         'registration_count': registration_count,
         'qr_code_base64': qr_code_base64,
+        'user_country': country,
+        'user_city': city,
+        'nearest_church': nearest_church,
     }
     
     # Use big event template if marked as big event

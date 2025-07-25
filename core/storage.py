@@ -33,13 +33,21 @@ class ImageKitStorage(Storage):
     def _save(self, name, content):
         name = self._clean_name(name or f"{uuid.uuid4()}{self._get_extension(content.name)}")
 
+        # Read the content into bytes
+        if hasattr(content, 'read'):
+            content.seek(0)
+            file_bytes = content.read()
+        else:
+            file_bytes = content
+
+        # Create BytesIO object for upload
+        file_obj = BytesIO(file_bytes)
+        file_obj.name = os.path.basename(name)
+
+        # Work around ImageKit bug by not using options parameter
         upload = self.imagekit.upload_file(
-            file=content,
-            file_name=os.path.basename(name),
-            options={
-                "folder": os.path.dirname(name) or "bethel",
-                "use_unique_file_name": False
-            }
+            file=file_obj,
+            file_name=os.path.basename(name)
         )
 
         if upload.response_metadata.http_status_code != 200:
@@ -56,11 +64,12 @@ class ImageKitStorage(Storage):
     def delete(self, name):
         name = self._clean_name(name)
         try:
-            files = self.imagekit.list_files(options={"path": name})
-            if files.list:
-                file_id = files.list[0].file_id
-                result = self.imagekit.delete_file(file_id)
-                return result.response_metadata.http_status_code == 200
+            # Work around ImageKit bug by not using options parameter
+            files = self.imagekit.list_files()
+            for file in files.list:
+                if file.file_path == name:
+                    result = self.imagekit.delete_file(file.file_id)
+                    return result.response_metadata.http_status_code == 200
         except Exception:
             pass
         return False
@@ -68,8 +77,13 @@ class ImageKitStorage(Storage):
     def exists(self, name):
         name = self._clean_name(name)
         try:
-            files = self.imagekit.list_files(options={"path": name})
-            return bool(files.list)
+            # Work around ImageKit bug by not using options parameter
+            files = self.imagekit.list_files()
+            # Check if any file matches our path
+            for file in files.list:
+                if file.file_path == name:
+                    return True
+            return False
         except Exception:
             return False
 
@@ -78,22 +92,34 @@ class ImageKitStorage(Storage):
 
     def size(self, name):
         try:
-            files = self.imagekit.list_files(options={"path": self._clean_name(name)})
-            return files.list[0].size if files.list else 0
+            # Work around ImageKit bug by not using options parameter
+            files = self.imagekit.list_files()
+            for file in files.list:
+                if file.file_path == self._clean_name(name):
+                    return file.size
+            return 0
         except Exception:
             return 0
 
     def get_created_time(self, name):
         try:
-            files = self.imagekit.list_files(options={"path": self._clean_name(name)})
-            return files.list[0].created_at if files.list else None
+            # Work around ImageKit bug by not using options parameter
+            files = self.imagekit.list_files()
+            for file in files.list:
+                if file.file_path == self._clean_name(name):
+                    return file.created_at
+            return None
         except Exception:
             return None
 
     def get_modified_time(self, name):
         try:
-            files = self.imagekit.list_files(options={"path": self._clean_name(name)})
-            return files.list[0].updated_at if files.list else None
+            # Work around ImageKit bug by not using options parameter
+            files = self.imagekit.list_files()
+            for file in files.list:
+                if file.file_path == self._clean_name(name):
+                    return file.updated_at
+            return None
         except Exception:
             return None
 
