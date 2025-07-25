@@ -13,13 +13,6 @@ import dj_database_url
 # Load .env variables
 load_dotenv()
 
-# Force ImageKit storage override - MUST be at the top
-try:
-    import core.storage_override
-    print("✅ Storage override imported successfully")
-except Exception as e:
-    print(f"⚠️ Could not import storage override: {e}")
-
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -275,3 +268,10 @@ REST_FRAMEWORK = {
         'user': '1000/hour'
     }
 }
+
+# Initialize ImageKit storage after all settings are loaded
+try:
+    import core.storage_init
+    print("✅ Storage initialization completed")
+except Exception as e:
+    print(f"⚠️ Could not initialize storage: {e}")

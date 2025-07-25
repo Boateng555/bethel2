@@ -31,5 +31,5 @@ def force_imagekit_storage():
         print(f"❌ Failed to force ImageKit storage: {e}")
         return False
 
-# Auto-execute when imported
-force_imagekit_storage() 
+# Don't auto-execute - let Django load first
+# force_imagekit_storage() 
