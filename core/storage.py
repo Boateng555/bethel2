@@ -88,7 +88,11 @@ class ImageKitStorage(Storage):
             return False
 
     def url(self, name):
-        return f"{self.base_url}/{self._clean_name(name)}" if name else ''
+        if not name:
+            return ''
+        clean_name = self._clean_name(name)
+        # Return the full ImageKit URL
+        return f"{self.base_url}/{clean_name}"
 
     def size(self, name):
         try:
