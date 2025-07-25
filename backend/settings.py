@@ -234,7 +234,7 @@ IMAGEKIT_CONFIG = {
 try:
     if all(IMAGEKIT_CONFIG.values()):
         print("🖼️ Using ImageKit for storage")
-        DEFAULT_FILE_STORAGE = 'core.forced_storage.ForcedImageKitStorage'
+        DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
         
         # Force ImageKit storage by ensuring environment variables are set
         os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', IMAGEKIT_CONFIG['PUBLIC_KEY'])
@@ -247,6 +247,12 @@ try:
 except Exception as e:
     print(f"⚠️ Error checking storage config: {e}")
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# Force ImageKit storage override
+try:
+    import core.storage_override
+except Exception as e:
+    print(f"⚠️ Could not import storage override: {e}")
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
