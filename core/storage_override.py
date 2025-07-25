@@ -4,18 +4,16 @@ Direct storage override to force ImageKit usage
 
 import os
 from django.core.files.storage import default_storage
-from django.conf import settings
 
 def force_imagekit_storage():
     """
     Force Django to use ImageKit storage by directly overriding default_storage
     """
     try:
-        # Ensure environment variables are set
-        if hasattr(settings, 'IMAGEKIT_CONFIG'):
-            os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY', ''))
-            os.environ.setdefault('IMAGEKIT_PRIVATE_KEY', settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY', ''))
-            os.environ.setdefault('IMAGEKIT_URL_ENDPOINT', settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT', ''))
+        # Set environment variables directly
+        os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', 'public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU=')
+        os.environ.setdefault('IMAGEKIT_PRIVATE_KEY', 'private_Dnsrj2VW7uJakaeMaNYaav+P784=')
+        os.environ.setdefault('IMAGEKIT_URL_ENDPOINT', 'https://ik.imagekit.io/9buar9mbp')
         
         # Import ImageKit storage
         from core.storage import ImageKitStorage
@@ -34,5 +32,4 @@ def force_imagekit_storage():
         return False
 
 # Auto-execute when imported
-if hasattr(settings, 'IMAGEKIT_CONFIG') and all(settings.IMAGEKIT_CONFIG.values()):
-    force_imagekit_storage() 
+force_imagekit_storage() 
