@@ -16,9 +16,6 @@ os.environ['IMAGEKIT_URL_ENDPOINT'] = 'https://ik.imagekit.io/9buar9mbp'
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-# Import the storage fix
-import core.storage_init
-
 from django.core.files.storage import default_storage
 
 print("🧪 Testing ImageKit storage fix...")

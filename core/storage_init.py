@@ -3,7 +3,6 @@ Custom storage initialization to force ImageKit storage
 """
 
 import os
-from django.core.files.storage import get_storage_class
 from django.conf import settings
 
 def get_imagekit_storage():
@@ -16,11 +15,11 @@ def get_imagekit_storage():
         os.environ.setdefault('IMAGEKIT_PRIVATE_KEY', settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY', ''))
         os.environ.setdefault('IMAGEKIT_URL_ENDPOINT', settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT', ''))
     
-    # Get the ImageKit storage class
-    storage_class = get_storage_class('core.storage.ImageKitStorage')
+    # Import the ImageKit storage class directly
+    from core.storage import ImageKitStorage
     
     # Create and return the storage instance
-    return storage_class()
+    return ImageKitStorage()
 
 # Override the default storage
 from django.core.files.storage import default_storage

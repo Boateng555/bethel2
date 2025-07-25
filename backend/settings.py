@@ -235,6 +235,12 @@ try:
     if all(IMAGEKIT_CONFIG.values()):
         print("🖼️ Using ImageKit for storage")
         DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+        
+        # Force ImageKit storage by ensuring environment variables are set
+        os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', IMAGEKIT_CONFIG['PUBLIC_KEY'])
+        os.environ.setdefault('IMAGEKIT_PRIVATE_KEY', IMAGEKIT_CONFIG['PRIVATE_KEY'])
+        os.environ.setdefault('IMAGEKIT_URL_ENDPOINT', IMAGEKIT_CONFIG['URL_ENDPOINT'])
+        
     else:
         print("⚙️ Using local storage (ImageKit keys missing)")
         DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
