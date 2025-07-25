@@ -234,7 +234,7 @@ IMAGEKIT_CONFIG = {
 try:
     if all(IMAGEKIT_CONFIG.values()):
         print("🖼️ Using ImageKit for storage")
-        DEFAULT_FILE_STORAGE = 'core.storage.ImageKitStorage'
+        DEFAULT_FILE_STORAGE = 'core.forced_storage.ForcedImageKitStorage'
         
         # Force ImageKit storage by ensuring environment variables are set
         os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', IMAGEKIT_CONFIG['PUBLIC_KEY'])
