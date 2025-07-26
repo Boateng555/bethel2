@@ -32,7 +32,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
-import imagekitio
+from imagekitio import ImageKit
 import time as time_module
 from django.db import connection
 from django.db.utils import OperationalError
@@ -2024,7 +2024,7 @@ def upload_test_endpoint(request):
     from django.http import JsonResponse
     from django.views.decorators.csrf import csrf_exempt
     from django.views.decorators.http import require_http_methods
-    import imagekitio
+    from imagekitio import ImageKit
     import os
     
     if request.method != 'POST':
@@ -2038,7 +2038,7 @@ def upload_test_endpoint(request):
         uploaded_file = request.FILES['image']
         
         # Initialize ImageKit with your credentials
-        imagekit = imagekitio.ImageKit(
+        imagekit = ImageKit(
             public_key=settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY'),
             private_key=settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY'),
             url_endpoint=settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')
