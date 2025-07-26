@@ -11,7 +11,7 @@ from .views import (
     request_global_hero_feature, request_global_news_feature, global_hero_feature_requests,
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
-    all_event_highlights, news_detail, trigger_media_upload,
+    all_event_highlights, news_detail,
     check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
     health_check, startup_health_check, static_fallback,
 )
@@ -81,8 +81,6 @@ urlpatterns = [
     path('events/highlight/<uuid:highlight_id>/', event_highlight_detail, name='event_highlight_detail'),
     path('events/<uuid:event_id>/speakers/', event_speakers, name='event_speakers'),
     path('events/highlights/', all_event_highlights, name='all_event_highlights'),
-    # Temporary media upload trigger
-    path('trigger-media-upload/', trigger_media_upload, name='trigger_media_upload'),
     # Debug views
     path('check-production-status/', check_production_status, name='check_production_status'),
     path('debug-env/', debug_env, name='debug_env'),
