@@ -13,4 +13,4 @@ imagekitio==3.1.0
 django-imagekit==5.0.0
 pytz==2024.1
 qrcode==7.4.2
-cloudinary==1.36.0 
+ 

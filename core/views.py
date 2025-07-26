@@ -25,8 +25,7 @@ import base64
 from django.core.mail import send_mail
 import math
 
-import cloudinary
-import cloudinary.uploader
+
 import os
 from django.conf import settings
 from django.http import JsonResponse
@@ -1740,105 +1739,7 @@ def news_detail(request, news_id):
     
     return render(request, 'core/news_detail.html', context)
 
-@csrf_exempt
-def trigger_media_upload(request):
-    """
-    Temporary view to trigger media upload to Cloudinary
-    Only accessible via direct URL
-    """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST method required'}, status=405)
-    
-    try:
-        # Configure Cloudinary
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
-            api_key=settings.CLOUDINARY_STORAGE['API_KEY'],
-            api_secret=settings.CLOUDINARY_STORAGE['API_SECRET']
-        )
-        
-        success_count = 0
-        error_count = 0
-        results = []
-        
-        # Upload Church logos
-        churches = Church.objects.all()
-        for church in churches:
-            if church.logo and not 'res.cloudinary.com' in str(church.logo):
-                try:
-                    local_path = str(church.logo)
-                    
-                    # Upload to Cloudinary
-                    result = cloudinary.uploader.upload(
-                        local_path,
-                        folder="churches/logos",
-                        public_id=f"church_{church.id}_logo",
-                        overwrite=True
-                    )
-                    
-                    # Update database
-                    church.logo = result['secure_url']
-                    church.save()
-                    
-                    results.append(f"✅ {church.name}: {result['secure_url']}")
-                    success_count += 1
-                    
-                except Exception as e:
-                    results.append(f"❌ {church.name}: Error - {e}")
-                    error_count += 1
-        
-        # Upload Hero Media
-        hero_media = HeroMedia.objects.all()
-        for hero in hero_media:
-            if hero.image and not 'res.cloudinary.com' in str(hero.image):
-                try:
-                    local_path = str(hero.image)
-                    
-                    result = cloudinary.uploader.upload(
-                        local_path,
-                        folder="hero",
-                        public_id=f"hero_{hero.id}",
-                        overwrite=True
-                    )
-                    
-                    hero.image = result['secure_url']
-                    hero.save()
-                    
-                    results.append(f"✅ Hero {hero.id}: {result['secure_url']}")
-                    success_count += 1
-                    
-                except Exception as e:
-                    results.append(f"❌ Hero {hero.id}: Error - {e}")
-                    error_count += 1
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Upload completed! Success: {success_count}, Errors: {error_count}',
-            'results': results
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
 
-@staff_member_required
-def trigger_sync_media_to_cloudinary(request):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("You must be a superuser.")
-    if request.method == "POST":
-        call_command("sync_media_to_cloudinary")
-        return HttpResponse("Media sync to Cloudinary triggered! Check your site in a few minutes.")
-    return HttpResponse("<form method='post'>{% csrf_token %}<button type='submit'>Sync Media to Cloudinary</button></form>")
-
-def simple_trigger_sync(request):
-    """Simple trigger for sync - temporary fix"""
-    try:
-        call_command("update_urls_to_cloudinary")
-        return HttpResponse("✅ Database URLs updated to Cloudinary! Check your site now.")
-    except Exception as e:
-        return HttpResponse(f"❌ Error: {str(e)}")
 
 def debug_urls(request):
     """Debug view to show current database URLs"""
@@ -1875,40 +1776,39 @@ def debug_urls(request):
             else:
                 output.append(f"<p><strong>{media.title}:</strong> No image</p>")
         
-        # Count local vs Cloudinary URLs
+        # Count local vs ImageKit URLs
         local_count = 0
-        cloudinary_count = 0
+        imagekit_count = 0
         
         for church in churches:
             if church.logo:
-                if str(church.logo).startswith('http'):
-                    cloudinary_count += 1
+                if 'ik.imagekit.io' in str(church.logo):
+                    imagekit_count += 1
                 else:
                     local_count += 1
         
         for news in news_items:
             if news.image:
-                if str(news.image).startswith('http'):
-                    cloudinary_count += 1
+                if 'ik.imagekit.io' in str(news.image):
+                    imagekit_count += 1
                 else:
                     local_count += 1
         
         for media in hero_media:
             if media.image:
-                if str(media.image).startswith('http'):
-                    cloudinary_count += 1
+                if 'ik.imagekit.io' in str(media.image):
+                    imagekit_count += 1
                 else:
                     local_count += 1
         
         output.append(f"<h2>📊 Summary:</h2>")
-        output.append(f"<p><strong>Cloudinary URLs:</strong> {cloudinary_count}</p>")
+        output.append(f"<p><strong>ImageKit URLs:</strong> {imagekit_count}</p>")
         output.append(f"<p><strong>Local paths:</strong> {local_count}</p>")
         
         if local_count > 0:
             output.append(f"<p style='color: red;'><strong>❌ Found {local_count} local paths that need to be updated!</strong></p>")
-            output.append("<p><a href='/trigger-sync/' style='background: blue; color: white; padding: 10px; text-decoration: none;'>🔧 Click here to update URLs</a></p>")
         else:
-            output.append(f"<p style='color: green;'><strong>✅ All URLs are already Cloudinary URLs!</strong></p>")
+            output.append(f"<p style='color: green;'><strong>✅ All URLs are already ImageKit URLs!</strong></p>")
         
         return HttpResponse("".join(output))
         
@@ -1917,8 +1817,6 @@ def debug_urls(request):
 
 def check_production_status(request):
     """Check production environment status"""
-    import cloudinary
-    from cloudinary import config
     
     status = {
         'environment': {
@@ -1926,29 +1824,24 @@ def check_production_status(request):
             'DEFAULT_FILE_STORAGE': settings.DEFAULT_FILE_STORAGE,
             'MEDIA_URL': settings.MEDIA_URL,
         },
-        'cloudinary_config': {
-            'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-            'api_key_set': bool(os.environ.get('CLOUDINARY_API_KEY')),
-            'api_secret_set': bool(os.environ.get('CLOUDINARY_API_SECRET')),
+        'imagekit_config': {
+            'public_key_set': bool(os.environ.get('IMAGEKIT_PUBLIC_KEY')),
+            'private_key_set': bool(os.environ.get('IMAGEKIT_PRIVATE_KEY')),
+            'url_endpoint_set': bool(os.environ.get('IMAGEKIT_URL_ENDPOINT')),
         },
         'sample_media': {}
     }
     
-    # Test Cloudinary connection
+    # Test ImageKit connection
     try:
-        if all([os.environ.get('CLOUDINARY_CLOUD_NAME'), 
-                os.environ.get('CLOUDINARY_API_KEY'), 
-                os.environ.get('CLOUDINARY_API_SECRET')]):
-            config(
-                cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-                api_key=os.environ.get('CLOUDINARY_API_KEY'),
-                api_secret=os.environ.get('CLOUDINARY_API_SECRET')
-            )
-            status['cloudinary_test'] = 'Configured'
+        if all([os.environ.get('IMAGEKIT_PUBLIC_KEY'), 
+                os.environ.get('IMAGEKIT_PRIVATE_KEY'), 
+                os.environ.get('IMAGEKIT_URL_ENDPOINT')]):
+            status['imagekit_test'] = 'Configured'
         else:
-            status['cloudinary_test'] = 'Not configured'
+            status['imagekit_test'] = 'Not configured'
     except Exception as e:
-        status['cloudinary_test'] = f'Error: {str(e)}'
+        status['imagekit_test'] = f'Error: {str(e)}'
     
     # Check sample media URLs
     if Event.objects.exists():
@@ -1969,7 +1862,6 @@ def debug_env(request):
         'imagekit_public_key': 'Set' if os.environ.get('IMAGEKIT_PUBLIC_KEY') else 'Not set',
         'imagekit_private_key': 'Set' if os.environ.get('IMAGEKIT_PRIVATE_KEY') else 'Not set',
         'imagekit_url_endpoint': 'Set' if os.environ.get('IMAGEKIT_URL_ENDPOINT') else 'Not set',
-        'cloudinary_cloud_name': 'Set' if os.environ.get('CLOUDINARY_CLOUD_NAME') else 'Not set',
     })
 
 def test_imagekit_upload_endpoint(request):

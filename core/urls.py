@@ -11,8 +11,8 @@ from .views import (
     request_global_hero_feature, request_global_news_feature, global_hero_feature_requests,
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
-    all_event_highlights, news_detail, trigger_media_upload, trigger_sync_media_to_cloudinary,
-    simple_trigger_sync, check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
+    all_event_highlights, news_detail, trigger_media_upload,
+    check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
     health_check, startup_health_check, static_fallback,
 )
 
