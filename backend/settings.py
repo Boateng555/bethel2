@@ -230,11 +230,11 @@ IMAGEKIT_CONFIG = {
     'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
 }
 
-# File storage (Fixed ImageKit if configured, fallback to local)
+# File storage (Robust ImageKit if configured, fallback to local)
 try:
     if all(IMAGEKIT_CONFIG.values()):
-        print("🖼️ Using FIXED ImageKit for storage")
-        DEFAULT_FILE_STORAGE = 'core.fixed_storage.FixedImageKitStorage'
+        print("🖼️ Using ROBUST ImageKit for storage")
+        DEFAULT_FILE_STORAGE = 'core.robust_storage.RobustImageKitStorage'
         
         # Force ImageKit storage by ensuring environment variables are set
         os.environ.setdefault('IMAGEKIT_PUBLIC_KEY', IMAGEKIT_CONFIG['PUBLIC_KEY'])
