@@ -418,7 +418,11 @@ class ChurchModelAdmin(admin.ModelAdmin):
         """Display a preview of the church logo"""
         if obj.logo:
             return format_html(
-                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                '<div style="text-align: center; margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 250px; max-height: 250px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666; margin-top: 8px; display: block;">Click image to view full size</small>'
+                '</div>',
                 obj.get_logo_url()
             )
         return "No logo uploaded"
@@ -428,7 +432,11 @@ class ChurchModelAdmin(admin.ModelAdmin):
         """Display a preview of the navigation logo"""
         if obj.nav_logo:
             return format_html(
-                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                '<div style="text-align: center; margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 200px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666; margin-top: 8px; display: block;">Navigation Logo - Click to view full size</small>'
+                '</div>',
                 obj.get_nav_logo_url()
             )
         return "No navigation logo uploaded"
@@ -1316,43 +1324,78 @@ class LocalLeadershipPageAdmin(LocalAdminMixin, admin.ModelAdmin):
 
     def pastor_image_preview(self, obj):
         if obj.pastor_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;border-radius:50%;" />', obj.pastor_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Pastor Photo</small>'
+                '</div>', obj.pastor_image.url)
         return ""
     pastor_image_preview.short_description = "Pastor Image Preview"
 
     def assistant_pastor_image_preview(self, obj):
         if obj.assistant_pastor_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;border-radius:50%;" />', obj.assistant_pastor_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Assistant Pastor Photo</small>'
+                '</div>', obj.assistant_pastor_image.url)
         return ""
     assistant_pastor_image_preview.short_description = "Assistant Pastor Image Preview"
 
     def board_image_preview(self, obj):
         if obj.board_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.board_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Board Photo</small>'
+                '</div>', obj.board_image.url)
         return ""
     board_image_preview.short_description = "Board Image Preview"
 
     def team_image_preview(self, obj):
         if obj.team_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.team_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Team Photo</small>'
+                '</div>', obj.team_image.url)
         return ""
     team_image_preview.short_description = "Team Image Preview"
 
     def leadership_photo_1_preview(self, obj):
         if obj.leadership_photo_1:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.leadership_photo_1.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Leadership Photo 1</small>'
+                '</div>', obj.leadership_photo_1.url)
         return ""
     leadership_photo_1_preview.short_description = "Leadership Photo 1 Preview"
 
     def leadership_photo_2_preview(self, obj):
         if obj.leadership_photo_2:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.leadership_photo_2.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Leadership Photo 2</small>'
+                '</div>', obj.leadership_photo_2.url)
         return ""
     leadership_photo_2_preview.short_description = "Leadership Photo 2 Preview"
 
     def leadership_photo_3_preview(self, obj):
         if obj.leadership_photo_3:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.leadership_photo_3.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Leadership Photo 3</small>'
+                '</div>', obj.leadership_photo_3.url)
         return ""
     leadership_photo_3_preview.short_description = "Leadership Photo 3 Preview"
 
@@ -1390,37 +1433,67 @@ class LocalAboutPageAdmin(LocalAdminMixin, admin.ModelAdmin):
 
     def logo_preview(self, obj):
         if obj.logo:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;object-fit:contain;background:#fff;padding:5px;" />', obj.logo.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 200px; object-fit: contain; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Church Logo</small>'
+                '</div>', obj.logo.url)
         return ""
     logo_preview.short_description = "Logo Preview"
 
     def founder_image_preview(self, obj):
         if obj.founder_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;border-radius:50%;" />', obj.founder_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 150px; max-height: 150px; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Founder Photo</small>'
+                '</div>', obj.founder_image.url)
         return ""
     founder_image_preview.short_description = "Founder Image Preview"
 
     def extra_image_preview(self, obj):
         if obj.extra_image:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.extra_image.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">Extra Photo</small>'
+                '</div>', obj.extra_image.url)
         return ""
     extra_image_preview.short_description = "Extra Image Preview"
 
     def about_photo_1_preview(self, obj):
         if obj.about_photo_1:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.about_photo_1.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">About Photo 1</small>'
+                '</div>', obj.about_photo_1.url)
         return ""
     about_photo_1_preview.short_description = "About Photo 1 Preview"
 
     def about_photo_2_preview(self, obj):
         if obj.about_photo_2:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.about_photo_2.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">About Photo 2</small>'
+                '</div>', obj.about_photo_2.url)
         return ""
     about_photo_2_preview.short_description = "About Photo 2 Preview"
 
     def about_photo_3_preview(self, obj):
         if obj.about_photo_3:
-            return format_html('<img src="{}" style="max-height:80px;max-width:80px;" />', obj.about_photo_3.url)
+            return format_html(
+                '<div style="text-align: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">'
+                '<img src="{}" style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: cover; cursor: pointer;" '
+                'onclick="window.open(this.src, \'_blank\')" title="Click to view full size" />'
+                '<br><small style="color: #666;">About Photo 3</small>'
+                '</div>', obj.about_photo_3.url)
         return ""
     about_photo_3_preview.short_description = "About Photo 3 Preview"
 
