@@ -1826,7 +1826,7 @@ class MinistryJoinRequestAdmin(LocalAdminMixin, admin.ModelAdmin):
                 )
         queryset.update(is_reviewed=True)
 
-# Register all admin classes
+# Register all admin classes (final registration)
 admin.site.register(GlobalFeatureRequest, GlobalFeatureRequestAdmin)
 admin.site.register(LocalHero, LocalHeroAdmin)
 admin.site.register(Church, ChurchModelAdmin)
