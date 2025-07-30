@@ -7,7 +7,7 @@
 - [ ] Domain name ready
 - [ ] SSH access to VPS configured
 - [ ] Environment variables exported
-- [ ] ImageKit credentials available
+- [ ] Local media directory configured
 - [ ] Database backup from previous deployment (if needed)
 
 ## 🔧 Step-by-Step Migration Process
@@ -78,10 +78,9 @@ ALLOWED_HOSTS=your-domain.com,www.your-domain.com,YOUR_SERVER_IP
 # Database Settings
 DATABASE_URL=postgresql://bethel_user:your_secure_password@localhost:5432/bethel_db
 
-# ImageKit Settings (copy from previous deployment)
-IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
-IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
+# Local Media Settings
+MEDIA_ROOT=/path/to/your/media/directory
+MEDIA_URL=/media/
 
 # Security Settings
 CSRF_TRUSTED_ORIGINS=https://your-domain.com,https://www.your-domain.com
@@ -169,7 +168,7 @@ curl http://localhost:8000/health/
 - Check all functionality
 - Test admin panel
 - Verify static files loading
-- Test ImageKit uploads
+- Test local file uploads
 
 ### Phase 7: Monitoring and Maintenance
 
@@ -391,7 +390,7 @@ ufw allow 8090/tcp
 - [ ] Website accessible via HTTPS
 - [ ] All functionality working
 - [ ] Static files loading correctly
-- [ ] ImageKit uploads working
+- [ ] Local file uploads working
 - [ ] Admin panel accessible
 - [ ] SSL certificate valid
 - [ ] Backups configured

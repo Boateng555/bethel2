@@ -31,7 +31,6 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
-from imagekitio import ImageKit
 import time as time_module
 from django.db import connection
 from django.db.utils import OperationalError
@@ -1864,8 +1863,8 @@ def debug_env(request):
         'imagekit_url_endpoint': 'Set' if os.environ.get('IMAGEKIT_URL_ENDPOINT') else 'Not set',
     })
 
-def test_imagekit_upload_endpoint(request):
-    """Test endpoint to upload an image to ImageKit"""
+def test_local_upload_endpoint(request):
+    """Test endpoint to upload an image to local storage"""
     from django.core.files.storage import default_storage
     from django.core.files.base import ContentFile
     from django.http import JsonResponse
@@ -1883,14 +1882,14 @@ def test_imagekit_upload_endpoint(request):
   <rect width="300" height="200" fill="url(#grad1)"/>
   <circle cx="150" cy="100" r="60" fill="#ffffff" opacity="0.9"/>
   <text x="150" y="95" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#3b82f6" text-anchor="middle">BETHEL</text>
-  <text x="150" y="115" font-family="Arial, sans-serif" font-size="14" fill="#1e3a8a" text-anchor="middle">IMAGEKIT</text>
+  <text x="150" y="115" font-family="Arial, sans-serif" font-size="14" fill="#1e3a8a" text-anchor="middle">LOCAL</text>
   <text x="150" y="135" font-family="Arial, sans-serif" font-size="12" fill="#1e3a8a" text-anchor="middle">TEST</text>
   <text x="150" y="175" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" text-anchor="middle">Uploaded via Django</text>
 </svg>'''
         
-        test_image = ContentFile(svg_content.encode('utf-8'), name='bethel_imagekit_test.svg')
+        test_image = ContentFile(svg_content.encode('utf-8'), name='bethel_local_test.svg')
         
-        # Upload to ImageKit
+        # Upload to local storage
         file_path = default_storage.save('bethel/test_image.svg', test_image)
         file_url = default_storage.url(file_path)
         
@@ -1898,9 +1897,8 @@ def test_imagekit_upload_endpoint(request):
             'success': True,
             'file_path': file_path,
             'file_url': file_url,
-            'is_imagekit': 'ik.imagekit.io' in file_url,
             'storage_backend': str(settings.DEFAULT_FILE_STORAGE),
-            'message': 'Image uploaded successfully! Check your ImageKit dashboard.'
+            'message': 'Image uploaded successfully to local storage!'
         })
         
     except Exception as e:
@@ -1916,7 +1914,7 @@ def upload_test_endpoint(request):
     from django.http import JsonResponse
     from django.views.decorators.csrf import csrf_exempt
     from django.views.decorators.http import require_http_methods
-    from imagekitio import ImageKit
+    from django.core.files.storage import default_storage
     import os
     
     if request.method != 'POST':
@@ -1929,47 +1927,18 @@ def upload_test_endpoint(request):
         
         uploaded_file = request.FILES['image']
         
-        # Initialize ImageKit with your credentials
-        imagekit = ImageKit(
-            public_key=settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY'),
-            private_key=settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY'),
-            url_endpoint=settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')
-        )
+        # Save the file to local storage
+        file_path = default_storage.save(f'uploads/{uploaded_file.name}', uploaded_file)
+        file_url = default_storage.url(file_path)
         
-        # Upload the file to ImageKit
-        upload = imagekit.upload_file(
-            file=uploaded_file,
-            file_name=f"bethel_{uploaded_file.name}"
-        )
-        
-        # Check if upload was successful
-        if upload.response_metadata.http_status_code == 200:
-            # Get the image URL
-            image_url = imagekit.url({
-                "path": upload.file_path,
-                "transformation": [{
-                    "height": "300",
-                    "width": "400"
-                }]
-            })
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'File uploaded successfully to ImageKit!',
-                'file_id': upload.file_id,
-                'file_name': upload.name,
-                'file_path': upload.file_path,
-                'url': upload.url,
-                'image_url': image_url,
-                'size': upload.size,
-                'is_imagekit': True
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': f'Upload failed with status: {upload.response_metadata.http_status_code}',
-                'raw_response': upload.response_metadata.raw
-            }, status=500)
+        return JsonResponse({
+            'success': True,
+            'message': 'File uploaded successfully to local storage!',
+            'file_name': uploaded_file.name,
+            'file_path': file_path,
+            'url': file_url,
+            'size': uploaded_file.size
+        })
             
     except Exception as e:
         import traceback
@@ -1978,11 +1947,7 @@ def upload_test_endpoint(request):
             'error': str(e),
             'traceback': traceback.format_exc(),
             'message': 'Upload failed due to an error',
-            'imagekit_config': {
-                'has_public_key': bool(settings.IMAGEKIT_CONFIG.get('PUBLIC_KEY')),
-                'has_private_key': bool(settings.IMAGEKIT_CONFIG.get('PRIVATE_KEY')),
-                'has_url_endpoint': bool(settings.IMAGEKIT_CONFIG.get('URL_ENDPOINT')),
-            }
+            'storage_backend': str(settings.DEFAULT_FILE_STORAGE)
         }, status=500)
 
 def health_check(request):

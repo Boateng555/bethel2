@@ -101,7 +101,7 @@ python manage.py collectstatic
 
 ### Production
 - Uses PostgreSQL database
-- Uses ImageKit for image storage
+- Uses local file storage for images
 - Debug mode disabled
 - Optimized for performance
 
@@ -153,7 +153,7 @@ Before deploying:
 2. Update `ALLOWED_HOSTS` with your domain
 3. Set up environment variables for production
 4. Configure your production database
-5. Set up ImageKit for media storage
+5. Media storage is handled locally
 
 ## Support
 

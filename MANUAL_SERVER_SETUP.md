@@ -58,9 +58,7 @@ DEBUG=False
 SECRET_KEY=6x81cy++5wh*#qi!*6srjp$(8(!_&m7g)31h9o9y@_ul#hf_t*
 ALLOWED_HOSTS=91.99.232.214,your-domain.com,localhost,127.0.0.1
 DATABASE_URL=postgresql://bethel_user:bethel_secure_password_2024@localhost:5432/bethel_db
-IMAGEKIT_PUBLIC_KEY=public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU=
-IMAGEKIT_PRIVATE_KEY=private_Dnsrj2VW7uJakaeMaNYaav+P784=
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/9buar9mbp
+# Local media storage is used by default
 WEB_CONCURRENCY=4
 PYTHONUNBUFFERED=1
 CONN_MAX_AGE=600

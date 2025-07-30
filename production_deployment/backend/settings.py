@@ -13,13 +13,7 @@ import dj_database_url
 # Load .env variables
 load_dotenv()
 
-# Set ImageKit environment variables if not already set
-if not os.environ.get('IMAGEKIT_PUBLIC_KEY'):
-    os.environ['IMAGEKIT_PUBLIC_KEY'] = 'public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU='
-if not os.environ.get('IMAGEKIT_PRIVATE_KEY'):
-    os.environ['IMAGEKIT_PRIVATE_KEY'] = 'private_Dnsrj2VW7uJakaeMaNYaav+P784='
-if not os.environ.get('IMAGEKIT_URL_ENDPOINT'):
-    os.environ['IMAGEKIT_URL_ENDPOINT'] = 'https://ik.imagekit.io/9buar9mbp'
+# Local media storage is used by default
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -237,12 +231,7 @@ LOGGING = {
     },
 }
 
-# ImageKit settings
-IMAGEKIT_CONFIG = {
-    'PUBLIC_KEY': os.environ.get('IMAGEKIT_PUBLIC_KEY'),
-    'PRIVATE_KEY': os.environ.get('IMAGEKIT_PRIVATE_KEY'),
-    'URL_ENDPOINT': os.environ.get('IMAGEKIT_URL_ENDPOINT'),
-}
+# Local media storage settings
 
 # File storage - Using local Django storage
 print("Using local Django file storage")
