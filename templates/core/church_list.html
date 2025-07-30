@@ -196,13 +196,13 @@
                            target="_blank" 
                            class="text-sm text-[#1e3a8a] hover:underline cursor-pointer"
                            title="Open in Google Maps">
-                            {{ church.city }}, {{ church.country }}
+                            {{ church.address }}
                         </a>
                         <span class="text-xs text-[#1e3a8a] ml-2 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}" style="display: none;">
                             <span class="distance-text"></span>
                         </span>
                         {% else %}
-                        <span class="text-sm">{{ church.city }}, {{ church.country }}</span>
+                        <span class="text-sm">{{ church.address }}</span>
                         {% endif %}
                     </div>
                     
