@@ -1931,12 +1931,6 @@ def upload_test_endpoint(request):
             'url': file_url,
             'size': uploaded_file.size
         })
-        else:
-            return JsonResponse({
-                'success': False,
-                'error': f'Upload failed with status: {upload.response_metadata.http_status_code}',
-                'raw_response': upload.response_metadata.raw
-            }, status=500)
             
     except Exception as e:
         import traceback
