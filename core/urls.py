@@ -13,7 +13,7 @@ from .views import (
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail,
     check_production_status, debug_env, test_local_upload_endpoint, upload_test_endpoint,
-    health_check, startup_health_check, static_fallback,
+    health_check, startup_health_check, static_fallback, clear_redirect_notification,
 )
 
 urlpatterns = [
@@ -89,6 +89,7 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('startup-health/', startup_health_check, name='startup_health_check'),
     path('fallback/', static_fallback, name='static_fallback'),
+    path('clear-redirect-notification/', clear_redirect_notification, name='clear_redirect_notification'),
 ]
 
 urlpatterns += [

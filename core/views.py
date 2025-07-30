@@ -101,23 +101,40 @@ def find_nearest_church(country, city):
     if not country:
         return None
     
+    # Get all active and approved churches
+    churches = Church.objects.filter(is_active=True, is_approved=True)
+    
+    if not churches.exists():
+        return None
+    
+    # If only one church exists, return it
+    if churches.count() == 1:
+        return churches.first()
+    
     # First try exact country match
-    churches = Church.objects.filter(country__icontains=country)
-    if churches.exists():
+    country_churches = churches.filter(country__icontains=country)
+    if country_churches.exists():
         # If multiple churches in same country, try city match
         if city:
-            city_churches = churches.filter(city__icontains=city)
+            city_churches = country_churches.filter(city__icontains=city)
             if city_churches.exists():
                 return city_churches.first()
         # Return first church in country
-        return churches.first()
+        return country_churches.first()
     
-    # Try partial country match
-    churches = Church.objects.filter(country__icontains=country.split()[0])
-    if churches.exists():
-        return churches.first()
+    # Try partial country match (e.g., "Germany" matches "Deutschland")
+    country_churches = churches.filter(country__icontains=country.split()[0])
+    if country_churches.exists():
+        return country_churches.first()
     
-    return None
+    # If no country match, try city match across all churches
+    if city:
+        city_churches = churches.filter(city__icontains=city)
+        if city_churches.exists():
+            return city_churches.first()
+    
+    # If still no match, return the first active church
+    return churches.first()
 
 def smart_home(request):
     """
@@ -181,6 +198,11 @@ def smart_home(request):
             nearest_church = find_nearest_church(country, city)
             if nearest_church:
                 print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
+                # Add a session message to inform user about the redirect
+                request.session['local_church_redirect'] = True
+                request.session['redirected_church'] = nearest_church.name
+                # Clear any existing session data to prevent conflicts
+                request.session.modified = True
                 return redirect('church_home', church_id=nearest_church.id)
             else:
                 print(f"DEBUG: No church found for location: {city}, {country}")
@@ -839,6 +861,11 @@ def church_home(request, church_id):
             nearest_church = find_nearest_church(country, city)
         except Exception as e:
             print(f"DEBUG: Error finding nearest church: {e}")
+    
+    # Clear the redirect notification after displaying it
+    if request.session.get('local_church_redirect'):
+        # Keep the data for this request, but mark it for removal
+        request.session['clear_redirect_notification'] = True
     
     context = {
         'church': church,
@@ -2150,3 +2177,21 @@ def get_database_status():
         return status == 'success', error
     except queue.Empty:
         return False, "Database check failed"
+
+@require_POST
+def clear_redirect_notification(request):
+    """Clear the redirect notification session variables"""
+    try:
+        # Clear the session variables
+        if 'local_church_redirect' in request.session:
+            del request.session['local_church_redirect']
+        if 'redirected_church' in request.session:
+            del request.session['redirected_church']
+        if 'clear_redirect_notification' in request.session:
+            del request.session['clear_redirect_notification']
+        
+        request.session.modified = True
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
