@@ -510,21 +510,6 @@ class ChurchAdminInline(admin.TabularInline):
     fields = ('user', 'role', 'is_active')
     autocomplete_fields = ['user']
     show_change_link = True
-    
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        
-        def save_new(form, *args, **kwargs):
-            commit = kwargs.get('commit', True)
-            instance = form.save(commit=False)
-            if obj:  # obj is the Church instance
-                instance.church = obj
-            if commit:
-                instance.save()
-            return instance
-        
-        formset.save_new = save_new
-        return formset
 
 class HeroInline(admin.StackedInline):
     model = Hero
@@ -716,6 +701,23 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context['show_setup_button'] = True
         return super().change_view(request, object_id, form_url, extra_context)
+    
+    def save_formset(self, request, form, formset, change):
+        """Handle formset saving, especially for ChurchAdmin inline"""
+        instances = formset.save(commit=False)
+        
+        # Set the church for new ChurchAdmin instances
+        for instance in instances:
+            if isinstance(instance, ChurchAdmin) and not instance.church_id:
+                instance.church = form.instance
+        
+        # Save all instances
+        for instance in instances:
+            instance.save()
+        
+        # Handle deleted instances
+        for obj in formset.deleted_objects:
+            obj.delete()
     
     # Preview methods are now handled by EnhancedImagePreviewMixin
 
