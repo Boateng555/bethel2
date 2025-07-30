@@ -12,7 +12,7 @@ from .views import (
     global_news_feature_requests, privacy, terms, cookies, leadership, resources, testimonies,
     church_leadership, event_highlight_detail, event_speakers,
     all_event_highlights, news_detail,
-    check_production_status, debug_env, test_imagekit_upload_endpoint, upload_test_endpoint,
+    check_production_status, debug_env, test_local_upload_endpoint, upload_test_endpoint,
     health_check, startup_health_check, static_fallback,
 )
 
@@ -84,7 +84,7 @@ urlpatterns = [
     # Debug views
     path('check-production-status/', check_production_status, name='check_production_status'),
     path('debug-env/', debug_env, name='debug_env'),
-    path('test-imagekit-upload/', test_imagekit_upload_endpoint, name='test_imagekit_upload'),
+    path('test-imagekit-upload/', test_local_upload_endpoint, name='test_imagekit_upload'),
     path('upload-test/', upload_test_endpoint, name='upload_test'),
     path('health/', health_check, name='health_check'),
     path('startup-health/', startup_health_check, name='startup_health_check'),
