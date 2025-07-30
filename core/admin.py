@@ -514,7 +514,8 @@ class ChurchAdminInline(admin.TabularInline):
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
         
-        def save_new(form, commit=True, *args, **kwargs):
+        def save_new(form, *args, **kwargs):
+            commit = kwargs.get('commit', True)
             instance = form.save(commit=False)
             if obj:  # obj is the Church instance
                 instance.church = obj
