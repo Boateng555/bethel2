@@ -2,7 +2,7 @@
 
 ## ✅ What's Already Ready:
 
-- ✅ **ImageKit Endpoint**: `https://ik.imagekit.io/144671b7r`
+- ✅ **Local Media Storage**: Configured for `/media/` directory
 - ✅ **Server Setup Script**: `hetzner_setup.sh`
 - ✅ **Deployment Script**: `deploy_production.sh`
 - ✅ **Production Environment**: `production.env`

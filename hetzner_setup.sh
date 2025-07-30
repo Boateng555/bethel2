@@ -120,7 +120,7 @@ DATABASE_URL=postgresql://bethel_user:bethel_secure_password_2024@localhost:5432
 # ImageKit Settings
 IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
+# Local media storage is used by default
 
 # Email Settings (if needed)
 EMAIL_HOST=smtp.gmail.com

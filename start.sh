@@ -94,7 +94,7 @@ start_with_db() {
 
 # Main startup logic
 echo "🔧 Production database optimizations applied"
-echo "🖼️ Using ImageKit for storage"
+echo "📁 Using local storage for media files"
 
 # Check database connectivity with timeout
 echo "🔍 Testing database connectivity..."

@@ -1777,37 +1777,31 @@ def debug_urls(request):
         
         # Count local vs ImageKit URLs
         local_count = 0
-        imagekit_count = 0
+        local_count = 0
         
         for church in churches:
             if church.logo:
-                if 'ik.imagekit.io' in str(church.logo):
-                    imagekit_count += 1
-                else:
+                if not str(church.logo).startswith('http'):
                     local_count += 1
         
         for news in news_items:
             if news.image:
-                if 'ik.imagekit.io' in str(news.image):
-                    imagekit_count += 1
-                else:
+                if not str(news.image).startswith('http'):
                     local_count += 1
         
         for media in hero_media:
             if media.image:
-                if 'ik.imagekit.io' in str(media.image):
-                    imagekit_count += 1
-                else:
+                if not str(media.image).startswith('http'):
                     local_count += 1
         
         output.append(f"<h2>📊 Summary:</h2>")
-        output.append(f"<p><strong>ImageKit URLs:</strong> {imagekit_count}</p>")
-        output.append(f"<p><strong>Local paths:</strong> {local_count}</p>")
+        output.append(f"<p><strong>Local media files:</strong> {local_count}</p>")
+        output.append(f"<p><strong>External URLs:</strong> {len(churches) + len(news_items) + len(hero_media) - local_count}</p>")
         
         if local_count > 0:
-            output.append(f"<p style='color: red;'><strong>❌ Found {local_count} local paths that need to be updated!</strong></p>")
+            output.append(f"<p style='color: green;'><strong>✅ Found {local_count} local media files!</strong></p>")
         else:
-            output.append(f"<p style='color: green;'><strong>✅ All URLs are already ImageKit URLs!</strong></p>")
+            output.append(f"<p style='color: blue;'><strong>ℹ️ All media files are external URLs!</strong></p>")
         
         return HttpResponse("".join(output))
         
@@ -1823,24 +1817,22 @@ def check_production_status(request):
             'DEFAULT_FILE_STORAGE': settings.DEFAULT_FILE_STORAGE,
             'MEDIA_URL': settings.MEDIA_URL,
         },
-        'imagekit_config': {
-            'public_key_set': bool(os.environ.get('IMAGEKIT_PUBLIC_KEY')),
-            'private_key_set': bool(os.environ.get('IMAGEKIT_PRIVATE_KEY')),
-            'url_endpoint_set': bool(os.environ.get('IMAGEKIT_URL_ENDPOINT')),
+        'storage_config': {
+            'using_local_storage': 'django.core.files.storage.FileSystemStorage' in str(settings.DEFAULT_FILE_STORAGE),
+            'media_url': settings.MEDIA_URL,
+            'media_root': str(settings.MEDIA_ROOT),
         },
         'sample_media': {}
     }
     
-    # Test ImageKit connection
+    # Test local storage
     try:
-        if all([os.environ.get('IMAGEKIT_PUBLIC_KEY'), 
-                os.environ.get('IMAGEKIT_PRIVATE_KEY'), 
-                os.environ.get('IMAGEKIT_URL_ENDPOINT')]):
-            status['imagekit_test'] = 'Configured'
-        else:
-            status['imagekit_test'] = 'Not configured'
+        from django.core.files.storage import default_storage
+        test_file = default_storage.save('test.txt', ContentFile(b'test'))
+        default_storage.delete(test_file)
+        status['storage_test'] = 'Working'
     except Exception as e:
-        status['imagekit_test'] = f'Error: {str(e)}'
+        status['storage_test'] = f'Error: {str(e)}'
     
     # Check sample media URLs
     if Event.objects.exists():
@@ -1858,9 +1850,9 @@ def debug_env(request):
     return JsonResponse({
         'debug': settings.DEBUG,
         'storage_backend': str(settings.DEFAULT_FILE_STORAGE),
-        'imagekit_public_key': 'Set' if os.environ.get('IMAGEKIT_PUBLIC_KEY') else 'Not set',
-        'imagekit_private_key': 'Set' if os.environ.get('IMAGEKIT_PRIVATE_KEY') else 'Not set',
-        'imagekit_url_endpoint': 'Set' if os.environ.get('IMAGEKIT_URL_ENDPOINT') else 'Not set',
+        'media_url': settings.MEDIA_URL,
+        'media_root': str(settings.MEDIA_ROOT),
+        'using_local_storage': 'django.core.files.storage.FileSystemStorage' in str(settings.DEFAULT_FILE_STORAGE),
     })
 
 def test_local_upload_endpoint(request):

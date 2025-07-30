@@ -137,7 +137,7 @@ DATABASE_URL=postgresql://bethel_user:your_secure_password@localhost:5432/bethel
 # ImageKit
 IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
+# Local media storage is used by default
 
 # Security
 CSRF_TRUSTED_ORIGINS=https://your-domain.com,https://www.your-domain.com

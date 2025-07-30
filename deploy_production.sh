@@ -24,7 +24,7 @@ SECRET_KEY="your_super_secret_django_key"
 # ImageKit credentials (get from ImageKit dashboard)
 IMAGEKIT_PUBLIC_KEY="public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU="
 IMAGEKIT_PRIVATE_KEY="private_Dnsrj2VW7uJakaeMaNYaav+P784="
-IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/9buar9mbp"
+# Local media storage is used by default
 
 # =============================================================================
 # Step 1: Generate Secret Key
