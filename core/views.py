@@ -96,10 +96,25 @@ def get_user_location(request):
 def find_nearest_church(country, city):
     """
     Find the nearest church based on country and city
-    Returns: Church object or None
+    Returns: Church object or None if no suitable match found
     """
     if not country:
         return None
+    
+    # Get configuration from GlobalSettings
+    try:
+        global_settings = GlobalSettings.objects.first()
+        if global_settings:
+            min_score = global_settings.local_church_redirect_min_score
+        else:
+            # Fallback to environment variables
+            from django.conf import settings
+            min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+    except Exception as e:
+        print(f"DEBUG: Error getting global settings in find_nearest_church: {e}")
+        # Fallback to environment variables
+        from django.conf import settings
+        min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
     
     # Get all active and approved churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
@@ -111,36 +126,85 @@ def find_nearest_church(country, city):
     if churches.count() == 1:
         return churches.first()
     
-    # First try exact country match
-    country_churches = churches.filter(country__icontains=country)
-    if country_churches.exists():
-        # If multiple churches in same country, try city match
-        if city:
-            city_churches = country_churches.filter(city__icontains=city)
-            if city_churches.exists():
-                return city_churches.first()
-        # Return first church in country
-        return country_churches.first()
+    # Score churches based on location match
+    church_scores = []
     
-    # Try partial country match (e.g., "Germany" matches "Deutschland")
-    country_churches = churches.filter(country__icontains=country.split()[0])
-    if country_churches.exists():
-        return country_churches.first()
+    for church in churches:
+        score = 0
+        
+        # Exact country match (highest priority)
+        if church.country and country.lower() in church.country.lower():
+            score += 100
+        # Partial country match
+        elif church.country and country.split()[0].lower() in church.country.lower():
+            score += 50
+        
+        # Exact city match (very high priority)
+        if city and church.city and city.lower() in church.city.lower():
+            score += 200
+        # Partial city match
+        elif city and church.city and city.split()[0].lower() in church.city.lower():
+            score += 100
+        
+        # If we have coordinates for the church, we could add distance calculation here
+        # For now, we'll be more conservative and only return churches with good matches
+        
+        church_scores.append((church, score))
     
-    # If no country match, try city match across all churches
-    if city:
-        city_churches = churches.filter(city__icontains=city)
-        if city_churches.exists():
-            return city_churches.first()
+    # Sort by score (highest first)
+    church_scores.sort(key=lambda x: x[1], reverse=True)
     
-    # If still no match, return the first active church
-    return churches.first()
+    # Only return a church if it has a reasonable match score
+    # Use the configured minimum score
+    if church_scores and church_scores[0][1] >= min_score:
+        best_church = church_scores[0][0]
+        best_score = church_scores[0][1]
+        
+        # Additional check: If we have multiple churches with the same score,
+        # prefer the one with better city match
+        if best_score >= 100:  # At least partial country match
+            # Look for churches with city match
+            city_matches = [c for c, s in church_scores if s >= 200]  # Exact city match
+            if city_matches:
+                return city_matches[0]
+            
+            partial_city_matches = [c for c, s in church_scores if s >= 150]  # Partial city match
+            if partial_city_matches:
+                return partial_city_matches[0]
+        
+        return best_church
+    
+    # If no good match found, return None instead of forcing a redirect
+    return None
 
 def smart_home(request):
     """
     Smart home view that redirects users to their nearest church based on location
     """
     try:
+        # Get global settings for configuration
+        try:
+            global_settings = GlobalSettings.objects.first()
+            if global_settings:
+                local_redirect_enabled = global_settings.local_church_redirect_enabled
+                min_score = global_settings.local_church_redirect_min_score
+            else:
+                # Fallback to environment variables if no global settings
+                from django.conf import settings
+                local_redirect_enabled = getattr(settings, 'LOCAL_CHURCH_REDIRECT_ENABLED', True)
+                min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+        except Exception as e:
+            print(f"DEBUG: Error getting global settings: {e}")
+            # Fallback to environment variables
+            from django.conf import settings
+            local_redirect_enabled = getattr(settings, 'LOCAL_CHURCH_REDIRECT_ENABLED', True)
+            min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+        
+        # Check if local church redirect is enabled
+        if not local_redirect_enabled:
+            print("DEBUG: Local church redirect disabled, showing church list")
+            return redirect('church_list')
+        
         # Check if user wants to go to global site (by presence of the parameter)
         go_global = 'global' in request.GET
 
@@ -198,18 +262,37 @@ def smart_home(request):
             nearest_church = find_nearest_church(country, city)
             if nearest_church:
                 print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
-                # Add a session message to inform user about the redirect
-                request.session['local_church_redirect'] = True
-                request.session['redirected_church'] = nearest_church.name
-                # Clear any existing session data to prevent conflicts
-                request.session.modified = True
-                return redirect('church_home', church_id=nearest_church.id)
+                
+                # Additional check: Only redirect if the match is strong enough
+                # This prevents redirecting to churches that are too far away
+                match_quality = "good"
+                
+                # If we have city information, check if it's a strong match
+                if city and nearest_church.city:
+                    if city.lower() in nearest_church.city.lower() or nearest_church.city.lower() in city.lower():
+                        match_quality = "excellent"
+                    elif city.split()[0].lower() in nearest_church.city.lower():
+                        match_quality = "good"
+                    else:
+                        match_quality = "country_only"
+                
+                # Only redirect for good or excellent matches, and only if score meets minimum
+                if match_quality in ["good", "excellent"]:
+                    print(f"DEBUG: Match quality: {match_quality}, redirecting to {nearest_church.name}")
+                    # Add a session message to inform user about the redirect
+                    request.session['local_church_redirect'] = True
+                    request.session['redirected_church'] = nearest_church.name
+                    # Clear any existing session data to prevent conflicts
+                    request.session.modified = True
+                    return redirect('church_home', church_id=nearest_church.id)
+                else:
+                    print(f"DEBUG: Match quality too low ({match_quality}), showing church list instead")
             else:
-                print(f"DEBUG: No church found for location: {city}, {country}")
+                print(f"DEBUG: No suitable church found for location: {city}, {country}")
         else:
             print("DEBUG: Could not determine user location")
         
-        # If we can't determine location or no nearby church, show church list
+        # If we can't determine location, no nearby church, or match quality is low, show church list
         print("DEBUG: Redirecting to church list")
         return redirect('church_list')
         

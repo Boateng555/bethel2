@@ -26,6 +26,11 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
 # Detect if running in production
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
+# Local Church Redirect Configuration
+LOCAL_CHURCH_REDIRECT_ENABLED = os.environ.get('LOCAL_CHURCH_REDIRECT_ENABLED', 'True') == 'True'
+LOCAL_CHURCH_REDIRECT_MIN_SCORE = int(os.environ.get('LOCAL_CHURCH_REDIRECT_MIN_SCORE', '100'))  # Minimum score for redirect
+LOCAL_CHURCH_REDIRECT_MAX_DISTANCE_KM = int(os.environ.get('LOCAL_CHURCH_REDIRECT_MAX_DISTANCE_KM', '50'))  # Max distance in km
+
 # Database: PostgreSQL in production or local SQLite
 if USE_PROD_DB:
     raw_db_url = os.environ.get("DATABASE_URL", "")

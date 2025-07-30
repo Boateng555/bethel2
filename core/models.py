@@ -1642,6 +1642,20 @@ class GlobalSettings(models.Model):
     global_contact_email = models.EmailField(blank=True)
     global_contact_phone = models.CharField(max_length=20, blank=True)
     
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
