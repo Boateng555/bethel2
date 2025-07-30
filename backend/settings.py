@@ -158,7 +158,7 @@ else:
 
 # Media files - Local storage
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'railway_media'
 
 # Image handling settings for better quality
 THUMBNAIL_DEBUG = False
@@ -236,7 +236,7 @@ LOGGING = {
 
 # File storage - Using local Django storage
 print("Using local Django file storage")
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DEFAULT_FILE_STORAGE = 'core.storage.LocalFileStorage'
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
