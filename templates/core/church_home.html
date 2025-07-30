@@ -365,33 +365,7 @@
 </div>
 
 <!-- Location Detection Banner - Only show on local church sites -->
-{% if user_country %}
-<div class="bg-white text-[#1e3a8a] py-4 px-6 border-b border-gray-200">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
-        <div class="flex items-center space-x-3 mb-4 md:mb-0">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <p class="font-semibold text-[#1e3a8a]">We detected you're in <strong class="text-[#1e3a8a]">{{ user_country }}</strong>{% if user_city %}, <span class="text-[#1e3a8a]">{{ user_city }}</span>{% endif %}</p>
-                {% if nearest_church %}
-                <p class="text-sm opacity-90 text-[#1e3a8a]">There's a Bethel church near you!</p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-3">
-            {% if nearest_church and nearest_church.id != church.id %}
-            <a href="/church/{{ nearest_church.id }}/" class="bg-[#1e3a8a] text-white hover:bg-[#243c8a] px-6 py-2 rounded-lg font-semibold transition duration-300 text-center">
-                Visit Local Church
-            </a>
-            {% endif %}
-            <a href="/?global=true" class="bg-transparent border-2 border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-6 py-2 rounded-lg font-semibold transition duration-300 text-center">
-                Go to Global Site
-            </a>
-        </div>
-    </div>
-</div>
-{% endif %}
+
 
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
