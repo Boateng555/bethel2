@@ -176,12 +176,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Memory optimization: Session settings
+# Session settings - Extended for better user experience
 if USE_PROD_DB:
     SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-    SESSION_COOKIE_AGE = 1800  # Reduced to 30 minutes
-    SESSION_SAVE_EVERY_REQUEST = False
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+    SESSION_COOKIE_AGE = 86400  # 24 hours
+    SESSION_SAVE_EVERY_REQUEST = True
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+else:
+    # Development session settings
+    SESSION_COOKIE_AGE = 86400  # 24 hours
+    SESSION_SAVE_EVERY_REQUEST = True
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Memory optimization: Cache settings (simple in-memory cache)
 CACHES = {
@@ -237,6 +242,9 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 CSRF_TRUSTED_ORIGINS = [
     "https://your-domain.com",
     "https://91.99.232.214",
+    "http://91.99.232.214:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 # Memory optimization: REST Framework settings
