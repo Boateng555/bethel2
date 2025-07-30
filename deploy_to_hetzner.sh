@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # =============================================================================
-# Bethel Prayer Ministry - Railway to Hetzner Migration Script
+# Bethel Prayer Ministry - Migration Script
 # =============================================================================
-# This script helps migrate your Django app from Railway to Hetzner VPS
+# This script helps migrate your Django app to Hetzner VPS
 # =============================================================================
 
 set -e
 
-echo "🚀 Starting Railway to Hetzner Migration"
+echo "🚀 Starting Migration to Hetzner"
 echo "📅 $(date)"
 echo ""
 
@@ -23,27 +23,27 @@ DB_PASSWORD="your_secure_db_password"
 SECRET_KEY="your_super_secret_django_key"
 
 # =============================================================================
-# Step 1: Backup Railway Data
+# Step 1: Backup Data
 # =============================================================================
 
-echo "📦 Step 1: Creating Railway backup..."
+echo "📦 Step 1: Creating backup..."
 
 # Create backup directory
-mkdir -p railway_backup
-cd railway_backup
+mkdir -p deployment_backup
+cd deployment_backup
 
-# Export environment variables from Railway
-echo "🔧 Exporting Railway environment variables..."
-# You'll need to manually copy these from Railway dashboard
-cat > railway_env.txt << EOF
-# Copy your Railway environment variables here
+# Export environment variables from previous deployment
+echo "🔧 Exporting environment variables..."
+# You'll need to manually copy these from your previous deployment dashboard
+cat > deployment_env.txt << EOF
+# Copy your environment variables here
 # DATABASE_URL=postgresql://...
 # IMAGEKIT_PUBLIC_KEY=...
 # IMAGEKIT_PRIVATE_KEY=...
 # IMAGEKIT_URL_ENDPOINT=...
 EOF
 
-echo "⚠️  Please manually copy your Railway environment variables to railway_env.txt"
+echo "⚠️  Please manually copy your environment variables to deployment_env.txt"
 echo "   Then press Enter to continue..."
 read
 
@@ -82,8 +82,8 @@ echo "✅ VPS setup completed"
 
 echo "⚙️ Step 4: Configuring environment variables..."
 
-# Read Railway environment variables
-source railway_env.txt
+# Read environment variables
+source deployment_env.txt
 
 # Create .env file for Hetzner
 cat > hetzner.env << EOF
@@ -95,10 +95,10 @@ ALLOWED_HOSTS=$DOMAIN,www.$DOMAIN,$SERVER_IP
 # Database Settings
 DATABASE_URL=postgresql://bethel_user:$DB_PASSWORD@localhost:5432/bethel_db
 
-# ImageKit Settings (from Railway)
-IMAGEKIT_PUBLIC_KEY=$IMAGEKIT_PUBLIC_KEY
-IMAGEKIT_PRIVATE_KEY=$IMAGEKIT_PRIVATE_KEY
-IMAGEKIT_URL_ENDPOINT=$IMAGEKIT_URL_ENDPOINT
+# Local Django file storage (ImageKit removed)
+# IMAGEKIT_PUBLIC_KEY=$IMAGEKIT_PUBLIC_KEY
+# IMAGEKIT_PRIVATE_KEY=$IMAGEKIT_PRIVATE_KEY
+# IMAGEKIT_URL_ENDPOINT=$IMAGEKIT_URL_ENDPOINT
 
 # Security Settings
 CSRF_TRUSTED_ORIGINS=https://$DOMAIN,https://www.$DOMAIN
@@ -284,7 +284,7 @@ echo "2. Test your website at https://$DOMAIN"
 echo "3. Configure SSL certificate in CyberPanel"
 echo "4. Set up email notifications"
 echo "5. Monitor logs for any issues"
-echo "6. Disable Railway deployment after testing"
+echo "6. Disable previous deployment after testing"
 echo ""
 echo "🔧 Useful Commands:"
 echo "- SSH to VPS: ssh root@$SERVER_IP"
@@ -305,4 +305,4 @@ echo "- Update .env file with secure values"
 echo "- Configure firewall rules"
 echo "- Set up regular backups"
 echo ""
-echo "✅ Railway to Hetzner migration completed!" 
+echo "✅ Migration to Hetzner completed!" 

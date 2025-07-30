@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Copy Images Script
-This script copies images from railway_media to media folder.
+This script copies images from backup media to media folder.
 """
 
 import os
@@ -9,20 +9,20 @@ import shutil
 from pathlib import Path
 
 def copy_images():
-    """Copy all images from railway_media to media folder"""
-    print("📁 Copying Images from railway_media to media")
+    """Copy all images from backup media to media folder"""
+    print("📁 Copying Images from backup media to media")
     print("=" * 50)
     
     # Get paths
     base_dir = Path(__file__).parent
-    railway_media = base_dir / 'railway_media'
+    backup_media = base_dir / 'backup_media'
     media_folder = base_dir / 'media'
     
-    print(f"Source: {railway_media}")
+    print(f"Source: {backup_media}")
     print(f"Destination: {media_folder}")
     
-    if not railway_media.exists():
-        print("❌ Railway media folder does not exist")
+    if not backup_media.exists():
+        print("❌ Backup media folder does not exist")
         return
     
     # Create media folder if it doesn't exist
@@ -32,10 +32,10 @@ def copy_images():
     failed_count = 0
     
     try:
-        # Copy all files from railway_media to media
-        for root, dirs, files in os.walk(railway_media):
+        # Copy all files from backup_media to media
+        for root, dirs, files in os.walk(backup_media):
             # Calculate relative path
-            rel_path = os.path.relpath(root, railway_media)
+            rel_path = os.path.relpath(root, backup_media)
             target_dir = media_folder / rel_path
             
             # Create target directory if it doesn't exist

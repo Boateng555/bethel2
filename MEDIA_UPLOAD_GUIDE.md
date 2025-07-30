@@ -1,80 +1,101 @@
-# Media Upload Guide for Live Site
+# Media Upload Guide
 
-## Why Your Media Isn't Showing on the Live Site
+## Overview
+Your local media files are stored on your computer, but the live site uses **ImageKit** (cloud storage). They're not connected automatically.
 
-Your local media files are stored on your computer, but the live site uses **Cloudinary** (cloud storage). They're not connected automatically.
+## How It Works
 
-## Solution 1: Manual Upload (Easiest)
+### Local Development
+- Images are stored in the `media/` folder on your computer
+- Fast access during development
+- No internet connection required
 
-### Step 1: Access Live Site Admin
-- Go to: `https://web-production-158c.up.railway.app/admin/`
-- Login with your admin credentials
+### Production
+- Images are uploaded to ImageKit cloud storage
+- Faster loading for website visitors
+- Global CDN for better performance
 
-### Step 2: Upload Media
-1. **Churches**: Edit each church → Upload logo
-2. **Heroes**: Edit each hero → Upload images/videos  
-3. **News**: Edit news items → Upload images
-4. **Sermons**: Edit sermons → Upload thumbnails/videos
-5. **Ministries**: Edit ministries → Upload images
+## Uploading Images
 
-### Step 3: Check Live Site
-- Visit your live site to see the uploaded media
-- Images should now appear with Cloudinary URLs
+### Through Django Admin
+1. Go to http://127.0.0.1:8000/admin/
+2. Login with your superuser account
+3. Navigate to the model you want to add images to
+4. Click "Add" or edit an existing item
+5. Upload your image file
+6. Save the changes
 
-## Solution 2: Automated Upload (Advanced)
+### What Happens
+- **Local**: Image is saved to `media/` folder
+- **Production**: Image is uploaded to ImageKit automatically
+- Images should now appear with ImageKit URLs
 
-### Prerequisites
-You need Cloudinary credentials:
-1. Go to [Cloudinary Dashboard](https://cloudinary.com/console)
-2. Get your credentials:
-   - Cloud Name
-   - API Key  
-   - API Secret
+## Setting Up ImageKit (Production Only)
+
+You need ImageKit credentials:
+1. Go to [ImageKit Dashboard](https://imagekit.io/dashboard)
+2. Sign up for a free account
+3. Go to **Developer Options** → **API Keys**
+4. Copy these values:
+   - **Public Key** (starts with `pk_`)
+   - **Private Key** (starts with `private_`)
+   - **URL Endpoint** (e.g., `https://ik.imagekit.io/your_username`)
 
 ### Set Environment Variables
-```bash
-# Windows PowerShell
-$env:CLOUDINARY_CLOUD_NAME="your_cloud_name"
-$env:CLOUDINARY_API_KEY="your_api_key"
-$env:CLOUDINARY_API_SECRET="your_api_secret"
 
-# Then run the upload script
-python quick_media_upload.py
+#### Windows PowerShell
+```powershell
+$env:IMAGEKIT_PUBLIC_KEY="your_public_key"
+$env:IMAGEKIT_PRIVATE_KEY="your_private_key"
+$env:IMAGEKIT_URL_ENDPOINT="your_url_endpoint"
 ```
 
-## Solution 3: Railway Environment Variables
+#### Linux/macOS
+```bash
+export IMAGEKIT_PUBLIC_KEY="your_public_key"
+export IMAGEKIT_PRIVATE_KEY="your_private_key"
+export IMAGEKIT_URL_ENDPOINT="your_url_endpoint"
+```
 
-If you want the live site to automatically use Cloudinary:
+### Production Deployment
+If you want the live site to automatically use ImageKit:
+1. Add these environment variables to your production environment:
+   - `IMAGEKIT_PUBLIC_KEY`
+   - `IMAGEKIT_PRIVATE_KEY`
+   - `IMAGEKIT_URL_ENDPOINT`
+2. Deploy your changes
+3. New uploads will automatically go to ImageKit
 
-1. Go to your Railway project dashboard
-2. Set these environment variables:
-   - `CLOUDINARY_CLOUD_NAME`
-   - `CLOUDINARY_API_KEY`
-   - `CLOUDINARY_API_SECRET`
-   - `DJANGO_DEBUG=False`
+## Migration Options
 
-## What Each Solution Does
+### Option 1: Manual Upload
+- Upload images one by one through the admin interface
+- Good for small numbers of images
+- Ensures proper organization
 
-- **Manual Upload**: Upload files directly via admin interface
-- **Automated Script**: Upload all local files to Cloudinary at once
-- **Railway Variables**: Make live site use Cloudinary for all uploads
+### Option 2: Automated Script
+- Upload all local files to ImageKit at once
+- Use the provided migration scripts
+- Faster for large numbers of images
 
-## Recommended Approach
-
-1. **Start with Manual Upload** - It's the most reliable
-2. **Use the admin interface** to upload your important media
-3. **Check the live site** to confirm everything appears
-4. **Consider automated script** for bulk uploads later
+### Option 3: Environment Variables
+- Make live site use ImageKit for all uploads
+- Existing local files remain local
+- New uploads go to cloud storage
 
 ## Troubleshooting
 
-- **Images still not showing**: Clear browser cache
-- **Upload errors**: Check file size limits
-- **Admin access issues**: Verify your admin credentials
-- **Cloudinary errors**: Check your credentials are correct
+### Images Not Showing
+- **Local**: Check that images exist in `media/` folder
+- **Production**: Check that ImageKit credentials are correct
+- **URLs**: Verify image URLs are accessible
 
-## File Types Supported
+### Upload Errors
+- **File size**: Check file size limits (ImageKit: 25MB per file)
+- **File type**: Ensure file type is supported (jpg, png, gif, etc.)
+- **Permissions**: Verify ImageKit credentials have upload permissions
 
-- **Images**: JPG, PNG, GIF, WebP
-- **Videos**: MP4, AVI, MOV, WebM
-- **Max file size**: Usually 100MB per file 
+### Performance Issues
+- **Slow loading**: ImageKit CDN should be faster than local storage
+- **Connection errors**: Check network connectivity
+- **ImageKit errors**: Check your credentials are correct 

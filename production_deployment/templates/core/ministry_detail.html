@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ministry.name }} - Bethel Prayer Ministry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Georgia', 'serif'],
+                    },
+                    colors: {
+                        'deep-blue': '#1e3a8a',
+                        '[#1e3a8a]': '#1e3a8a',
+                        'white': '#ffffff',
+                        'very-white': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-serif font-bold text-deep-blue">Bethel Prayer Ministry</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="hover:text-white transition-colors">Home</a>
+                    <div class="relative group">
+                        <button class="hover:text-white transition-colors">Get Involved ▾</button>
+                        <div id="ministries-dropdown" class="absolute hidden group-hover:block hover:block mt-2 bg-white text-deep-blue py-2 px-4 rounded shadow-lg min-w-48 z-50">
+                            <a href="/ministries/" class="block py-1 hover:text-[#1e3a8a] font-semibold border-b border-gray-200 mb-1">All Ministries</a>
+                            {% for ministry in all_ministries %}
+                            <a href="/ministries/{{ ministry.id }}/" class="block py-1 hover:text-[#1e3a8a] text-sm">{{ ministry.name }}</a>
+                            {% empty %}
+                            <span class="block py-1 text-gray-500 text-sm">No ministries available</span>
+                            {% endfor %}
+                            <div class="border-t border-gray-200 mt-1 pt-1">
+                                <a href="/volunteer" class="block py-1 hover:text-[#1e3a8a] text-sm">Volunteer</a>
+                                <a href="/serve" class="block py-1 hover:text-[#1e3a8a] text-sm">Serve</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <button class="hover:text-white transition-colors">Events ▾</button>
+                        <div id="events-dropdown" class="absolute hidden group-hover:block hover:block mt-2 bg-white text-deep-blue py-2 px-4 rounded shadow-lg min-w-48 z-50">
+                            <a href="/events/" class="block py-1 hover:text-[#1e3a8a] font-semibold border-b border-gray-200 mb-1">All Events</a>
+                            {% for event in all_events %}
+                            <a href="/events/{{ event.id }}/" class="block py-1 hover:text-[#1e3a8a] text-sm">{{ event.title }}</a>
+                            {% empty %}
+                            <span class="block py-1 text-gray-500 text-sm">No events available</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <a href="/shop" class="hover:text-white transition-colors">Shop</a>
+                    <a href="/donation" class="hover:text-white transition-colors">Donation</a>
+                    <a href="/about" class="hover:text-white transition-colors">About Us</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Ministry Hero Section -->
+    {% if ministry.image %}
+    <div class="bg-gradient-to-r from-deep-blue to-[#1e3a8a] text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-serif font-bold mb-4">{{ ministry.name }}</h1>
+                    <p class="text-xl mb-6">{{ ministry.description|truncatewords:30 }}</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#join" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-6 py-3 rounded-lg font-semibold hover:from-[#a5b4fc] hover:to-[#6366f1] transition-colors">
+                            Join This Ministry
+                        </a>
+                        <a href="/ministries/" class="bg-transparent text-white px-6 py-3 rounded-lg font-semibold border-2 border-white hover:bg-white hover:text-deep-blue transition-colors">
+                            View All Ministries
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="rounded-xl shadow-lg w-full h-64 object-cover" />
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-900 text-white py-16">
+        <div class="max-w-3xl mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold mb-4">{{ ministry.name }}</h1>
+            <p class="text-xl mb-6">{{ ministry.description|truncatewords:30 }}</p>
+            <div class="flex flex-wrap gap-4">
+                <a href="#join" class="bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-6 py-3 rounded-lg font-semibold hover:from-[#a5b4fc] hover:to-[#6366f1] transition-colors">
+                    Join This Ministry
+                </a>
+                <a href="/ministries/" class="bg-transparent text-white px-6 py-3 rounded-lg font-semibold border-2 border-white hover:bg-white hover:text-deep-blue transition-colors">
+                    View All Ministries
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ministry Details -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Content -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                        <h2 class="text-3xl font-serif font-bold text-deep-blue mb-6">About This Ministry</h2>
+                        <div class="prose max-w-none">
+                            <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                                {{ ministry.description }}
+                            </p>
+                            
+                            {% if ministry.requirements %}
+                            <h3 class="text-xl font-serif font-bold text-deep-blue mb-4">Requirements</h3>
+                            <p class="text-gray-700 mb-6">{{ ministry.requirements }}</p>
+                            {% endif %}
+                            
+                            {% if ministry.schedule %}
+                            <h3 class="text-xl font-serif font-bold text-deep-blue mb-4">Schedule</h3>
+                            <p class="text-gray-700 mb-6">{{ ministry.schedule }}</p>
+                            {% endif %}
+                            
+                            {% if ministry.location %}
+                            <h3 class="text-xl font-serif font-bold text-deep-blue mb-4">Location</h3>
+                            <p class="text-gray-700 mb-6">{{ ministry.location }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h3 class="text-xl font-serif font-bold text-deep-blue mb-4">Ministry Details</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-users text-[#1e3a8a] mr-3"></i>
+                                <span class="text-gray-700">{{ ministry.members_count|default:"Join us" }} members</span>
+                            </div>
+                            {% if ministry.leader %}
+                            <div class="flex items-center">
+                                <i class="fas fa-user text-[#1e3a8a] mr-3"></i>
+                                <span class="text-gray-700">Leader: {{ ministry.leader }}</span>
+                            </div>
+                            {% endif %}
+                            {% if ministry.contact_email %}
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-[#1e3a8a] mr-3"></i>
+                                <span class="text-gray-700">{{ ministry.contact_email }}</span>
+                            </div>
+                            {% endif %}
+                            {% if ministry.contact_phone %}
+                            <div class="flex items-center">
+                                <i class="fas fa-phone text-[#1e3a8a] mr-3"></i>
+                                <span class="text-gray-700">{{ ministry.contact_phone }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="bg-very-white rounded-lg p-6">
+                        <h3 class="text-xl font-serif font-bold text-deep-blue mb-4">Ready to Join?</h3>
+                        <p class="text-gray-700 mb-4">Interested in joining this ministry? Contact us to get started!</p>
+                        <a href="#join" class="w-full bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-6 py-3 rounded-lg font-semibold hover:from-[#a5b4fc] hover:to-[#6366f1] transition-colors text-center block">
+                            Join Ministry
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Join Section -->
+    <section id="join" class="bg-very-white py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-deep-blue mb-4">Join {{ ministry.name }}</h2>
+            <p class="text-lg text-gray-600 mb-8">
+                Ready to get involved? Fill out the form below and we'll get back to you soon.
+            </p>
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                {% if join_success %}
+                <div class="mb-6 p-4 rounded-lg bg-green-100 text-green-800 text-lg font-semibold border border-green-300">
+                    Thank you for your application! We'll get back to you soon.
+                </div>
+                {% endif %}
+                <form class="space-y-6" method="post">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="name" name="name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent text-gray-900 placeholder-gray-500">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent text-gray-900 placeholder-gray-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent text-gray-900 placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Why do you want to join this ministry?</label>
+                        <textarea id="message" name="message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-br from-[#6366f1] to-[#a5b4fc] text-white px-8 py-3 rounded-lg font-semibold hover:from-[#a5b4fc] hover:to-[#6366f1] transition-colors">
+                        Submit Application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-deep-blue text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-serif font-bold mb-4">Bethel Prayer Ministry</h3>
+                    <p class="text-gray-300">Spreading love, hope, and faith in our community through prayer and service.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/events/" class="text-gray-300 hover:text-white transition-colors">Events</a></li>
+                        <li><a href="/ministries/" class="text-gray-300 hover:text-white transition-colors">Ministries</a></li>
+                        <li><a href="/about" class="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Get Involved</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/volunteer" class="text-gray-300 hover:text-white transition-colors">Volunteer</a></li>
+                        <li><a href="/donation" class="text-gray-300 hover:text-white transition-colors">Donate</a></li>
+                        <li><a href="/prayer" class="text-gray-300 hover:text-white transition-colors">Prayer Requests</a></li>
+                        <li><a href="/contact" class="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Connect With Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Improved dropdown behavior with better hover and click handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownGroups = document.querySelectorAll('.relative.group');
+            let hoverTimeout;
+            
+            dropdownGroups.forEach(group => {
+                const button = group.querySelector('button');
+                const dropdown = group.querySelector('[id$="-dropdown"]');
+                
+                // Show dropdown on button hover
+                button.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    // Hide all other dropdowns first
+                    document.querySelectorAll('[id$="-dropdown"]').forEach(d => {
+                        if (d !== dropdown) {
+                            d.classList.add('hidden');
+                        }
+                    });
+                    // Show current dropdown
+                    dropdown.classList.remove('hidden');
+                });
+                
+                // Keep dropdown open when hovering over it
+                dropdown.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    dropdown.classList.remove('hidden');
+                });
+                
+                // Hide dropdown when leaving the button (with small delay)
+                button.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(() => {
+                        // Only hide if not hovering over dropdown
+                        if (!dropdown.matches(':hover')) {
+                            dropdown.classList.add('hidden');
+                        }
+                    }, 100);
+                });
+                
+                // Hide dropdown when leaving the dropdown itself
+                dropdown.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(() => {
+                        dropdown.classList.add('hidden');
+                    }, 100);
+                });
+                
+                // Handle click events on dropdown items
+                dropdown.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        // Allow the link to work normally
+                        return;
+                    }
+                    // Prevent dropdown from closing immediately on click
+                    e.stopPropagation();
+                });
+            });
+            
+            // Close all dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.relative.group')) {
+                    document.querySelectorAll('[id$="-dropdown"]').forEach(d => {
+                        d.classList.add('hidden');
+                    });
+                }
+            });
+            
+            // Close dropdowns when pressing Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    document.querySelectorAll('[id$="-dropdown"]').forEach(d => {
+                        d.classList.add('hidden');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,9 +1,9 @@
 DJANGO_SECRET_KEY=your-django-secret-key
 DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=yourdomain.railway.app
+DJANGO_ALLOWED_HOSTS=yourdomain.com
 localhost
 127.0.0.1
-CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-CLOUDINARY_API_KEY=your-cloudinary-api-key
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
-DATABASE_URL=your-railway-database-url
+IMAGEKIT_PUBLIC_KEY=your-imagekit-public-key
+IMAGEKIT_PRIVATE_KEY=your-imagekit-private-key
+IMAGEKIT_URL_ENDPOINT=your-imagekit-url-endpoint
+DATABASE_URL=your-production-database-url

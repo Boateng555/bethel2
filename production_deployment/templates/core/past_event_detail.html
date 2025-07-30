@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ highlight.title }} - Event Highlight</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-br from-[#1e3a8a] to-[#6366f1] text-white py-16 mb-12">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
+            {% if highlight.video_url %}
+                {% with video_url=highlight.video_url %}
+                    {% if 'youtube.com/watch?v=' in video_url %}
+                        {% with embed_url=video_url|cut:'watch?v='|add:'embed/' %}
+                            <div class="md:w-1/2 w-full mb-6 md:mb-0">
+                                <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                    <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-64 rounded-xl shadow-lg border-4 border-white"></iframe>
+                                </div>
+                            </div>
+                        {% endwith %}
+                    {% elif 'youtu.be/' in video_url %}
+                        {% with embed_url='https://www.youtube.com/embed/'|add:video_url|cut:'https://youtu.be/' %}
+                            <div class="md:w-1/2 w-full mb-6 md:mb-0">
+                                <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                    <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-64 rounded-xl shadow-lg border-4 border-white"></iframe>
+                                </div>
+                            </div>
+                        {% endwith %}
+                    {% elif 'vimeo.com/' in video_url and not 'player.vimeo.com' in video_url %}
+                        {% with embed_url=video_url|cut:'vimeo.com/'|add:'https://player.vimeo.com/video/' %}
+                            <div class="md:w-1/2 w-full mb-6 md:mb-0">
+                                <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                    <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-64 rounded-xl shadow-lg border-4 border-white"></iframe>
+                                </div>
+                            </div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="md:w-1/2 w-full mb-6 md:mb-0">
+                            <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                <iframe src="{{ video_url|safe }}" frameborder="0" allowfullscreen class="w-full h-64 rounded-xl shadow-lg border-4 border-white"></iframe>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% elif highlight.image %}
+            <div class="md:w-1/2 w-full mb-6 md:mb-0">
+                <img src="{{ highlight.image }}" alt="{{ highlight.title }}" class="w-full h-64 object-cover rounded-xl shadow-lg border-4 border-white">
+            </div>
+            {% endif %}
+            <div class="md:w-1/2 w-full text-center md:text-left">
+                <span class="inline-block bg-white text-[#1e3a8a] px-4 py-1 rounded-full text-sm font-bold mb-4 shadow">{{ highlight.year }}</span>
+                <h1 class="text-4xl font-extrabold mb-4">{{ highlight.title }}</h1>
+                <p class="text-lg opacity-90 mb-4">Relive the amazing moments from our previous events</p>
+                <div class="flex flex-wrap gap-3 justify-center md:justify-start mt-4">
+                    <!-- Social Sharing -->
+                    <a href="https://wa.me/?text={{ highlight.title|urlencode }} - {{ request.build_absolute_uri }}" target="_blank" class="bg-white text-[#1e3a8a] p-2 rounded-full shadow hover:bg-[#f1f5fd] transition"><i class="fab fa-whatsapp fa-lg"></i></a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="bg-white text-[#1e3a8a] p-2 rounded-full shadow hover:bg-[#f1f5fd] transition"><i class="fab fa-facebook fa-lg"></i></a>
+                    <a href="mailto:?subject={{ highlight.title|urlencode }}&body={{ highlight.description|truncatewords:30|urlencode }} - {{ request.build_absolute_uri }}" class="bg-white text-[#1e3a8a] p-2 rounded-full shadow hover:bg-[#f1f5fd] transition"><i class="fas fa-envelope fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+        <a href="javascript:history.back()" class="absolute top-6 left-6 text-white bg-[#6366f1] bg-opacity-80 px-4 py-2 rounded-full text-sm font-semibold shadow hover:bg-opacity-100 transition"><i class="fas fa-arrow-left mr-2"></i>Back to Past Events</a>
+    </section>
+
+    <!-- Main Content Section: Only Video or Image -->
+    <section class="max-w-3xl mx-auto px-4 mb-16">
+        <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center">
+            {% if highlight.video_url %}
+                {% with video_url=highlight.video_url %}
+                    {% if 'youtube.com/watch?v=' in video_url %}
+                        {% with embed_url=video_url|cut:'watch?v='|add:'embed/' %}
+                            <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-96 rounded-lg"></iframe>
+                            </div>
+                        {% endwith %}
+                    {% elif 'youtu.be/' in video_url %}
+                        {% with embed_url='https://www.youtube.com/embed/'|add:video_url|cut:'https://youtu.be/' %}
+                            <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-96 rounded-lg"></iframe>
+                            </div>
+                        {% endwith %}
+                    {% elif 'vimeo.com/' in video_url and not 'player.vimeo.com' in video_url %}
+                        {% with embed_url=video_url|cut:'vimeo.com/'|add:'https://player.vimeo.com/video/' %}
+                            <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                                <iframe src="{{ embed_url|safe }}" frameborder="0" allowfullscreen class="w-full h-96 rounded-lg"></iframe>
+                            </div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="w-full aspect-w-16 aspect-h-9 mb-4">
+                            <iframe src="{{ video_url|safe }}" frameborder="0" allowfullscreen class="w-full h-96 rounded-lg"></iframe>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% elif highlight.image %}
+            <img src="{{ highlight.image }}" alt="{{ highlight.title }}" class="w-full h-96 object-cover rounded-lg mb-4">
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-12">
+                <i class="fas fa-video-slash text-5xl text-gray-300 mb-4"></i>
+                <p class="text-lg text-gray-500">No video or image available for this event.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</body>
+</html> 

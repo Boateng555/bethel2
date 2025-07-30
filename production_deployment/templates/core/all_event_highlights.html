@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block content %}
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-deep-blue mb-4">All Past Event Highlights</h2>
+            <p class="text-xl text-gray-600">Relive the amazing moments from all our previous events</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for highlight in highlights %}
+            <a href="/events/highlight/{{ highlight.id }}/" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if highlight.image %}
+                <img src="{{ highlight.image }}" alt="{{ highlight.title }}" class="w-full h-48 object-cover">
+                {% endif %}
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-deep-blue mb-3">{{ highlight.title }}</h3>
+                    <p class="text-gray-600 mb-4">{{ highlight.description|truncatewords:20 }}</p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-gray-500">{{ highlight.year }}</p>
+                        {% if highlight.attendees_count %}
+                        <span class="text-sm text-gray-500">{{ highlight.attendees_count }} attendee{% if highlight.attendees_count|add:'-1' %}s{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %} 

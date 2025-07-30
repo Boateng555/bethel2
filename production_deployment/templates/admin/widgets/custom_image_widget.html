@@ -1,0 +1,89 @@
+{% if widget.is_initial %}
+<div class="custom-image-widget">
+    <!-- File Input -->
+    <div class="file-input-section">
+        <input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+        {% if widget.is_initial %}{{ widget.initial_text }}: <a href="{{ widget.value.url }}">{{ widget.value }}</a>
+        {% if not widget.required %}
+        <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}>
+        <label for="{{ widget.checkbox_id }}">{{ widget.clear_checkbox_label }}</label>{% endif %}<br>
+        {{ widget.input_text }}:{% endif %}
+    </div>
+    
+    <!-- Enhanced Full-size Preview (only if image exists) -->
+    {% if widget.image_url %}
+    <div class="image-preview-section" style="margin-top: 15px;">
+        <div class="image-preview-container">
+            <img src="{{ widget.image_url }}" 
+                 class="enhanced-image-preview"
+                 onclick="openImageModal(this.src, '{{ widget.image_name }}')" 
+                 title="Click to view full size in modal"
+                 alt="Image preview">
+            <div class="image-preview-overlay">
+                <div class="overlay-content">
+                    <span class="overlay-text">Click to enlarge</span>
+                    <span class="overlay-icon">🔍</span>
+                </div>
+            </div>
+            <div class="image-info">
+                <small class="image-name">{{ widget.image_name }}</small>
+                <small class="image-actions">
+                    <a href="{{ widget.image_url }}" target="_blank" class="view-full-link">View Full Size</a>
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<!-- No existing image, just show file input -->
+<div class="custom-image-widget">
+    <input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+</div>
+{% endif %}
+
+<!-- Image Modal for Full Size View -->
+<div id="imageModal" class="image-modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <img id="modalImage" src="" alt="Full size image">
+        <div class="modal-info">
+            <span id="modalImageName"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(imageSrc, imageName) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalName = document.getElementById('modalImageName');
+    
+    modal.style.display = "block";
+    modalImg.src = imageSrc;
+    modalName.textContent = imageName;
+}
+
+// Close modal when clicking the X or outside the modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    const closeBtn = document.querySelector('.close-modal');
+    
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = "none";
+        }
+    });
+});
+</script> 

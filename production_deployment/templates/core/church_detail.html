@@ -1,0 +1,263 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ church.name }} - Bethel Church{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Church Header -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+        <!-- Banner or Logo or Fallback -->
+        {% if church.banner_image %}
+        <div class="h-64 bg-cover bg-center" style="background-image: url('{{ church.get_banner_url }}');"></div>
+        {% elif church.logo %}
+        <div class="h-64 flex items-center justify-center bg-white">
+            <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="h-40 w-auto max-w-full object-contain mx-auto shadow border-4 border-[#1e3a8a] bg-white" />
+        </div>
+        {% else %}
+        <div class="h-64 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] flex items-center justify-center">
+            <span class="text-white text-6xl font-bold">{{ church.name|first }}</span>
+        </div>
+        {% endif %}
+        
+        <!-- Church Info -->
+        <div class="p-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ church.name }}</h1>
+                    <p class="text-lg text-gray-600">{{ church.city }}, {{ church.country }}</p>
+                </div>
+                
+                <div class="mt-4 lg:mt-0 flex space-x-3">
+                    <a href="{% url 'church_donation' church.id %}" 
+                       class="bg-[#1e3a8a] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200">
+                        Donate
+                    </a>
+                    <a href="#contact" 
+                       class="bg-[#1e3a8a] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200">
+                        Contact Us
+                    </a>
+                </div>
+            </div>
+            
+            {% if church.description %}
+            <div class="prose max-w-none text-gray-700">
+                {{ church.description|linebreaks }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Upcoming Events -->
+            {% if events %}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Upcoming Events</h2>
+                <div class="space-y-4">
+                    {% for event in events %}
+                    <div class="border-l-4 border-[#1e3a8a] pl-4">
+                        <h3 class="font-semibold text-gray-900">{{ event.title }}</h3>
+                        <a href="/church/{{ church.id }}/calendar/?year={{ event.start_date|date:'Y' }}&month={{ event.start_date|date:'n' }}" class="hover:underline hover:text-[#1e3a8a]">{{ event.start_date|date:"F j, Y" }} at {{ event.start_date|time:"g:i A" }}</a>
+                        {% if event.location %}
+                        <p class="text-sm text-gray-600">{{ event.location }}</p>
+                        {% endif %}
+                        <a href="{% url 'event_detail' event.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">
+                            View Details →
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'events' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a]">View All Events →</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ministries -->
+            {% if ministries %}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Ministries</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for ministry in ministries %}
+                    <div class="border rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-900">{{ ministry.name }}</h3>
+                        {% if ministry.leader_name %}
+                        <p class="text-sm text-gray-600">Leader: {{ ministry.leader_name }}</p>
+                        {% endif %}
+                        {% if ministry.description %}
+                        <p class="text-sm text-gray-700 mt-2">{{ ministry.description|truncatewords:20 }}</p>
+                        {% endif %}
+                        <a href="{% url 'ministry_detail' ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">
+                            Learn More →
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent News -->
+            {% if news %}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Recent News</h2>
+                <div class="space-y-4">
+                    {% for article in news %}
+                    <div class="border-b border-gray-200 pb-4 last:border-b-0">
+                        <h3 class="font-semibold text-gray-900">{{ article.title }}</h3>
+                        <p class="text-sm text-gray-600">{{ article.date|date:"F j, Y" }}</p>
+                        {% if article.excerpt %}
+                        <p class="text-gray-700 mt-2">{{ article.excerpt }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Sermons -->
+            {% if sermons %}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4">Recent Sermons</h2>
+                <div class="space-y-4">
+                    {% for sermon in sermons %}
+                    <div class="border rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-900">{{ sermon.title }}</h3>
+                        <p class="text-sm text-gray-600">{{ sermon.preacher }} • {{ sermon.date|date:"F j, Y" }}</p>
+                        {% if sermon.scripture_reference %}
+                        <p class="text-sm text-gray-600">Scripture: {{ sermon.scripture_reference }}</p>
+                        {% endif %}
+                        {% if sermon.link %}
+                        <a href="{{ sermon.link }}" target="_blank" class="text-[#1e3a8a] hover:text-[#1e3a8a] text-sm">
+                            Watch/Listen →
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="space-y-6">
+            <!-- Contact Information -->
+            <div id="contact" class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-gray-900 font-medium">Address</p>
+                            <p class="text-sm text-gray-600">{{ church.get_full_address }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if church.pastor_name %}
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-gray-900 font-medium">Pastor</p>
+                            <p class="text-sm text-gray-600">{{ church.pastor_name }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if church.phone %}
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-gray-900 font-medium">Phone</p>
+                            <p class="text-sm text-gray-600">{{ church.phone }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if church.email %}
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-gray-900 font-medium">Email</p>
+                            <a href="mailto:{{ church.email }}" class="text-sm text-[#1e3a8a] hover:text-[#1e3a8a]">{{ church.email }}</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if church.website %}
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-gray-900 font-medium">Website</p>
+                            <a href="{{ church.website }}" target="_blank" class="text-sm text-[#1e3a8a] hover:text-[#1e3a8a]">Visit Website</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Church Details -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Church Details</h2>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-900 font-medium">Denomination</p>
+                        <p class="text-sm text-gray-600">{{ church.denomination }}</p>
+                    </div>
+                    
+                    {% if church.founded_date %}
+                    <div>
+                        <p class="text-sm text-gray-900 font-medium">Founded</p>
+                        <p class="text-sm text-gray-600">{{ church.founded_date|date:"F Y" }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <p class="text-sm text-gray-900 font-medium">Status</p>
+                        <p class="text-sm text-gray-600">
+                            {% if church.is_featured %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1e3a8a] text-[#1e3a8a]">
+                                Featured
+                            </span>
+                            {% endif %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1e3a8a] text-[#1e3a8a]">
+                                Active
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                <div class="space-y-3">
+                    <a href="{% url 'church_donation' church.id %}" 
+                       class="w-full bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200 block">
+                        Make a Donation
+                    </a>
+                    <a href="{% url 'events' %}" 
+                       class="w-full bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200 block">
+                        View All Events
+                    </a>
+                    <a href="{% url 'ministries' %}" 
+                       class="w-full bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200 block">
+                        Explore Ministries
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

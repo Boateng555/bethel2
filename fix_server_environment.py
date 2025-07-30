@@ -23,7 +23,6 @@ def check_current_environment():
     env_files = [
         '.env',
         'production.env',
-        'railway.env',
         '/home/testsite.local/.env',
         '/home/testsite.local/production.env',
         '/home/cyberpanel/public_html/bethel/.env',

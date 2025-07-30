@@ -5,7 +5,7 @@ Write-Host "=================================================" -ForegroundColor 
 # Set environment variables for local development
 $env:DJANGO_DEBUG = "True"
 
-# Remove any Railway-specific environment variables that might interfere
+# Remove any deployment-specific environment variables that might interfere
 if ($env:DATABASE_URL) {
     Write-Host "⚠️ DATABASE_URL found - this will be ignored for local development" -ForegroundColor Yellow
 }

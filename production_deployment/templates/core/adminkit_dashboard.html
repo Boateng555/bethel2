@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bethel Admin Dashboard{% endblock %}</title>
+    
+    <!-- AdminKit CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .sidebar-dark-primary {
+            background-color: #343a40 !important;
+        }
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+        .content-wrapper {
+            background-color: #f4f6f9;
+        }
+        .card {
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+            margin-bottom: 1rem;
+        }
+        .info-box {
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+            border-radius: 0.25rem;
+            background-color: #fff;
+            display: flex;
+            margin-bottom: 1rem;
+            min-height: 80px;
+            padding: .5rem;
+            position: relative;
+            width: 100%;
+        }
+        .info-box-icon {
+            border-radius: 0.25rem;
+            display: block;
+            font-size: 1.875rem;
+            height: 70px;
+            line-height: 70px;
+            text-align: center;
+            width: 70px;
+            flex-shrink: 0;
+        }
+        .info-box-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.8;
+            flex: 1;
+            padding: 0 10px;
+        }
+        .info-box-text {
+            display: block;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .info-box-number {
+            display: block;
+            font-weight: 700;
+        }
+        .small-box {
+            border-radius: 0.25rem;
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+            display: block;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .small-box > .inner {
+            padding: 10px;
+        }
+        .small-box h3 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            padding: 0;
+            white-space: nowrap;
+        }
+        .small-box p {
+            font-size: 1rem;
+        }
+        .small-box .icon {
+            color: rgba(0,0,0,.15);
+            z-index: 0;
+        }
+        .small-box .icon > i {
+            font-size: 70px;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            transition: transform .3s linear;
+        }
+        .small-box:hover .icon > i {
+            transform: scale(1.1);
+        }
+        .bg-info {
+            background-color: #17a2b8 !important;
+        }
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+        .bg-warning {
+            background-color: #ffc107 !important;
+        }
+        .bg-danger {
+            background-color: #dc3545 !important;
+        }
+        .bg-primary {
+            background-color: #007bff !important;
+        }
+        .bg-secondary {
+            background-color: #6c757d !important;
+        }
+        .text-white {
+            color: #fff !important;
+        }
+        .activity-feed {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .activity-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f4f4f4;
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        .activity-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Site
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/" target="_blank">
+                        <i class="fas fa-cog"></i> Django Admin
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="{% url 'dashboard' %}" class="brand-link">
+                <span class="brand-text font-weight-light">Bethel Admin</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <div class="image">
+                        <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username }}&background=007bff&color=fff" class="img-circle elevation-2" alt="User Image">
+                    </div>
+                    <div class="info">
+                        <a href="#" class="d-block">{{ user.get_full_name|default:user.username }}</a>
+                        <small class="text-muted">{{ user_role|title }}</small>
+                    </div>
+                </div>
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+                        
+                        {% if user.is_superuser or user_role == 'global_admin' %}
+                        <!-- Global Admin Menu -->
+                        <li class="nav-header">GLOBAL ADMIN</li>
+                        <li class="nav-item">
+                            <a href="{% url 'global_admin_dashboard' %}" class="nav-link">
+                                <i class="nav-icon fas fa-globe"></i>
+                                <p>Global Dashboard</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'global_event_feature_requests' %}" class="nav-link">
+                                <i class="nav-icon fas fa-calendar-check"></i>
+                                <p>Event Requests</p>
+                                {% if pending_event_requests_count > 0 %}
+                                <span class="badge badge-warning right">{{ pending_event_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'global_hero_feature_requests' %}" class="nav-link">
+                                <i class="nav-icon fas fa-star"></i>
+                                <p>Hero Requests</p>
+                                {% if pending_hero_requests_count > 0 %}
+                                <span class="badge badge-warning right">{{ pending_hero_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'global_news_feature_requests' %}" class="nav-link">
+                                <i class="nav-icon fas fa-newspaper"></i>
+                                <p>News Requests</p>
+                                {% if pending_news_requests_count > 0 %}
+                                <span class="badge badge-warning right">{{ pending_news_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% if user_role == 'local_admin' %}
+                        <!-- Local Admin Menu -->
+                        <li class="nav-header">CHURCH ADMIN</li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_dashboard' %}" class="nav-link">
+                                <i class="nav-icon fas fa-church"></i>
+                                <p>Church Dashboard</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_events' %}" class="nav-link">
+                                <i class="nav-icon fas fa-calendar"></i>
+                                <p>Events</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_ministries' %}" class="nav-link">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Ministries</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_news' %}" class="nav-link">
+                                <i class="nav-icon fas fa-newspaper"></i>
+                                <p>News</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_sermons' %}" class="nav-link">
+                                <i class="nav-icon fas fa-video"></i>
+                                <p>Sermons</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_donations' %}" class="nav-link">
+                                <i class="nav-icon fas fa-hand-holding-usd"></i>
+                                <p>Donations</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_heroes' %}" class="nav-link">
+                                <i class="nav-icon fas fa-star"></i>
+                                <p>Hero Content</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'local_admin_church_settings' %}" class="nav-link">
+                                <i class="nav-icon fas fa-cog"></i>
+                                <p>Settings</p>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Content Header -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                                <li class="breadcrumb-item active">{% block breadcrumb %}Dashboard{% endblock %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    {% block content %}
+                    <!-- Stats Cards -->
+                    <div class="row">
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-info">
+                                <div class="inner">
+                                    <h3>{{ total_churches|default:"0" }}</h3>
+                                    <p>Total Churches</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-church"></i>
+                                </div>
+                                <a href="/admin/core/church/" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-success">
+                                <div class="inner">
+                                    <h3>{{ pending_applications|default:"0" }}</h3>
+                                    <p>Pending Applications</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <a href="/admin/core/churchapplication/" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-warning">
+                                <div class="inner">
+                                    <h3>{{ total_events|default:"0" }}</h3>
+                                    <p>Total Events</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <a href="/admin/core/event/" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-danger">
+                                <div class="inner">
+                                    <h3>{{ total_users|default:"0" }}</h3>
+                                    <p>Total Users</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <a href="/admin/auth/user/" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts and Widgets -->
+                    <div class="row">
+                        <!-- Chart -->
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-chart-bar mr-1"></i>
+                                        Activity Overview
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="activityChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity -->
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-history mr-1"></i>
+                                        Recent Activity
+                                    </h3>
+                                </div>
+                                <div class="card-body activity-feed">
+                                    {% for activity in recent_activities %}
+                                    <div class="activity-item">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>{{ activity.title }}</strong>
+                                            <span class="activity-time">{{ activity.time }}</span>
+                                        </div>
+                                        <small class="text-muted">{{ activity.description }}</small>
+                                    </div>
+                                    {% empty %}
+                                    <div class="activity-item">
+                                        <p class="text-muted">No recent activity</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-bolt mr-1"></i>
+                                        Quick Actions
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="/admin/core/church/add/" class="btn btn-primary btn-block">
+                                                <i class="fas fa-plus mr-2"></i>Add Church
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="/admin/core/event/add/" class="btn btn-success btn-block">
+                                                <i class="fas fa-calendar-plus mr-2"></i>Add Event
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="/admin/core/news/add/" class="btn btn-warning btn-block">
+                                                <i class="fas fa-newspaper mr-2"></i>Add News
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="/admin/auth/user/add/" class="btn btn-info btn-block">
+                                                <i class="fas fa-user-plus mr-2"></i>Add User
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endblock %}
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-inline">
+                Bethel Admin Dashboard
+            </div>
+            <strong>Copyright &copy; 2024 <a href="#">Bethel</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+
+    <!-- AdminKit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+        // Activity Chart
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Churches',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }, {
+                    label: 'Events',
+                    data: [8, 15, 7, 12, 9, 14],
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(function() {
+            // You can add AJAX calls here to refresh stats
+            console.log('Refreshing dashboard stats...');
+        }, 30000);
+    </script>
+</body>
+</html> 

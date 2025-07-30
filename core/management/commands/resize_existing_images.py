@@ -159,7 +159,7 @@ class Command(BaseCommand):
                     if not field or not hasattr(field, 'name') or not field.name:
                         continue
                     
-                    # Skip if it's already a URL (Cloudinary, ImageKit, etc.)
+                    # Skip if it's already a URL (ImageKit, etc.)
                     if str(field).startswith('http'):
                         continue
                     
@@ -241,5 +241,5 @@ class Command(BaseCommand):
         if total_resized > 0:
             self.stdout.write('\n💡 Tips:')
             self.stdout.write('• The resized images should now be much smaller in file size')
-            self.stdout.write('• This should help with Railway deployment timeouts')
+            self.stdout.write('• This should help with production deployment timeouts')
             self.stdout.write('• Consider running this command periodically for new uploads') 

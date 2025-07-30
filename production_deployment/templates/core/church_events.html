@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ church.name }} - Events{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-deep-blue to-[#1e3a8a] text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Events at {{ church.name }}</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Join our community in faith, fellowship, and spiritual growth</p>
+    </div>
+</section>
+
+<!-- Events Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h2 class="text-3xl font-bold mb-8 text-deep-blue">All Events</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for event in all_events %}
+            {% include 'core/_event_card.html' with event=event church=church %}
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <p class="text-gray-500 text-lg">No events scheduled at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

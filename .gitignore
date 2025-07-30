@@ -52,8 +52,8 @@ staticfiles/
 ehthumbs.db
 Thumbs.db
 
-# Railway
-.railway/
+# Deployment
+.deployment/
 
 # Temporary files
 *.tmp

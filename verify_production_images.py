@@ -18,7 +18,7 @@ def verify_production_images():
     print("=" * 50)
     
     # Production URL
-    production_url = "https://web-production-158c.up.railway.app"
+    production_url = "https://your-domain.com"
     
     print(f"🌐 Production URL: {production_url}")
     

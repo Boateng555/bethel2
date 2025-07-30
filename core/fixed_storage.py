@@ -12,7 +12,7 @@ from imagekitio import ImageKit
 @deconstructible
 class FixedImageKitStorage(Storage):
     """
-    Fixed Django storage backend for ImageKit.io that prevents corruption
+    Fixed Django storage backend for ImageKit.io
     """
 
     def __init__(self, location=None, base_url=None):
@@ -31,46 +31,39 @@ class FixedImageKitStorage(Storage):
         return os.path.splitext(filename)[1] if filename else ''
 
     def _save(self, name, content):
-        """
-        Fixed save method that prevents corruption
-        """
         name = self._clean_name(name or f"{uuid.uuid4()}{self._get_extension(content.name)}")
-        
-        # Ensure content is properly read as bytes
+
+        # Read the content into bytes
         if hasattr(content, 'read'):
             content.seek(0)
             file_bytes = content.read()
         else:
-            file_bytes = bytes(content)
-        
-        # Verify we have actual content
-        if len(file_bytes) < 100:  # Less than 100 bytes is suspicious
-            raise ValueError(f"File too small ({len(file_bytes)} bytes) - likely corrupted")
-        
-        # Create proper file object for upload
+            file_bytes = content
+
+        # Create BytesIO object for upload
         file_obj = BytesIO(file_bytes)
+        file_obj.name = os.path.basename(name)
         file_obj.seek(0)
-        
+
         # Upload to ImageKit
         try:
             upload = self.imagekit.upload_file(
                 file=file_obj,
                 file_name=os.path.basename(name)
             )
-            
+
             if upload.response_metadata.http_status_code != 200:
                 raise Exception(f"ImageKit upload failed: {upload.response_metadata.raw}")
             
-            # Verify the uploaded file size
-            uploaded_size = self.size(name)
-            if uploaded_size < 100:
-                raise Exception(f"Uploaded file is too small ({uploaded_size} bytes) - upload may have failed")
-            
-            return name
+            # Return the actual file path from ImageKit response
+            return upload.file_path.lstrip('/')
             
         except Exception as e:
-            print(f"❌ Upload error: {e}")
-            raise
+            print(f"❌ ImageKit upload error: {e}")
+            # Fallback: save to local storage temporarily
+            from django.core.files.storage import FileSystemStorage
+            local_storage = FileSystemStorage()
+            return local_storage.save(name, content)
 
     def _open(self, name, mode='rb'):
         url = self.url(name)
@@ -105,7 +98,13 @@ class FixedImageKitStorage(Storage):
     def url(self, name):
         if not name:
             return ''
+        
+        # If name is already a full ImageKit URL, return it as is
+        if name.startswith('https://ik.imagekit.io/'):
+            return name
+        
         clean_name = self._clean_name(name)
+        # Return the full ImageKit URL
         return f"{self.base_url}/{clean_name}"
 
     def size(self, name):

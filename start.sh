@@ -93,7 +93,7 @@ start_with_db() {
 }
 
 # Main startup logic
-echo "🔧 Railway database optimizations applied"
+echo "🔧 Production database optimizations applied"
 echo "🖼️ Using ImageKit for storage"
 
 # Check database connectivity with timeout

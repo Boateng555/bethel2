@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Bethel Prayer Ministry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-800">Bethel Prayer Ministry</h1>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-900">Home</a>
+                    
+                    <!-- Events Dropdown -->
+                    <div class="relative group">
+                        <button class="text-gray-600 hover:text-gray-900 flex items-center">
+                            Events
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            <div class="py-2">
+                                <a href="{% url 'events' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Events</a>
+                                <a href="{% url 'calendar' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Calendar</a>
+                                {% for event in all_events %}
+                                <a href="{% url 'event_detail' event.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ event.title }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Get Involved Dropdown -->
+                    <div class="relative group">
+                        <button class="text-gray-600 hover:text-gray-900 flex items-center">
+                            Get Involved
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            <div class="py-2">
+                                <a href="{% url 'ministries' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Ministries</a>
+                                {% for ministry in all_ministries %}
+                                <a href="{% url 'ministry_detail' ministry.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ ministry.name }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'shop' %}" class="text-[#1e3a8a] font-semibold">Shop</a>
+                    <a href="{% url 'donation' %}" class="text-gray-600 hover:text-gray-900">Donation</a>
+                    <a href="{% url 'about' %}" class="text-gray-600 hover:text-gray-900">About Us</a>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col text-lg font-semibold text-gray-800 hidden">
+                <!-- Close button at the top (fixed) -->
+                <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-gray-800 hover:text-gray-600 p-2 z-10" aria-label="Close menu">&times;</button>
+                
+                <!-- Scrollable navigation links container -->
+                <div class="flex-1 overflow-y-auto pt-16 pb-8">
+                    <div class="w-full max-w-sm mx-auto px-4">
+                        <a href="{% url 'home' %}" class="block w-full text-center py-3 hover:bg-gray-100 rounded-lg mb-2">Home</a>
+                        <a href="{% url 'events' %}" class="block w-full text-center py-3 hover:bg-gray-100 rounded-lg mb-2">Events</a>
+                        <a href="{% url 'ministries' %}" class="block w-full text-center py-3 hover:bg-gray-100 rounded-lg mb-2">Ministries</a>
+                        <a href="{% url 'shop' %}" class="block w-full text-center py-3 bg-[#1e3a8a] bg-opacity-20 rounded-lg mb-2 font-semibold">Shop</a>
+                        <a href="{% url 'donation' %}" class="block w-full text-center py-3 hover:bg-gray-100 rounded-lg mb-2">Donation</a>
+                        <a href="{% url 'about' %}" class="block w-full text-center py-3 hover:bg-gray-100 rounded-lg mb-2">About Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Ministry Shop</h1>
+            <p class="text-xl text-gray-600">Coming Soon</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-8">
+            <p class="text-gray-700 text-lg leading-relaxed">
+                Our ministry shop is currently under development. We're working to bring you 
+                books, resources, and other items that will help you grow in your faith. 
+                Please check back soon for updates.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('mobile-menu-button');
+            const menu = document.getElementById('mobile-menu');
+            const closeBtn = document.getElementById('mobile-menu-close');
+            
+            function openMobileMenu() {
+                menu.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+            
+            function closeMobileMenu() {
+                menu.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+            
+            // Open menu
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openMobileMenu();
+                });
+            }
+            
+            // Close menu
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeMobileMenu();
+                });
+            }
+            
+            // Close menu when clicking a link
+            if (menu) {
+                menu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        closeMobileMenu();
+                    });
+                });
+            }
+            
+            // Close menu when clicking outside
+            menu.addEventListener('click', function(e) {
+                if (e.target === menu) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Close menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -314,7 +314,7 @@ tail -f /home/cyberpanel/public_html/bethel/logs/gunicorn_error.log
 - [ ] Security hardened
 - [ ] Performance optimized
 - [ ] DNS updated
-- [ ] Old Railway deployment disabled
+- [ ] Old deployment disabled
 
 ### 16. Post-Migration Tasks
 

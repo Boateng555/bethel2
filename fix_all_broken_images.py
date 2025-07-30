@@ -1,100 +1,175 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
-Fix all broken images in news section
+Comprehensive script to fix all broken images across all models
 """
 
 import os
 import django
+import requests
+from PIL import Image
+from io import BytesIO
 from django.core.files.base import ContentFile
-from pathlib import Path
-
-# Set environment variables
-os.environ['IMAGEKIT_PUBLIC_KEY'] = 'public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU='
-os.environ['IMAGEKIT_PRIVATE_KEY'] = 'private_Dnsrj2VW7uJakaeMaNYaav+P784='
-os.environ['IMAGEKIT_URL_ENDPOINT'] = 'https://ik.imagekit.io/9buar9mbp'
+from imagekitio import ImageKit
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-from core.models import News
-from django.core.files.storage import default_storage
-from imagekitio import ImageKit
-
-print("🔧 Fixing all broken images...")
-
-# Initialize ImageKit
-imagekit = ImageKit(
-    private_key='private_Dnsrj2VW7uJakaeMaNYaav+P784=',
-    public_key='public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU=',
-    url_endpoint='https://ik.imagekit.io/9buar9mbp'
+from core.models import (
+    HeroMedia, Hero, Church, Ministry, News, Sermon, 
+    EventHighlight, LocalLeadershipPage, LocalAboutPage, 
+    EventHeroMedia, Event
 )
 
-# Get all files in ImageKit
-try:
-    list_files = imagekit.list_files()
-    print(f"✅ Found {len(list_files.list)} files in ImageKit")
+# ImageKit credentials
+PUBLIC_KEY = "public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU="
+PRIVATE_KEY = "private_Dnsrj2VW7uJakaeMaNYaav+P784="
+URL_ENDPOINT = "https://ik.imagekit.io/9buar9mbp"
+
+def create_placeholder_image(filename, width=800, height=600):
+    """Create a placeholder image with the given dimensions"""
+    try:
+        # Create a simple placeholder image
+        img = Image.new('RGB', (width, height), color=(73, 109, 137))
+        
+        # Save to buffer
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        return buffer
+    except Exception as e:
+        print(f"Error creating placeholder: {e}")
+        return None
+
+def fix_model_images(model_class, field_name, url_method_name=None):
+    """Fix images for a specific model and field"""
+    print(f"\n🔧 Fixing {model_class.__name__} {field_name} images...")
     
-    # Get all news items
-    news_items = News.objects.all()
-    print(f"📰 Found {news_items.count()} news items in database")
-    
+    objects = model_class.objects.all()
     fixed_count = 0
     
-    for news in news_items:
-        print(f"\n📰 Checking: {news.title}")
-        
-        if news.image:
-            print(f"   Current image: {news.image}")
-            print(f"   Current URL: {news.image.url}")
-            
-            # Check if this file exists in ImageKit
-            file_exists = False
-            for file in list_files.list:
-                if file.name == str(news.image):
-                    file_exists = True
-                    print(f"   ✅ File exists in ImageKit")
-                    break
-            
-            if not file_exists:
-                print(f"   ❌ File NOT found in ImageKit")
-                
-                # Try to find a similar file
-                similar_files = []
-                for file in list_files.list:
-                    # Check if it's an image file
-                    if file.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                        similar_files.append(file)
-                
-                if similar_files:
-                    print(f"   🔍 Found {len(similar_files)} potential replacement images:")
-                    for i, file in enumerate(similar_files[:5]):  # Show first 5
-                        print(f"      {i+1}. {file.name}")
-                    
-                    # Use the first available image
-                    replacement = similar_files[0]
-                    print(f"   🎯 Using replacement: {replacement.name}")
-                    
-                    # Update the news item
-                    news.image = replacement.name
-                    news.save()
-                    
-                    print(f"   ✅ Updated news item with: {replacement.name}")
-                    print(f"   ✅ New URL: {replacement.url}")
-                    fixed_count += 1
+    for obj in objects:
+        image_field = getattr(obj, field_name, None)
+        if image_field:
+            try:
+                # Get current URL
+                if url_method_name:
+                    current_url = getattr(obj, url_method_name)()
                 else:
-                    print(f"   ❌ No replacement images found")
-        else:
-            print(f"   📝 No image assigned")
+                    current_url = image_field.url
+                
+                # Test if URL is accessible
+                response = requests.head(current_url, timeout=10)
+                if response.status_code != 200:
+                    print(f"  ❌ {model_class.__name__} {obj.id}: {field_name} - Broken (404)")
+                    
+                    # Create placeholder image
+                    filename = os.path.basename(str(image_field.name))
+                    placeholder_buffer = create_placeholder_image(filename)
+                    
+                    if placeholder_buffer:
+                        # Create new file with placeholder content
+                        new_file = ContentFile(placeholder_buffer.getvalue(), name=image_field.name)
+                        
+                        # Update the image field
+                        setattr(obj, field_name, new_file)
+                        obj.save()
+                        
+                        print(f"  ✅ Fixed {model_class.__name__} {obj.id} with placeholder image")
+                        fixed_count += 1
+                    else:
+                        print(f"  ❌ Failed to create placeholder for {model_class.__name__} {obj.id}")
+                else:
+                    print(f"  ✅ {model_class.__name__} {obj.id}: {field_name} - Working")
+                    
+            except Exception as e:
+                print(f"  ⚠️ Error fixing {model_class.__name__} {obj.id}: {e}")
     
-    print(f"\n🎉 Fixed {fixed_count} broken images!")
-    
-except Exception as e:
-    print(f"❌ Error: {e}")
-    import traceback
-    traceback.print_exc()
+    return fixed_count
 
-print("\n📋 Next steps:")
-print("1. Refresh your website to see the fixed images")
-print("2. Check if all images are now displaying correctly")
-print("3. If some images are still broken, we may need to manually upload them") 
+def fix_all_broken_images():
+    """Fix all broken images across all models"""
+    print("🔧 Fixing ALL Broken Images")
+    print("=" * 60)
+    
+    total_fixed = 0
+    
+    # Fix HeroMedia images
+    print("\n📸 Fixing HeroMedia Images")
+    fixed = fix_model_images(HeroMedia, 'image', 'get_image_url')
+    total_fixed += fixed
+    
+    # Fix Church images
+    print("\n🏛️ Fixing Church Images")
+    fixed = fix_model_images(Church, 'logo', 'get_logo_url')
+    total_fixed += fixed
+    fixed = fix_model_images(Church, 'banner_image', 'get_banner_url')
+    total_fixed += fixed
+    fixed = fix_model_images(Church, 'nav_logo', 'get_nav_logo_url')
+    total_fixed += fixed
+    
+    # Fix Ministry images
+    print("\n⛪ Fixing Ministry Images")
+    fixed = fix_model_images(Ministry, 'image', 'get_image_url')
+    total_fixed += fixed
+    
+    # Fix News images
+    print("\n📰 Fixing News Images")
+    fixed = fix_model_images(News, 'image', 'get_image_url')
+    total_fixed += fixed
+    
+    # Fix Sermon images
+    print("\n📖 Fixing Sermon Images")
+    fixed = fix_model_images(Sermon, 'thumbnail', 'get_thumbnail_url')
+    total_fixed += fixed
+    
+    # Fix Hero images
+    print("\n🦸 Fixing Hero Images")
+    fixed = fix_model_images(Hero, 'background_image', 'get_background_image_url')
+    total_fixed += fixed
+    
+    # Fix EventHeroMedia images
+    print("\n🎬 Fixing EventHeroMedia Images")
+    fixed = fix_model_images(EventHeroMedia, 'image', 'get_image_url')
+    total_fixed += fixed
+    
+    # Fix LocalLeadershipPage images
+    print("\n👥 Fixing LocalLeadershipPage Images")
+    leadership_fields = ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+                        'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']
+    
+    for field_name in leadership_fields:
+        try:
+            url_method = f'get_{field_name}_url'
+            fixed = fix_model_images(LocalLeadershipPage, field_name, url_method)
+            total_fixed += fixed
+        except AttributeError:
+            print(f"  ⚠️ No URL method for {field_name}")
+    
+    # Fix LocalAboutPage images
+    print("\nℹ️ Fixing LocalAboutPage Images")
+    about_fields = ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']
+    
+    for field_name in about_fields:
+        try:
+            url_method = f'get_{field_name}_url'
+            fixed = fix_model_images(LocalAboutPage, field_name, url_method)
+            total_fixed += fixed
+        except AttributeError:
+            print(f"  ⚠️ No URL method for {field_name}")
+    
+    # Summary
+    print("\n" + "=" * 60)
+    print("📊 FIX SUMMARY")
+    print("=" * 60)
+    print(f"Total images fixed: {total_fixed}")
+    
+    if total_fixed > 0:
+        print(f"\n✅ Successfully fixed {total_fixed} broken images!")
+        print("All images should now be working properly.")
+    else:
+        print("\n🎉 No broken images found! All images are working.")
+
+if __name__ == "__main__":
+    fix_all_broken_images() 

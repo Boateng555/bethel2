@@ -1,14 +1,24 @@
 # ImageKit.io Setup Guide
 
 ## Overview
-ImageKit.io is a powerful image optimization and CDN service that will help you serve images faster and more efficiently than Cloudinary.
+ImageKit.io is a powerful image optimization and CDN service that will help you serve images faster and more efficiently.
 
-## Why ImageKit.io?
-- **Better Performance**: Faster CDN with global edge locations
-- **Advanced Optimization**: Automatic image compression and format conversion
-- **Real-time Transformations**: Resize, crop, and transform images on-the-fly
-- **Free Tier**: 20GB storage, 20GB bandwidth per month
-- **Better Pricing**: More generous limits than Cloudinary
+## Why ImageKit?
+
+### Performance Benefits
+- **Global CDN**: Faster image loading worldwide
+- **Automatic Optimization**: Compresses images automatically
+- **Format Conversion**: Serves WebP/AVIF when supported
+
+### Features
+- **Real-time Transformations**: Resize, crop, filter on-the-fly
+- **Analytics**: Track image usage and performance
+- **Better Free Tier**: 20GB storage
+
+### Cost Benefits
+- **Free Tier**: 20GB storage, 20GB bandwidth/month
+- **Better Pricing**: More generous limits
+- **No Credit Card Required**: Start with free tier
 
 ## Step 1: Create ImageKit Account
 1. Go to [imagekit.io](https://imagekit.io)
@@ -24,27 +34,27 @@ ImageKit.io is a powerful image optimization and CDN service that will help you 
    - **Private Key** (e.g., `private_xyz789uvw012`)
    - **URL Endpoint** (e.g., `https://ik.imagekit.io/your_username`)
 
-## Step 3: Set Environment Variables in Railway
+## Step 3: Set Environment Variables in Production
 
-### Option A: Using Railway CLI
+### Option A: Using CLI
 ```bash
-# Install Railway CLI if you haven't already
-npm install -g @railway/cli
+# Install CLI if you haven't already
+npm install -g @deployment/cli
 
-# Login to Railway
-railway login
+# Login to deployment platform
+deployment login
 
 # Link to your project
-railway link
+deployment link
 
 # Set environment variables
-railway variables set IMAGEKIT_PUBLIC_KEY=your_public_key
-railway variables set IMAGEKIT_PRIVATE_KEY=your_private_key
-railway variables set IMAGEKIT_URL_ENDPOINT=your_url_endpoint
+deployment variables set IMAGEKIT_PUBLIC_KEY=your_public_key
+deployment variables set IMAGEKIT_PRIVATE_KEY=your_private_key
+deployment variables set IMAGEKIT_URL_ENDPOINT=your_url_endpoint
 ```
 
-### Option B: Using Railway Dashboard
-1. Go to your Railway project dashboard
+### Option B: Using Deployment Dashboard
+1. Go to your deployment project dashboard
 2. Click on your service
 3. Go to the "Variables" tab
 4. Add these environment variables:
@@ -65,17 +75,17 @@ $env:IMAGEKIT_URL_ENDPOINT="your_url_endpoint"
 python upload_media_to_imagekit.py
 ```
 
-## Step 5: Deploy to Railway
+## Step 5: Deploy to Production
 ```bash
 git add .
 git commit -m "Switch to ImageKit.io for media storage"
 git push origin main
 ```
 
-Railway will automatically redeploy with the new ImageKit configuration.
+Your deployment platform will automatically redeploy with the new ImageKit configuration.
 
 ## Step 6: Verify Setup
-After deployment, check your Railway logs to see:
+After deployment, check your deployment logs to see:
 - `🖼️ Using ImageKit for production` - Success!
 - `⚠️ ImageKit not configured, using local storage` - Check your environment variables
 
@@ -89,7 +99,7 @@ After deployment, check your Railway logs to see:
 - **Optimization**: Automatic image optimization and compression
 - **Transformations**: On-the-fly image resizing, cropping, etc.
 - **Analytics**: Track image usage and performance
-- **Better Free Tier**: 20GB storage vs Cloudinary's 25GB
+- **Better Free Tier**: 20GB storage
 
 ## Testing
 To test locally with ImageKit:
@@ -113,11 +123,12 @@ ImageKit free tier includes:
 - 20 GB storage
 - 20 GB bandwidth per month
 - 20,000 transformations per month
+- 25 MB max file size
 - Perfect for most church websites!
 
-## Migration from Cloudinary
-If you're switching from Cloudinary:
-1. Your existing Cloudinary images will continue to work
-2. New uploads will go to ImageKit
-3. You can gradually migrate existing images using the upload script
-4. No downtime or data loss during migration 
+## Migration
+
+### From Local Storage
+- Existing local images continue to work
+- New uploads go to ImageKit
+- Use management commands to migrate existing images 

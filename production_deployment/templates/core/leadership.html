@@ -1,0 +1,290 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Leadership - Bethel Prayer Ministry International{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-deep-blue via-blue-800 to-[#1e3a8a] text-white py-12 md:py-20">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative max-w-6xl mx-auto px-4 md:px-6 text-center">
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
+            Our <span class="text-white">Leadership</span>
+        </h1>
+        {% if leadership_page and leadership_page.intro %}
+            <p class="text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90 px-4">
+                {{ leadership_page.intro }}
+            </p>
+        {% else %}
+            <p class="text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90 px-4">
+                Meet the dedicated leaders guiding our ministry forward
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-16">
+    {% if leadership_page %}
+        <!-- Vision & Mission Section -->
+        {% if leadership_page.vision_statement or leadership_page.mission_statement %}
+        <section class="mb-12 md:mb-20">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-2xl md:text-4xl font-bold text-deep-blue mb-4">Vision & Mission</h2>
+                <div class="w-16 md:w-24 h-1 bg-deep-blue mx-auto"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                {% if leadership_page.vision_statement %}
+                <div class="bg-gradient-to-br from-white to-[#1e3a8a] text-white rounded-xl md:rounded-2xl p-6 md:p-8 shadow-xl">
+                    <h3 class="text-xl md:text-2xl font-bold mb-4">Our Vision</h3>
+                    <div class="prose prose-invert max-w-none text-sm md:text-base">
+                        {{ leadership_page.vision_statement|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+                {% if leadership_page.mission_statement %}
+                <div class="bg-gradient-to-br from-deep-blue to-[#1e3a8a] text-white rounded-xl md:rounded-2xl p-6 md:p-8 shadow-xl">
+                    <h3 class="text-xl md:text-2xl font-bold mb-4">Our Mission</h3>
+                    <div class="prose prose-invert max-w-none text-sm md:text-base">
+                        {{ leadership_page.mission_statement|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Current Leadership Section -->
+        {% if leadership_page.current_leadership %}
+        <section class="mb-12 md:mb-20">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-2xl md:text-4xl font-bold text-deep-blue mb-4">Current Leadership</h2>
+                <div class="w-16 md:w-24 h-1 bg-deep-blue mx-auto"></div>
+            </div>
+            <div class="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-12">
+                <!-- Leadership Photos -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    {% if leadership_page.chairman_image %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.chairman_image }}" alt="Chairman" class="mx-auto rounded-full w-24 h-24 md:w-32 md:h-32 object-cover shadow-lg mb-3" />
+                        <p class="font-semibold text-deep-blue text-sm md:text-base">Chairman</p>
+                    </div>
+                    {% endif %}
+                    {% if leadership_page.vice_chairman_image %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.vice_chairman_image }}" alt="Vice Chairman" class="mx-auto rounded-full w-24 h-24 md:w-32 md:h-32 object-cover shadow-lg mb-3" />
+                        <p class="font-semibold text-deep-blue text-sm md:text-base">Vice Chairman</p>
+                    </div>
+                    {% endif %}
+                    {% if leadership_page.leadership_photo_1 %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.leadership_photo_1 }}" alt="Leadership" class="mx-auto rounded-full w-24 h-24 md:w-32 md:h-32 object-cover shadow-lg mb-3" />
+                        <p class="font-semibold text-deep-blue text-sm md:text-base">Leadership</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed text-sm md:text-base">
+                    {{ leadership_page.current_leadership|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Board Members Section -->
+        {% if leadership_page.board_members %}
+        <section class="mb-12 md:mb-20">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-2xl md:text-4xl font-bold text-deep-blue mb-4">Board Members</h2>
+                <div class="w-16 md:w-24 h-1 bg-deep-blue mx-auto"></div>
+            </div>
+            <div class="bg-gradient-to-r from-gray-50 to-white rounded-xl md:rounded-2xl p-6 md:p-12 shadow-xl">
+                {% if leadership_page.board_image %}
+                    <div class="text-center mb-6 md:mb-8">
+                        <img src="{{ leadership_page.board_image }}" alt="Board Members" class="mx-auto rounded-lg max-w-full md:max-w-md shadow-lg" />
+                        <p class="text-xs md:text-sm text-gray-600 mt-2">Board of Directors</p>
+                    </div>
+                {% endif %}
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed text-sm md:text-base">
+                    {{ leadership_page.board_members|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Leadership Team Section -->
+        {% if leadership_page.leadership_team %}
+        <section class="mb-12 md:mb-20">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-2xl md:text-4xl font-bold text-deep-blue mb-4">Leadership Team</h2>
+                <div class="w-16 md:w-24 h-1 bg-deep-blue mx-auto"></div>
+            </div>
+            <div class="bg-white rounded-xl md:rounded-2xl shadow-xl p-6 md:p-12">
+                <!-- Team Photos -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    {% if leadership_page.team_image %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.team_image }}" alt="Leadership Team" class="mx-auto rounded-lg max-w-full shadow-lg" />
+                        <p class="text-xs md:text-sm text-gray-600 mt-2">Leadership Team</p>
+                    </div>
+                    {% endif %}
+                    {% if leadership_page.leadership_photo_2 %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.leadership_photo_2 }}" alt="Team Photo" class="mx-auto rounded-lg max-w-full shadow-lg" />
+                        <p class="text-xs md:text-sm text-gray-600 mt-2">Team Photo</p>
+                    </div>
+                    {% endif %}
+                    {% if leadership_page.leadership_photo_3 %}
+                    <div class="text-center">
+                        <img src="{{ leadership_page.leadership_photo_3 }}" alt="Additional Photo" class="mx-auto rounded-lg max-w-full shadow-lg" />
+                        <p class="text-xs md:text-sm text-gray-600 mt-2">Additional Photo</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed text-sm md:text-base">
+                    {{ leadership_page.leadership_team|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+    {% else %}
+        <!-- Fallback Content -->
+        <div class="text-center py-12 md:py-20">
+            <h2 class="text-2xl md:text-4xl font-bold text-deep-blue mb-6 md:mb-8">Leadership</h2>
+            <div class="bg-white rounded-xl md:rounded-2xl shadow-xl p-8 md:p-12 max-w-4xl mx-auto">
+                <p class="text-lg md:text-xl text-gray-600 mb-6 md:mb-8">
+                    Our leadership information is being prepared. Please check back soon!
+                </p>
+                <a href="{% url 'home' %}" class="inline-block bg-deep-blue text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] transition-colors">
+                    Return to Home
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Call to Action Section -->
+<section class="bg-gradient-to-r from-deep-blue to-[#1e3a8a] text-white py-12 md:py-16">
+    <div class="max-w-4xl mx-auto px-4 md:px-6 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Join Our Ministry</h2>
+        <p class="text-lg md:text-xl mb-6 md:mb-8 opacity-90">
+            Be part of our mission to spread the gospel worldwide
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'ministries' %}" class="bg-white text-deep-blue px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Get Involved
+            </a>
+            <a href="{% url 'donation' %}" class="bg-transparent border-2 border-white text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-deep-blue transition-colors">
+                Support Our Work
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Fix any overflow issues */
+    body {
+        overflow-x: hidden;
+        background-color: #f9fafb;
+    }
+    
+    /* Ensure proper container width */
+    .max-w-6xl {
+        max-width: 72rem;
+    }
+    
+    /* Fix prose styling */
+    .prose {
+        max-width: none;
+    }
+    .prose p {
+        margin-bottom: 1rem;
+    }
+    .prose strong {
+        color: #1e40af;
+        font-weight: 600;
+    }
+    .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+    }
+    .prose li {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Ensure images display properly - but don't override object-cover */
+    img:not(.object-cover) {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Mobile responsive fixes */
+    @media (max-width: 640px) {
+        /* Ensure proper mobile layout */
+        .grid {
+            grid-template-columns: 1fr;
+        }
+        
+        /* Fix any horizontal scrolling issues */
+        .max-w-6xl {
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        /* Better spacing on mobile */
+        .mb-12 {
+            margin-bottom: 2rem;
+        }
+        
+        .mb-20 {
+            margin-bottom: 3rem;
+        }
+        
+        .py-12 {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .py-20 {
+            padding-top: 3rem;
+            padding-bottom: 3rem;
+        }
+        
+        /* Better text sizing on mobile */
+        .text-3xl {
+            font-size: 1.875rem;
+        }
+        
+        .text-2xl {
+            font-size: 1.5rem;
+        }
+        
+        .text-xl {
+            font-size: 1.25rem;
+        }
+        
+        .text-lg {
+            font-size: 1.125rem;
+        }
+        
+        /* Better padding on mobile */
+        .p-6 {
+            padding: 1.25rem;
+        }
+        
+        .p-8 {
+            padding: 1.5rem;
+        }
+        
+        /* Better gaps on mobile */
+        .gap-6 {
+            gap: 1.25rem;
+        }
+        
+        .gap-8 {
+            gap: 1.5rem;
+        }
+    }
+</style>
+{% endblock %} 

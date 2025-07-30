@@ -1,0 +1,179 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Donate - Bethel Church Network{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Support Our Churches</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Your generosity helps our Bethel churches continue their mission of spreading God's love and serving communities around the world.
+        </p>
+    </div>
+
+    <!-- Global Donation Section -->
+    <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] rounded-lg shadow-lg p-8 mb-12 text-white">
+        <div class="text-center mb-6">
+            <h2 class="text-3xl font-bold mb-4">Global Bethel Network</h2>
+            <p class="text-xl opacity-90">Support the global Bethel church network and our shared mission</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 text-center">
+                <div class="text-4xl mb-4">🌍</div>
+                <h3 class="text-xl font-semibold mb-2">Global Outreach</h3>
+                <p class="opacity-90">Support our international mission work and church planting efforts</p>
+            </div>
+            
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 text-center">
+                <div class="text-4xl mb-4">📚</div>
+                <h3 class="text-xl font-semibold mb-2">Leadership Training</h3>
+                <p class="opacity-90">Help train pastors and church leaders worldwide</p>
+            </div>
+            
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 text-center">
+                <div class="text-4xl mb-4">🤝</div>
+                <h3 class="text-xl font-semibold mb-2">Community Support</h3>
+                <p class="opacity-90">Support humanitarian aid and community development projects</p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="mailto:donations@bethelnetwork.org" 
+               class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200 inline-block">
+                Contact for Global Donations
+            </a>
+        </div>
+    </div>
+
+    <!-- Churches by Region -->
+    <div class="mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Support Local Churches</h2>
+        
+        {% if churches_with_donations %}
+        <div class="space-y-8">
+            {% for church in churches_with_donations %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        {% if church.logo %}
+                        <img src="{{ church.get_logo_url }}" alt="{{ church.name }}" class="w-16 h-16 rounded-full mr-4">
+                        {% else %}
+                        <div class="w-16 h-16 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] rounded-full flex items-center justify-center mr-4">
+                            <span class="text-white text-xl font-bold">{{ church.name|first }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-semibold text-gray-900">{{ church.name }}</h3>
+                            <p class="text-gray-600">{{ church.city }}, {{ church.country }}</p>
+                            {% if church.pastor_name %}
+                            <p class="text-sm text-gray-500">Pastor {{ church.pastor_name }}</p>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'church_donation' church.id %}" 
+                           class="bg-[#1e3a8a] text-white px-6 py-2 rounded-md hover:bg-[#1e3a8a] transition duration-200">
+                            Donate
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Preview of donation methods -->
+                <div class="p-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Available Donation Methods</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for method in church.donationmethod_set.all|slice:":3" %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-medium text-gray-900">{{ method.name }}</h5>
+                                {% if method.is_default %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#1e3a8a] text-white">
+                                    Recommended
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-600">{{ method.get_payment_type_display }}</p>
+                            {% if method.description %}
+                            <p class="text-sm text-gray-500 mt-1">{{ method.description|truncatechars:60 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% if church.donationmethod_set.count > 3 %}
+                        <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-center">
+                            <span class="text-sm text-gray-500">
+                                +{{ church.donationmethod_set.count|add:"-3" }} more methods
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="text-gray-400 mb-4">
+                <svg class="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No churches with donation methods yet</h3>
+            <p class="text-gray-500">Our churches are setting up their donation systems. Please check back soon!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Donation Information -->
+    <div class="bg-gray-50 rounded-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">About Your Donations</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-[#1e3a8a] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Secure & Safe</h3>
+                <p class="text-gray-600">All donations are processed through secure, trusted payment platforms</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-12 h-12 bg-[#1e3a8a] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Transparent</h3>
+                <p class="text-gray-600">Each church provides clear information about how donations are used</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-12 h-12 bg-[#1e3a8a] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Impactful</h3>
+                <p class="text-gray-600">Your donations directly support local ministries and community outreach</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="text-center mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Questions About Donations?</h2>
+        <p class="text-gray-600 mb-6">Contact us for more information about our donation process</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="mailto:donations@bethelnetwork.org" 
+               class="bg-[#1e3a8a] text-white px-6 py-3 rounded-md hover:bg-[#1e3a8a] transition duration-200">
+                Email Us
+            </a>
+            <a href="{% url 'about' %}" 
+               class="bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition duration-200">
+                Learn More About Us
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

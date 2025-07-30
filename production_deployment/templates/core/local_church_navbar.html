@@ -1,0 +1,105 @@
+<header class="bg-[#1e3a8a] text-white shadow-lg sticky top-0 z-50 border-b border-white">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="/" class="text-sm md:text-lg font-semibold font-serif leading-tight">{{ church.name|default:"Bethel Prayer Ministry" }}</a>
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <a href="{% url 'church_home' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Home</a>
+            <a href="{% url 'church_about' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About</a>
+            <a href="{% url 'church_events' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Events</a>
+            <a href="{% url 'church_ministries' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Ministries</a>
+            <a href="{% url 'church_sermons' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-white">Sermons</a>
+            <a href="{% url 'church_news' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">News</a>
+            {% if church.shop_url %}
+              <a href="{{ church.shop_url }}" target="_blank" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
+            {% endif %}
+            <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
+            <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
+        </nav>
+        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">
+        <!-- Close button at the top (fixed) -->
+        <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-white hover:text-gray-300 p-2 z-10" aria-label="Close menu">&times;</button>
+        
+        <!-- Scrollable navigation links container -->
+        <div class="flex-1 overflow-y-auto pt-16 pb-8">
+            <div class="w-full max-w-sm mx-auto px-4">
+                <a href="{% url 'church_home' church.id %}" class="block w-full text-center py-3 bg-white bg-opacity-20 rounded-lg mb-2">Home</a>
+                <a href="{% url 'church_about' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">About</a>
+                <a href="{% url 'church_events' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Events</a>
+                <a href="{% url 'church_ministries' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Ministries</a>
+                <a href="{% url 'church_sermons' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Sermons</a>
+                <a href="{% url 'church_news' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">News</a>
+                {% if church.shop_url %}
+                  <a href="{{ church.shop_url }}" target="_blank" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
+                {% endif %}
+                <a href="{% url 'church_donation' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Give</a>
+                <a href="{% url 'church_donation' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Donate</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const menuBtn = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+    const closeBtn = document.getElementById('mobile-menu-close');
+    
+    function openMobileMenu() {
+        menu.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+    
+    function closeMobileMenu() {
+        menu.classList.add('hidden');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+    
+    // Open menu
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openMobileMenu();
+        });
+    }
+    
+    // Close menu
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMobileMenu();
+        });
+    }
+    
+    // Close menu when clicking a link
+    if (menu) {
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function() {
+                closeMobileMenu();
+            });
+        });
+    }
+    
+    // Close menu when clicking outside
+    menu.addEventListener('click', function(e) {
+        if (e.target === menu) {
+            closeMobileMenu();
+        }
+    });
+    
+    // Close menu on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+            closeMobileMenu();
+        }
+    });
+});
+</script> 

@@ -1,100 +1,164 @@
 # Local Development Guide
 
-This guide explains how to set up and run the Bethel project locally.
+## Overview
+This guide will help you set up and run the Bethel Prayer Ministry Django project locally on your computer.
+
+## Prerequisites
+- Python 3.8 or higher
+- Git
+- A code editor (VS Code, PyCharm, etc.)
 
 ## Quick Start
 
-### Option 1: PowerShell Script (Recommended)
-```powershell
-.\start_local.ps1
-```
-
-### Option 2: Batch File (Windows)
-```cmd
-start_local_fixed.bat
-```
-
-### Option 3: Python Script
+### 1. Clone the Repository
 ```bash
-python start_local_server.py
+git clone <repository-url>
+cd bethel
 ```
 
-### Option 4: Manual Setup
-```powershell
-# Set environment variable
-$env:DJANGO_DEBUG = "True"
-
-# Start server
-python manage.py runserver
-```
-
-## Environment Configuration
-
-The project automatically detects whether it's running locally or in production:
-
-- **Local Development** (`DEBUG=True`):
-  - Uses SQLite database (`db.sqlite3`)
-  - Uses local file storage (`media/` folder)
-  - Ignores Railway environment variables
-
-- **Production** (`DEBUG=False`):
-  - Uses Railway PostgreSQL database
-  - Uses Cloudinary for image storage
-  - Uses Railway environment variables
-
-## Verification
-
-To check if your local environment is configured correctly:
-
+### 2. Create Virtual Environment
 ```bash
-python check_local_env.py
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-You should see:
-- ✅ Local development environment is configured correctly!
-- 📦 Using SQLite database
-- 🖼️ Using local file storage
-
-## Troubleshooting
-
-### Issue: Still connecting to Railway database
-**Solution**: Set the environment variable in your current shell:
-```powershell
-$env:DJANGO_DEBUG = "True"
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
 ```
 
-### Issue: Images not showing locally
-**Solution**: Make sure you have images in the `media/` folder. The local server serves images from the local filesystem.
+### 4. Set Up Environment Variables
+Create a `.env` file in the project root:
+```bash
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+```
 
-### Issue: Database connection errors
-**Solution**: Make sure `db.sqlite3` exists. If not, run:
+### 5. Run Database Migrations
 ```bash
 python manage.py migrate
 ```
 
-## File Structure
+### 6. Create Superuser (Optional)
+```bash
+python manage.py createsuperuser
+```
+
+### 7. Start Development Server
+```bash
+python manage.py runserver
+```
+
+Your site will be available at: http://127.0.0.1:8000/
+
+## Project Structure
 
 ```
 bethel/
-├── db.sqlite3          # Local SQLite database
-├── media/              # Local media files
-├── start_local.ps1     # PowerShell startup script
-├── start_local_fixed.bat # Windows batch startup script
-├── start_local_server.py # Python startup script
-└── check_local_env.py  # Environment verification script
+├── backend/           # Django settings and configuration
+├── core/             # Main Django app with models, views, etc.
+├── templates/        # HTML templates
+├── static/          # CSS, JS, images
+├── media/           # User-uploaded files (local development)
+├── requirements.txt # Python dependencies
+└── manage.py       # Django management script
 ```
 
 ## Development Workflow
 
-1. **Start local server**: Use one of the convenience scripts above
-2. **Make changes**: Edit code, templates, etc.
-3. **Test locally**: Visit http://127.0.0.1:8000
-4. **Commit changes**: `git add . && git commit -m "message"`
-5. **Deploy**: `git push` (automatically deploys to Railway)
+### Making Changes
+1. Create a new branch for your feature
+2. Make your changes
+3. Test locally
+4. Commit and push your changes
 
-## Notes
+### Database Changes
+If you modify models:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
-- The local server runs on `http://127.0.0.1:8000`
-- Local development uses SQLite, which is faster for development
-- Images uploaded locally are stored in the `media/` folder
-- The production environment on Railway uses PostgreSQL and Cloudinary 
+### Static Files
+After modifying CSS/JS:
+```bash
+python manage.py collectstatic
+```
+
+## Environment Differences
+
+### Local Development
+- Uses SQLite database
+- Uses local storage for media files
+- Debug mode enabled
+- Detailed error pages
+
+### Production
+- Uses PostgreSQL database
+- Uses ImageKit for image storage
+- Debug mode disabled
+- Optimized for performance
+
+## Common Issues
+
+### Port Already in Use
+If port 8000 is busy:
+```bash
+python manage.py runserver 8001
+```
+
+### Database Issues
+Reset the database:
+```bash
+rm db.sqlite3
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+### Static Files Not Loading
+```bash
+python manage.py collectstatic --clear
+```
+
+## Testing
+
+### Run Tests
+```bash
+python manage.py test
+```
+
+### Run Specific Tests
+```bash
+python manage.py test core.tests
+```
+
+## Debugging
+
+### Django Debug Toolbar
+The project includes Django Debug Toolbar for local development. It will automatically appear when `DEBUG=True`.
+
+### Logging
+Check the console output for detailed error messages and SQL queries.
+
+## Deployment Preparation
+
+Before deploying:
+1. Set `DEBUG=False` in production
+2. Update `ALLOWED_HOSTS` with your domain
+3. Set up environment variables for production
+4. Configure your production database
+5. Set up ImageKit for media storage
+
+## Support
+
+If you encounter issues:
+1. Check the Django documentation
+2. Review the project's README.md
+3. Check the deployment guides in the project
+4. Look at the error logs in the console 

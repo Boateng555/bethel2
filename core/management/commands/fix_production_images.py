@@ -25,7 +25,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.ERROR('❌ Connected to local SQLite database!')
             )
-            self.stdout.write('💡 This command needs to run on Railway with production database.')
+            self.stdout.write('💡 This command needs to run in production with the production database.')
             return
         
         self.stdout.write(self.style.SUCCESS('✅ Connected to production database'))
@@ -76,52 +76,8 @@ class Command(BaseCommand):
                     self.stdout.write(f'    ✅ Already ImageKit URL')
                     continue
                 
-                # Handle Cloudinary URLs
-                if 'res.cloudinary.com' in field_str:
-                    try:
-                        self.stdout.write(f'    📤 Downloading from Cloudinary...')
-                        
-                        # Download from Cloudinary
-                        response = requests.get(field_str, timeout=30)
-                        if response.status_code != 200:
-                            self.stdout.write(
-                                self.style.ERROR(f'      ❌ Failed to download: {response.status_code}')
-                            )
-                            total_errors += 1
-                            continue
-                        
-                        # Get filename
-                        filename = os.path.basename(field_str.split('/')[-1])
-                        if '?' in filename:
-                            filename = filename.split('?')[0]
-                        
-                        # Create new file path for ImageKit
-                        new_path = f"{folder}/{filename}"
-                        
-                        # Create ContentFile
-                        content_file = ContentFile(response.content, name=filename)
-                        
-                        # Save to ImageKit
-                        from django.core.files.storage import default_storage
-                        saved_path = default_storage.save(new_path, content_file)
-                        
-                        # Update the field
-                        setattr(instance, field_name, saved_path)
-                        instance.save()
-                        
-                        self.stdout.write(
-                            self.style.SUCCESS(f'      ✅ Migrated to: {saved_path}')
-                        )
-                        total_fixed += 1
-                        
-                    except Exception as e:
-                        self.stdout.write(
-                            self.style.ERROR(f'      ❌ Error: {e}')
-                        )
-                        total_errors += 1
-                
                 # Handle local file paths
-                elif field_str.startswith('/media/') or field_str.startswith('media/'):
+                if field_str.startswith('/media/') or field_str.startswith('media/'):
                     try:
                         self.stdout.write(f'    📁 Converting local path...')
                         
@@ -145,6 +101,33 @@ class Command(BaseCommand):
                             self.style.ERROR(f'      ❌ Error: {e}')
                         )
                         total_errors += 1
+                
+                # Handle external URLs (ImageKit, etc.)
+                if field_str.startswith('http'):
+                    self.stdout.write(f'    📤 Downloading from external URL...')
+                    
+                    try:
+                        # Download from external URL
+                        response = requests.get(field_str, timeout=10)
+                        response.raise_for_status()
+                        
+                        # Save to local media
+                        file_path = os.path.join(settings.MEDIA_ROOT, field_name, filename)
+                        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                        
+                        with open(file_path, 'wb') as f:
+                            f.write(response.content)
+                        
+                        # Update field to local path
+                        setattr(obj, field_name, f'{field_name}/{filename}')
+                        obj.save()
+                        
+                        self.stdout.write(f'    ✅ Downloaded and saved locally')
+                        fixed_count += 1
+                        
+                    except Exception as e:
+                        self.stdout.write(f'    ❌ Failed to download: {e}')
+                        continue
                 
                 # Upload placeholders for missing images
                 elif options['upload_placeholders']:

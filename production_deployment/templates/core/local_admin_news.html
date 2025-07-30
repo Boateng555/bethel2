@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Manage News - {{ church.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <h1 class="text-3xl font-bold text-gray-900">Manage News</h1>
+        <p class="mt-2 text-gray-600">{{ church.name }} - {{ church.city }}, {{ church.country }}</p>
+        
+        <div class="mt-4 space-x-4">
+            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                ← Back to Dashboard
+            </a>
+            <a href="/admin/core/news/add/" target="_blank" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">
+                + Add News Article
+            </a>
+        </div>
+
+        {% if news %}
+        <div class="mt-8">
+            <h2 class="text-lg font-medium text-gray-900">All News Articles ({{ news.count }})</h2>
+            {% for article in news %}
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h3 class="text-lg font-semibold">{{ article.title }}</h3>
+                <p class="text-sm text-gray-500">{{ article.published_date|date:"M d, Y" }}</p>
+                {% if article.is_public %}
+                <span class="bg-[#1e3a8a] text-[#1e3a8a] px-2 py-1 rounded text-xs">Public</span>
+                {% else %}
+                <span class="bg-[#1e3a8a] text-[#1e3a8a] px-2 py-1 rounded text-xs">Private</span>
+                {% endif %}
+                <div class="mt-2">
+                    <a href="/admin/core/news/{{ article.id }}/change/" target="_blank" class="text-[#1e3a8a] hover:text-[#1e3a8a] mr-4">Edit</a>
+                    {% if article.global_feature_status == 'none' or article.global_feature_status == 'rejected' %}
+                        <form method="post" action="{% url 'request_global_news_feature' article.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="text-[#1e3a8a] hover:text-[#1e3a8a]">Request Global Feature</button>
+                        </form>
+                    {% elif article.global_feature_status == 'pending' %}
+                        <span class="text-[#1e3a8a] font-semibold">Pending Global Approval</span>
+                    {% elif article.global_feature_status == 'approved' %}
+                        <span class="text-[#1e3a8a] font-semibold">Globally Featured</span>
+                    {% elif article.global_feature_status == 'rejected' %}
+                        <span class="text-[#1e3a8a] font-semibold">Rejected</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-8 text-center">
+            <h3 class="text-lg font-medium text-gray-900">No news articles</h3>
+            <p class="text-sm text-gray-500">Get started by creating your first news article.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+ 

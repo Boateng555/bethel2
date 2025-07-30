@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ImageKit Production Setup Script
-This script helps you set up ImageKit for production deployment on Railway.
+This script helps you set up ImageKit for production deployment.
 """
 
 import os
@@ -131,40 +131,6 @@ def test_imagekit_upload(config):
         print(f"❌ ImageKit upload test failed: {e}")
         return False
 
-def setup_railway_instructions():
-    """Provide instructions for setting up ImageKit on Railway"""
-    print(f"\n🚀 Railway Setup Instructions")
-    print("=" * 50)
-    
-    print("""
-To deploy with ImageKit on Railway:
-
-1. 📝 Get ImageKit Credentials:
-   - Go to https://imagekit.io
-   - Sign up for a free account
-   - Go to Developer Options → API Keys
-   - Copy your credentials
-
-2. 🔧 Set Railway Environment Variables:
-   - Go to your Railway project dashboard
-   - Click on your service
-   - Go to "Variables" tab
-   - Add these variables:
-     * IMAGEKIT_PUBLIC_KEY=your_public_key
-     * IMAGEKIT_PRIVATE_KEY=your_private_key
-     * IMAGEKIT_URL_ENDPOINT=your_url_endpoint
-
-3. 🚀 Deploy:
-   - Commit and push your changes
-   - Railway will automatically redeploy
-   - Check logs for "🖼️ Using ImageKit for storage"
-
-4. 📊 Verify:
-   - Visit your live site
-   - Upload an image through admin
-   - Check that image URL points to ImageKit domain
-""")
-
 def create_env_template():
     """Create a template .env file for local testing"""
     print(f"\n📄 Creating .env Template")
@@ -221,16 +187,13 @@ def main():
         print(f"   ImageKit credentials are not configured")
         print(f"   Follow the instructions below to set them up")
     
-    # Provide setup instructions
-    setup_railway_instructions()
-    
     # Create template
     create_env_template()
     
     print(f"\n" + "=" * 60)
     print(f"🎯 Next Steps:")
     print(f"1. Get ImageKit credentials from https://imagekit.io")
-    print(f"2. Set environment variables in Railway dashboard")
+    print(f"2. Set environment variables in your environment")
     print(f"3. Deploy your application")
     print(f"4. Test image uploads on your live site")
     print(f"=" * 60)

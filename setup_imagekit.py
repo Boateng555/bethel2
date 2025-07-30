@@ -66,8 +66,8 @@ def setup_imagekit():
     print("3. Restart your Django server")
     print("4. Test by uploading an image through the admin interface")
     
-    print("\n💡 For production (Railway), set these in Railway dashboard:")
-    print("   - Go to your Railway project")
+    print("\n💡 For production, set these in your environment dashboard:")
+    print("   - Go to your deployment project")
     print("   - Click Variables tab")
     print("   - Add the three IMAGEKIT_* variables")
 

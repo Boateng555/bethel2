@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script to run Django migrations on Railway
+Script to run Django migrations in production
 """
 import os
 import django

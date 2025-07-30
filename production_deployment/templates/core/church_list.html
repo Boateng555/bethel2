@@ -1,0 +1,350 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Find a Bethel Church - Church Directory{% endblock %}
+
+{% block content %}
+<style>
+/* Mobile-first responsive design */
+@media (max-width: 640px) {
+  .church-card {
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+  
+  .church-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+  
+  .church-card .p-6 {
+    padding: 1rem;
+  }
+  
+  .church-card .text-xl {
+    font-size: 1.125rem;
+  }
+  
+  .church-card .text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .church-card .flex.gap-3 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .church-card .flex.gap-3 a {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .church-card .h-48 {
+    height: 12rem;
+  }
+  
+  .church-card .min-h-\[400px\] {
+    min-height: auto;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .church-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .church-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+</style>
+
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Find a Bethel Church</h1>
+        <p class="text-lg text-gray-600">Discover Bethel churches around the world</p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <form method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search Input -->
+                <div class="md:col-span-2">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Churches</label>
+                    <input type="text" 
+                           id="search" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="Search by name, city, country, or pastor..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900 placeholder-gray-500">
+                </div>
+                
+                <!-- Country Filter -->
+                <div>
+                    <label for="country" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select id="country" name="country" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a]">
+                        <option value="">All Countries</option>
+                        {% for country in countries %}
+                        <option value="{{ country }}" {% if country == country_filter %}selected{% endif %}>{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- City Filter -->
+                <div>
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <select id="city" name="city" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a]">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                        <option value="{{ city }}" {% if city == city_filter %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Search Button -->
+            <div class="flex justify-center">
+                <button type="submit" class="bg-[#1e3a8a] text-white px-6 py-2 rounded-md hover:bg-[#1e3a8a] transition duration-200">
+                    Search Churches
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold text-gray-900">
+                {% if search_query or country_filter or city_filter %}
+                    Search Results ({{ churches.count }} churches found)
+                {% else %}
+                    All Churches ({{ churches.count }} churches)
+                {% endif %}
+            </h2>
+            
+            {% if search_query or country_filter or city_filter %}
+            <a href="{% url 'church_list' %}" class="text-[#1e3a8a] hover:text-[#1e3a8a]">Clear Filters</a>
+            {% endif %}
+        </div>
+
+        {% if churches %}
+        <div class="church-grid">
+            {% for church in churches %}
+            <div class="church-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
+                <!-- Image Section -->
+                {% if church.logo %}
+                <div class="relative h-48 overflow-hidden">
+                    <img src="{{ church.get_logo_url }}" 
+                         alt="{{ church.name }} logo" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center" style="display: none;">
+                        <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
+                    </div>
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                {% elif church.banner_image %}
+                <div class="relative h-48 overflow-hidden">
+                    <img src="{{ church.get_banner_url }}" 
+                         alt="{{ church.name }} banner" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center" style="display: none;">
+                        <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
+                    </div>
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                {% else %}
+                <div class="relative h-48 bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center overflow-hidden">
+                    <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                {% endif %}
+                
+                <!-- Country Badge -->
+                <div class="absolute top-4 right-4">
+                    <span class="bg-white/90 backdrop-blur-sm text-[#1e3a8a] text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                        {{ church.country }}
+                    </span>
+                </div>
+                
+                <!-- Content Section -->
+                <div class="p-6 flex flex-col flex-1">
+                    <!-- Church Name -->
+                    <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1e3a8a] transition duration-200">
+                        {{ church.name }}
+                    </h3>
+                    
+                    <!-- Location Info -->
+                    <div class="flex items-center text-gray-600 mb-3">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                        </svg>
+                        {% if church.latitude and church.longitude %}
+                        <a href="https://maps.google.com/?q={{ church.latitude }},{{ church.longitude }}" 
+                           target="_blank" 
+                           class="text-sm text-[#1e3a8a] hover:underline cursor-pointer"
+                           title="Open in Google Maps">
+                            {{ church.city }}, {{ church.country }}
+                        </a>
+                        <span class="text-xs text-[#1e3a8a] ml-2 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}" style="display: none;">
+                            <span class="distance-text"></span>
+                        </span>
+                        {% else %}
+                        <span class="text-sm">{{ church.city }}, {{ church.country }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Pastor Info -->
+                    {% if church.pastor_name %}
+                    <div class="flex items-center text-gray-600 mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm">{{ church.pastor_name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Description -->
+                    <p class="text-gray-700 text-sm mb-6 flex-1 leading-relaxed">
+                        {{ church.description|default:"Join us for worship and fellowship."|truncatewords:15 }}
+                    </p>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 mt-auto">
+                        <a href="{% url 'church_home' church.id %}" 
+                           class="flex-1 bg-[#1e3a8a] text-white text-sm font-semibold px-4 py-3 rounded-lg hover:bg-[#1e40af] transition duration-200 text-center">
+                            Visit Website
+                        </a>
+                        <a href="{% url 'church_detail' church.id %}" 
+                           class="flex-1 bg-gray-100 text-[#1e3a8a] text-sm font-semibold px-4 py-3 rounded-lg hover:bg-gray-200 transition duration-200 text-center">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No churches found</h3>
+            <p class="text-gray-600">Try adjusting your search criteria or browse all churches.</p>
+            <a href="{% url 'church_list' %}" class="mt-4 inline-block bg-[#1e3a8a] text-white px-4 py-2 rounded-md hover:bg-[#1e3a8a]">
+                View All Churches
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Call to Action -->
+    <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] rounded-lg p-8 text-center text-white">
+        <h3 class="text-2xl font-bold mb-4">Is your church not listed?</h3>
+        <p class="text-lg mb-6">Join the global Bethel network and connect with churches worldwide.</p>
+        <a href="/admin/core/churchapplication/add/" class="bg-white text-[#1e3a8a] px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition duration-200">
+            Apply to Join
+        </a>
+    </div>
+</div>
+
+<!-- Add geolocation and distance calculation JS -->
+<script>
+// Calculate distance between two points using Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c; // Distance in kilometers
+    return distance;
+}
+
+// Format distance for display
+function formatDistance(distance) {
+    if (distance < 1) {
+        return Math.round(distance * 1000) + 'm';
+    } else if (distance < 10) {
+        return distance.toFixed(1) + 'km';
+    } else {
+        return Math.round(distance) + 'km';
+    }
+}
+
+// Update distance display for all churches
+function updateDistances(userLat, userLng) {
+    const distanceElements = document.querySelectorAll('.distance-info');
+    distanceElements.forEach(element => {
+        const churchLat = parseFloat(element.dataset.lat);
+        const churchLng = parseFloat(element.dataset.lng);
+        const distance = calculateDistance(userLat, userLng, churchLat, churchLng);
+        const distanceText = element.querySelector('.distance-text');
+        distanceText.textContent = `(${formatDistance(distance)})`;
+        element.style.display = 'inline';
+    });
+}
+
+// Initialize geolocation and distance calculation
+window.addEventListener('DOMContentLoaded', function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            // Update distances for all churches
+            updateDistances(userLat, userLng);
+            
+            // Use a free geocoding API to get city/country from lat/lng
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.address) {
+                        const country = data.address.country;
+                        const city = data.address.city || data.address.town || data.address.village;
+                        // Set the select fields if not already set
+                        const countrySelect = document.getElementById('country');
+                        const citySelect = document.getElementById('city');
+                        if (countrySelect && !countrySelect.value && country) {
+                            for (let opt of countrySelect.options) {
+                                if (opt.text === country) {
+                                    opt.selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (citySelect && !citySelect.value && city) {
+                            for (let opt of citySelect.options) {
+                                if (opt.text === city) {
+                                    opt.selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                        // Optionally auto-submit the form if both are set
+                        if (countrySelect.value && citySelect.value) {
+                            countrySelect.form.submit();
+                        }
+                    }
+                });
+        }, function(error) {
+            console.log('Geolocation not available or denied');
+        });
+    }
+});
+</script>
+{% endblock %} 

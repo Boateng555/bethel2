@@ -1,0 +1,247 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}About Us - Bethel Prayer Ministry International{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-deep-blue via-blue-800 to-[#1e3a8a] text-white py-20">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative max-w-6xl mx-auto px-6 text-center">
+        {% if about_page and about_page.logo %}
+            <img src="{{ about_page.logo }}" alt="Bethel Logo" class="mx-auto mb-8 w-32 h-32 object-contain drop-shadow-lg" />
+        {% endif %}
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            About <span class="text-white">Bethel</span>
+        </h1>
+        {% if about_page and about_page.intro %}
+            <p class="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90">
+                {{ about_page.intro }}
+            </p>
+        {% else %}
+            <p class="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90">
+                Connecting churches worldwide through prayer and ministry
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-6 py-16">
+    {% if about_page %}
+        <!-- Founding Story Section -->
+        {% if about_page.founding_story %}
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-deep-blue mb-4">Our Founding Story</h2>
+                <div class="w-24 h-1 bg-white mx-auto"></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                {% if about_page.founder_image %}
+                    <div class="text-center mb-8">
+                        <img src="{{ about_page.founder_image }}" alt="Founder" class="mx-auto rounded-full w-48 h-48 object-cover shadow-lg" />
+                    </div>
+                {% endif %}
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ about_page.founding_story|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Timeline Section -->
+        {% if about_page.timeline %}
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-deep-blue mb-4">Our Journey</h2>
+                <div class="w-24 h-1 bg-white mx-auto"></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ about_page.timeline|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Leadership Timeline -->
+        {% if about_page.leadership_timeline %}
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-deep-blue mb-4">Leadership Timeline</h2>
+                <div class="w-24 h-1 bg-white mx-auto"></div>
+            </div>
+            <div class="bg-gradient-to-br from-deep-blue to-[#1e3a8a] text-white rounded-xl p-8 shadow-xl">
+                <div class="prose prose-invert max-w-none">
+                    {{ about_page.leadership_timeline|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Ministry Today -->
+        {% if about_page.ministry_today %}
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-deep-blue mb-4">Ministry Today</h2>
+                <div class="w-24 h-1 bg-white mx-auto"></div>
+            </div>
+            <div class="bg-gradient-to-r from-very-white to-white rounded-2xl p-8 md:p-12 shadow-xl">
+                {% if about_page.extra_image %}
+                    <div class="text-center mb-8">
+                        <img src="{{ about_page.extra_image }}" alt="Ministry Today" class="mx-auto rounded-lg max-w-md shadow-lg" />
+                    </div>
+                {% endif %}
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ about_page.ministry_today|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Quick Facts -->
+        {% if about_page.quick_facts %}
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-deep-blue mb-4">Quick Facts</h2>
+                <div class="w-24 h-1 bg-white mx-auto"></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ about_page.quick_facts|linebreaks }}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+    {% else %}
+        <!-- Fallback Content: Hardcoded Narrative About Us -->
+        <div class="text-center py-20">
+            <h2 class="text-4xl font-bold text-deep-blue mb-8">About Us</h2>
+            <div class="bg-white rounded-2xl shadow-xl p-12 max-w-4xl mx-auto text-left text-gray-800">
+                <h3 class="text-2xl font-bold mb-4">Our History</h3>
+                <p class="mb-4">Founded in 2005, <b>Bethel Prayer Ministry International</b> began as a small, Spirit-filled prayer group in response to a vision God gave to <b>Rev. Benjamin Mensah</b>. With a handful of believers, Rev. Mensah started weekly gatherings focused on fervent prayer, worship, and the study of God’s Word. The group quickly grew as people experienced healing, deliverance, and transformation through the power of prayer.</p>
+                <p class="mb-4">Over the years, Bethel Prayer Ministry International has blossomed into a dynamic, multi-cultural church family with branches in the United Kingdom, United States, and other nations. The ministry is known for its passionate worship, powerful intercession, and a deep commitment to seeing lives changed by the love of Jesus Christ.</p>
+                <h3 class="text-xl font-bold mt-8 mb-2">Our Founder</h3>
+                <p class="mb-4"><b>Rev. Benjamin Mensah</b> is a visionary leader, teacher, and intercessor. He is deeply committed to raising up a generation of believers who are rooted in prayer and equipped to impact their world. Rev. Mensah’s ministry is marked by humility, compassion, and a relentless pursuit of God’s presence. He is supported by a dedicated team of pastors, elders, and ministry leaders who share his heart for revival and community transformation.</p>
+                {% if leadership_page %}
+                <h3 class="text-2xl font-bold mt-12 mb-6 text-center">Our Leadership</h3>
+                <div class="flex flex-wrap justify-center gap-8">
+                  {% if leadership_page.chairman_image %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.chairman_image }}" alt="Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Chairman</h4>
+                      <p class="text-gray-500 mb-2">{{ leadership_page.intro|default:"Our Chairman leads with vision and integrity." }}</p>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.vice_chairman_image %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.vice_chairman_image }}" alt="Vice Chairman" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Vice Chairman</h4>
+                      <p class="text-gray-500 mb-2">{{ leadership_page.leadership_team|default:"Supporting the vision and mission of the ministry." }}</p>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.board_image %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.board_image }}" alt="Board Members" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Board Members</h4>
+                      <p class="text-gray-500 mb-2">{{ leadership_page.board_members|default:"Guiding the ministry with wisdom and experience." }}</p>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.team_image %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.team_image }}" alt="Leadership Team" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Leadership Team</h4>
+                      <p class="text-gray-500 mb-2">{{ leadership_page.leadership_team|default:"A dedicated team serving the church and community." }}</p>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.leadership_photo_1 %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.leadership_photo_1 }}" alt="Leadership Photo 1" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Leadership Photo 1</h4>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.leadership_photo_2 %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.leadership_photo_2 }}" alt="Leadership Photo 2" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Leadership Photo 2</h4>
+                    </div>
+                  {% endif %}
+                  {% if leadership_page.leadership_photo_3 %}
+                    <div class="bg-gray-50 rounded-xl shadow p-6 w-72 flex flex-col items-center">
+                      <img src="{{ leadership_page.leadership_photo_3 }}" alt="Leadership Photo 3" class="w-24 h-24 rounded-full object-cover mb-4" />
+                      <h4 class="font-bold text-lg mb-1">Leadership Photo 3</h4>
+                    </div>
+                  {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center text-gray-500 mt-12">Leadership information will appear here soon.</div>
+                {% endif %}
+                <h3 class="text-xl font-bold mt-8 mb-2">What We Do</h3>
+                <p class="mb-4">Bethel Prayer Ministry International is more than a church—it’s a movement. Our ministry is built on four pillars:</p>
+                <ul class="list-disc pl-6 mb-4">
+                    <li><b>Prayer:</b> We believe prayer is the engine of spiritual growth and breakthrough. We host daily and weekly prayer meetings, all-night vigils, and special prayer conferences that draw people from across the globe.</li>
+                    <li><b>Worship:</b> Our worship services are vibrant and Spirit-led, creating an atmosphere where people can encounter God, receive healing, and be refreshed.</li>
+                    <li><b>Teaching & Discipleship:</b> We offer Bible studies, discipleship classes, and leadership training to help believers grow in faith and maturity. Our teaching is rooted in Scripture and relevant to everyday life.</li>
+                    <li><b>Outreach & Missions:</b> We are passionate about reaching the lost and serving our communities. Our outreach programs include food distribution, support for the homeless, hospital and prison ministry, youth empowerment, and evangelistic crusades.</li>
+                </ul>
+                <h3 class="text-xl font-bold mt-8 mb-2">Our Global Impact</h3>
+                <p class="mb-4">Bethel Prayer Ministry International has touched thousands of lives through its local and international branches. Our annual conventions and prayer summits bring together believers from different nations to seek God’s face and receive fresh vision for the year ahead. Through our online ministry, we reach people in Africa, Europe, North America, and beyond—offering hope, encouragement, and practical support.</p>
+                <h3 class="text-xl font-bold mt-8 mb-2">Our Mission</h3>
+                <p class="mb-4">To spread the gospel of Jesus Christ and make disciples of all nations through prayer, teaching, and community service.</p>
+                <h3 class="text-xl font-bold mt-8 mb-2">Our Vision</h3>
+                <p class="mb-4">To be a global spiritual center where lives are transformed through the power of prayer and the Word of God.</p>
+                <h3 class="text-xl font-bold mt-8 mb-2">Core Values</h3>
+                <ul class="list-disc pl-6 mb-4">
+                    <li><b>Prayer:</b> We believe in the transformative power of prayer.</li>
+                    <li><b>Biblical Teaching:</b> We are committed to sound biblical doctrine.</li>
+                    <li><b>Service:</b> We serve God by serving others.</li>
+                    <li><b>Community:</b> We foster a loving and supportive community.</li>
+                    <li><b>Integrity:</b> We strive to live out our faith with honesty and transparency.</li>
+                    <li><b>Compassion:</b> We reach out to the hurting and marginalized with the love of Christ.</li>
+                </ul>
+                <h3 class="text-xl font-bold mt-8 mb-2">Join Us</h3>
+                <p>Whether you are seeking a church home, need prayer, or want to grow in your faith, Bethel Prayer Ministry International welcomes you. We are a family of believers from all backgrounds, united by our love for God and our desire to make a difference in the world. Come and experience the power of prayer, the warmth of community, and the life-changing message of Jesus Christ.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Call to Action Section -->
+<section class="bg-gradient-to-r from-deep-blue to-[#1e3a8a] text-white py-16">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-3xl font-bold mb-6">Join Our Global Family</h2>
+        <p class="text-xl mb-8 opacity-90">
+            Experience the power of prayer and ministry that spans continents
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'donation' %}" class="bg-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] transition-colors">
+                Support Our Mission
+            </a>
+            <a href="{% url 'events' %}" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-deep-blue transition-colors">
+                Attend Events
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .prose {
+        max-width: none;
+    }
+    .prose p {
+        margin-bottom: 1rem;
+    }
+    .prose strong {
+        color: #1e40af;
+        font-weight: 600;
+    }
+    .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+    }
+    .prose li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %} 

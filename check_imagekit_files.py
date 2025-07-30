@@ -1,13 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
-Check ImageKit files and verify specific image
+Check existing files in ImageKit account
 """
 
 import os
+import sys
 import django
-from imagekitio import ImageKit
+from pathlib import Path
 
-# Set environment variables
+# Add the project root to Python path
+project_root = Path(__file__).resolve().parent
+sys.path.insert(0, str(project_root))
+
+# Set ImageKit environment variables BEFORE Django setup
 os.environ['IMAGEKIT_PUBLIC_KEY'] = 'public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU='
 os.environ['IMAGEKIT_PRIVATE_KEY'] = 'private_Dnsrj2VW7uJakaeMaNYaav+P784='
 os.environ['IMAGEKIT_URL_ENDPOINT'] = 'https://ik.imagekit.io/9buar9mbp'
@@ -16,67 +21,78 @@ os.environ['IMAGEKIT_URL_ENDPOINT'] = 'https://ik.imagekit.io/9buar9mbp'
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-from core.models import News
+from imagekitio import ImageKit
+import requests
 
-print("🔍 Checking ImageKit files...")
-
-# Initialize ImageKit
-imagekit = ImageKit(
-    private_key='private_Dnsrj2VW7uJakaeMaNYaav+P784=',
-    public_key='public_Y1VNbHgFpCqBL6FhEcr7oCdkQNU=',
-    url_endpoint='https://ik.imagekit.io/9buar9mbp'
-)
-
-# List all files in ImageKit
-try:
-    list_files = imagekit.list_files()
-    print(f"✅ Found {len(list_files.list)} files in ImageKit")
+def check_imagekit_files():
+    """Check existing files in ImageKit account"""
+    print("🔍 Checking ImageKit Files")
+    print("=" * 50)
     
-    # Check for the specific problematic image
-    target_file = "news/Windows Server 2019 Running - Oracle VM VirtualBox 26 04 2024 10 25 40.png"
-    found = False
+    # Initialize ImageKit
+    imagekit = ImageKit(
+        public_key=os.environ['IMAGEKIT_PUBLIC_KEY'],
+        private_key=os.environ['IMAGEKIT_PRIVATE_KEY'],
+        url_endpoint=os.environ['IMAGEKIT_URL_ENDPOINT']
+    )
     
-    for file in list_files.list:
-        print(f"📁 {file.name}")
-        if file.name == target_file:
-            found = True
-            print(f"✅ Found target file: {file.name}")
-            print(f"   URL: {file.url}")
-            print(f"   Size: {file.size} bytes")
-            print(f"   Created: {file.created_at}")
-    
-    if not found:
-        print(f"❌ Target file not found: {target_file}")
+    try:
+        # List files
+        files = imagekit.list_files()
+        print(f"✅ Found {len(files.list)} files in ImageKit account")
         
-        # Check what news files exist
-        print("\n📰 Checking news files in ImageKit:")
-        news_files = [f for f in list_files.list if f.name.startswith('news/')]
-        for file in news_files:
-            print(f"   📄 {file.name}")
-            
-except Exception as e:
-    print(f"❌ Error listing ImageKit files: {e}")
-
-# Check Django News model
-print("\n📰 Checking Django News model...")
-try:
-    news_items = News.objects.all()
-    print(f"Found {news_items.count()} news items in database")
-    
-    for news in news_items:
-        if news.image:
-            print(f"📰 {news.title}: {news.image.url}")
-            if 'Windows Server' in str(news.image):
-                print(f"   ⚠️ This is the problematic image")
-                print(f"   Database path: {news.image}")
-                print(f"   Generated URL: {news.image.url}")
+        # Check files, looking for larger ones
+        valid_files = [f for f in files.list if f.size > 1000]
+        print(f"✅ Found {len(valid_files)} files larger than 1KB")
+        
+        if valid_files:
+            print(f"\n📁 Valid files (size > 1KB):")
+            for i, file in enumerate(valid_files[:3]):
+                print(f"\n📁 File {i+1}:")
+                print(f"   Name: {file.name}")
+                print(f"   Path: {file.file_path}")
+                print(f"   Size: {file.size} bytes")
+                print(f"   Type: {file.file_type}")
+                
+                # Try to access the file
+                file_url = f"{os.environ['IMAGEKIT_URL_ENDPOINT']}/{file.file_path.lstrip('/')}"
+                print(f"   URL: {file_url}")
+                
+                response = requests.get(file_url, timeout=10)
+                print(f"   HTTP Status: {response.status_code}")
+                print(f"   Response Size: {len(response.content)} bytes")
+                
+                if response.status_code == 200 and len(response.content) > 1000:
+                    print(f"   ✅ File accessible and looks like an image")
+                else:
+                    print(f"   ❌ File not accessible or too small")
         else:
-            print(f"📰 {news.title}: No image")
+            print(f"\n❌ No valid files found. All files are corrupted or too small.")
             
-except Exception as e:
-    print(f"❌ Error checking News model: {e}")
+        # Show some examples of the corrupted files
+        print(f"\n📁 Examples of corrupted files:")
+        for i, file in enumerate(files.list[:3]):
+            print(f"\n📁 File {i+1}:")
+            print(f"   Name: {file.name}")
+            print(f"   Path: {file.file_path}")
+            print(f"   Size: {file.size} bytes")
+            print(f"   Type: {file.file_type}")
+            
+            # Try to access the file
+            file_url = f"{os.environ['IMAGEKIT_URL_ENDPOINT']}/{file.file_path.lstrip('/')}"
+            print(f"   URL: {file_url}")
+            
+            response = requests.get(file_url, timeout=10)
+            print(f"   HTTP Status: {response.status_code}")
+            print(f"   Response Size: {len(response.content)} bytes")
+            
+            if response.status_code == 200 and len(response.content) > 1000:
+                print(f"   ✅ File accessible and looks like an image")
+            else:
+                print(f"   ❌ File not accessible or too small")
+                
+    except Exception as e:
+        print(f"❌ Error listing files: {e}")
 
-print("\n🔧 Next steps:")
-print("1. If the file doesn't exist in ImageKit, we need to re-upload it")
-print("2. If the file exists but URL is wrong, we need to fix the path")
-print("3. If the file exists and URL is correct, there might be a CORS or access issue") 
+if __name__ == "__main__":
+    check_imagekit_files() 

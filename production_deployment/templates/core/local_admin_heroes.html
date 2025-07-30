@@ -1,0 +1,136 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ church.name }} - Hero Management{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-12 px-6">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-deep-blue mb-2">
+                    Hero Content Management
+                </h1>
+                <p class="text-gray-700">
+                    Manage the main banner/video content for {{ church.name }}
+                </p>
+            </div>
+            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                Back to Dashboard
+            </a>
+        </div>
+
+        {% if heroes %}
+            <div class="grid gap-6">
+                {% for hero in heroes %}
+                <div class="border rounded-lg p-6 bg-gray-50">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-semibold text-deep-blue">{{ hero.title }}</h3>
+                            <p class="text-gray-600 mt-1">{{ hero.subtitle }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="px-3 py-1 bg-[#1e3a8a] text-[#1e3a8a] rounded-full text-sm">
+                                {{ hero.background_type|title }}
+                            </span>
+                            {% if hero.is_active %}
+                                <span class="px-3 py-1 bg-[#1e3a8a] text-[#1e3a8a] rounded-full text-sm">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-[#1e3a8a] text-[#1e3a8a] rounded-full text-sm">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Buttons</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-500">Primary:</span>
+                                    <span class="text-sm">{{ hero.primary_button_text }} → {{ hero.primary_button_link }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-500">Secondary:</span>
+                                    <span class="text-sm">{{ hero.secondary_button_text }} → {{ hero.secondary_button_link }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Hero Media</h4>
+                            {% if hero.hero_media.all %}
+                                <div class="space-y-2">
+                                    {% for media in hero.hero_media.all|dictsort:'order' %}
+                                        <div class="flex items-center space-x-2">
+                                            {% if media.image %}
+                                                <div class="w-16 h-12 bg-gray-200 rounded overflow-hidden">
+                                                    <img src="{{ media.get_image_url }}" alt="Hero media" class="w-full h-full object-cover">
+                                                </div>
+                                                <span class="text-sm text-gray-600">Image (Order: {{ media.order }})</span>
+                                            {% elif media.video %}
+                                                <div class="w-16 h-12 bg-gray-200 rounded flex items-center justify-center">
+                                                    <i class="fas fa-video text-gray-400"></i>
+                                                </div>
+                                                <span class="text-sm text-gray-600">Video (Order: {{ media.order }})</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-sm text-gray-500">No hero media uploaded</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            Order: {{ hero.order }} | Created: {{ hero.created_at|date:"M d, Y" }}
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="/admin/core/hero/{{ hero.id }}/change/" class="bg-[#1e3a8a] text-white px-4 py-2 rounded hover:bg-[#1e3a8a] transition">
+                                Edit in Admin
+                            </a>
+                            {% if hero.global_feature_status == 'none' or hero.global_feature_status == 'rejected' %}
+                                <form method="post" action="{% url 'request_global_hero_feature' hero.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-[#1e3a8a] hover:text-[#1e3a8a]">Request Global Feature</button>
+                                </form>
+                            {% elif hero.global_feature_status == 'pending' %}
+                                <span class="text-[#1e3a8a] font-semibold">Pending Global Approval</span>
+                            {% elif hero.global_feature_status == 'approved' %}
+                                <span class="text-[#1e3a8a] font-semibold">Globally Featured</span>
+                            {% elif hero.global_feature_status == 'rejected' %}
+                                <span class="text-[#1e3a8a] font-semibold">Rejected</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="text-6xl text-gray-300 mb-4">
+                    <i class="fas fa-image"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">No Hero Content Yet</h3>
+                <p class="text-gray-500 mb-6">
+                    You haven't created any hero content for your church yet.
+                </p>
+                <a href="/admin/core/hero/add/" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
+                    Create Hero Content
+                </a>
+            </div>
+        {% endif %}
+        
+        {% if heroes %}
+        <div class="mt-8 text-center">
+            <a href="/admin/core/hero/add/" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
+                Add New Hero Content
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

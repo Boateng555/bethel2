@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-8">
+  <h1 class="text-3xl font-bold text-center mb-8 text-deep-blue">Privacy Policy</h1>
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <p class="text-gray-600 mb-6">Last updated: {{ year|default:2025 }}</p>
+    
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">1. Information We Collect</h3>
+    <p class="text-gray-700 mb-4">We collect information you provide directly to us, such as when you create an account, sign up for newsletters, make donations, or contact us. This may include:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Name and contact information</li>
+      <li>Church affiliation and preferences</li>
+      <li>Donation history and payment information</li>
+      <li>Event registrations and attendance</li>
+      <li>Communication preferences</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">2. How We Use Your Information</h3>
+    <p class="text-gray-700 mb-4">We use the information we collect to:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Provide and maintain our services</li>
+      <li>Process donations and payments</li>
+      <li>Send newsletters and updates</li>
+      <li>Organize events and ministries</li>
+      <li>Improve our platform and services</li>
+      <li>Comply with legal obligations</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">3. Information Sharing</h3>
+    <p class="text-gray-700 mb-4">We do not sell, trade, or rent your personal information to third parties. We may share information with:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Your local church administrators (for church-specific features)</li>
+      <li>Service providers who assist in our operations</li>
+      <li>Legal authorities when required by law</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">4. Data Security</h3>
+    <p class="text-gray-700 mb-6">We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">5. Your Rights</h3>
+    <p class="text-gray-700 mb-4">You have the right to:</p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 space-y-2">
+      <li>Access your personal information</li>
+      <li>Correct inaccurate information</li>
+      <li>Request deletion of your information</li>
+      <li>Opt out of communications</li>
+      <li>Withdraw consent for data processing</li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-4 text-deep-blue">6. Contact Us</h3>
+    <p class="text-gray-700">If you have questions about this Privacy Policy, please contact us at privacy@bethel.com</p>
+  </div>
+</div>
+{% endblock %} 

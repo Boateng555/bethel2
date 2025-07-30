@@ -120,14 +120,14 @@ def check_media_folders():
     else:
         print("❌ Main media folder does not exist")
     
-    # Check railway_media folder
-    railway_media = os.path.join(settings.BASE_DIR, 'railway_media')
-    print(f"\nRailway media folder: {railway_media}")
+    # Check backup_media folder
+    backup_media = os.path.join(settings.BASE_DIR, 'backup_media')
+    print(f"\nBackup media folder: {backup_media}")
     
-    if os.path.exists(railway_media):
-        print("✅ Railway media folder exists")
-        for root, dirs, files in os.walk(railway_media):
-            level = root.replace(railway_media, '').count(os.sep)
+    if os.path.exists(backup_media):
+        print("✅ Backup media folder exists")
+        for root, dirs, files in os.walk(backup_media):
+            level = root.replace(backup_media, '').count(os.sep)
             indent = ' ' * 2 * level
             print(f"{indent}{os.path.basename(root)}/")
             subindent = ' ' * 2 * (level + 1)
@@ -136,20 +136,20 @@ def check_media_folders():
             if len(files) > 5:
                 print(f"{subindent}... and {len(files) - 5} more files")
     else:
-        print("❌ Railway media folder does not exist")
+        print("❌ Backup media folder does not exist")
 
-def copy_images_from_railway_media():
-    """Copy images from railway_media to media folder"""
-    print(f"\n📁 Copying Images from railway_media to media")
+def copy_images_from_backup_media():
+    """Copy images from backup_media to media folder"""
+    print(f"\n📁 Copying Images from backup_media to media")
     print("=" * 50)
     
     import shutil
     
-    railway_media = os.path.join(settings.BASE_DIR, 'railway_media')
+    backup_media = os.path.join(settings.BASE_DIR, 'backup_media')
     media_root = settings.MEDIA_ROOT
     
-    if not os.path.exists(railway_media):
-        print("❌ Railway media folder does not exist")
+    if not os.path.exists(backup_media):
+        print("❌ Backup media folder does not exist")
         return
     
     if not os.path.exists(media_root):
@@ -160,10 +160,10 @@ def copy_images_from_railway_media():
     failed_count = 0
     
     try:
-        # Copy all files from railway_media to media
-        for root, dirs, files in os.walk(railway_media):
+        # Copy all files from backup_media to media
+        for root, dirs, files in os.walk(backup_media):
             # Calculate relative path
-            rel_path = os.path.relpath(root, railway_media)
+            rel_path = os.path.relpath(root, backup_media)
             target_dir = os.path.join(media_root, rel_path)
             
             # Create target directory if it doesn't exist
@@ -200,9 +200,9 @@ def suggest_fixes():
     print("""
 If images are missing, here are the solutions:
 
-1. 📁 Copy Images from railway_media to media:
-   - Your images are in railway_media/ but Django looks in media/
-   - Copy files: railway_media/* → media/
+1. 📁 Copy Images from backup_media to media:
+   - Your images are in backup_media/ but Django looks in media/
+   - Copy files: backup_media/* → media/
 
 2. 🖼️ Upload Images via Admin:
    - Go to http://localhost:8000/admin/
@@ -225,18 +225,18 @@ def main():
     check_media_folders()
     
     # Ask if user wants to copy images
-    print(f"\n🤔 Do you want to copy images from railway_media to media?")
+    print(f"\n🤔 Do you want to copy images from backup_media to media?")
     response = input("Type 'yes' to copy images: ").strip().lower()
     
     if response == 'yes':
-        copy_images_from_railway_media()
+        copy_images_from_backup_media()
     else:
         suggest_fixes()
     
     print(f"\n" + "=" * 60)
     print("🎯 Next Steps:")
     print("1. Check the output above to see what's missing")
-    print("2. Copy images from railway_media to media if needed")
+    print("2. Copy images from backup_media to media if needed")
     print("3. Or upload images through Django admin")
     print("4. Test your site to see if images appear")
     print("=" * 60)

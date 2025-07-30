@@ -55,9 +55,9 @@ staticfiles/
 ehthumbs.db
 Thumbs.db
 
-# Railway
-.railway/
-.railwayignore
+# Deployment
+.deployment/
+.deploymentignore
 
 # Documentation
 *.md
@@ -81,7 +81,6 @@ update_*.py
 export_*.py
 simple_*.py
 comprehensive_*.py
-cloudinary_*.py
 manual_*.py
 prepare_*.py
 copy_*.py

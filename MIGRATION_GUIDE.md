@@ -1,4 +1,4 @@
-# 🚀 Railway to Hetzner VPS Migration Guide
+# 🚀 Migration Guide
 
 ## 📋 Pre-Migration Checklist
 
@@ -6,9 +6,9 @@
 - [ ] Hetzner VPS (CX11) purchased and running
 - [ ] Domain name ready
 - [ ] SSH access to VPS configured
-- [ ] Railway environment variables exported
+- [ ] Environment variables exported
 - [ ] ImageKit credentials available
-- [ ] Database backup from Railway (if needed)
+- [ ] Database backup from previous deployment (if needed)
 
 ## 🔧 Step-by-Step Migration Process
 
@@ -78,7 +78,7 @@ ALLOWED_HOSTS=your-domain.com,www.your-domain.com,YOUR_SERVER_IP
 # Database Settings
 DATABASE_URL=postgresql://bethel_user:your_secure_password@localhost:5432/bethel_db
 
-# ImageKit Settings (copy from Railway)
+# ImageKit Settings (copy from previous deployment)
 IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
 IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
@@ -398,7 +398,7 @@ ufw allow 8090/tcp
 - [ ] Monitoring active
 - [ ] Security hardened
 - [ ] DNS propagated
-- [ ] Railway deployment disabled
+- [ ] Previous deployment disabled
 - [ ] Documentation updated
 
 ## 🎉 Migration Complete!

@@ -1,0 +1,280 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Donate to {{ church.name }} - Bethel Church{% endblock %}
+
+{% block content %}
+<style>
+    .modern-icon {
+        background: #fff;
+        border-width: 2px;
+        border-style: solid;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 4px 0 rgba(30,58,138,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.5rem;
+        height: 4.5rem;
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .modern-icon:hover {
+        box-shadow: 0 4px 16px 0 rgba(30,58,138,0.18);
+        transform: translateY(-2px) scale(1.05);
+    }
+    .modern-icon svg {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    .icon-paypal { border-color: #003087; }
+    .icon-stripe { border-color: #635bff; }
+    .icon-gofundme { border-color: #00b964; }
+    .icon-bank { border-color: #64748b; }
+    .icon-default { border-color: #64748b; }
+    /* Responsive for mobile */
+    @media (max-width: 640px) {
+        .modern-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        .modern-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .donation-card {
+            padding: 0.75rem !important;
+        }
+        .donation-card h3 {
+            font-size: 1rem !important;
+        }
+        .donation-card p, .donation-card span, .donation-card button, .donation-card a {
+            font-size: 0.85rem !important;
+        }
+        .donation-card .bg-gray-50 {
+            padding: 0.5rem !important;
+        }
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Support {{ church.name }}</h1>
+        <p class="text-lg text-gray-600">Your generosity helps us continue our mission in {{ church.city }}, {{ church.country }}</p>
+    </div>
+
+    <!-- Church Info Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center">
+            {% if church.logo %}
+            <img src="{{ church.get_logo_url }}" alt="{{ church.name }}" class="w-16 h-16 rounded-full mr-4">
+            {% else %}
+            <div class="w-16 h-16 bg-gradient-to-br from-[#1e3a8a] to-[#1e3a8a] rounded-full flex items-center justify-center mr-4">
+                <span class="text-white text-xl font-bold">{{ church.name|first }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-900">{{ church.name }}</h2>
+                <p class="text-gray-600">{{ church.city }}, {{ church.country }}</p>
+                {% if church.pastor_name %}
+                <p class="text-sm text-gray-500">Pastor {{ church.pastor_name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Methods -->
+    {% if donation_methods %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for method in donation_methods %}
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-[#1e3a8a] donation-card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">{{ method.name }}</h3>
+                {% if method.is_default %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#1e3a8a] text-white shadow-sm border border-[#1e3a8a]">
+                    Recommended
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Payment Type Icon -->
+            <div class="mb-4">
+                {% if method.payment_type == 'paypal' %}
+                <div class="modern-icon icon-paypal mb-4">
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="#003087" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="16" fill="#fff"/>
+                        <path d="M21.5 10.5c-.5-2-2.5-3-5-3h-5.5c-.5 0-1 .5-1 1l-3 18c0 .5.5 1 1 1h4c.5 0 1-.5 1-1l.5-3h2.5c4 0 7-2.5 7.5-6 .5-2.5-1-4-2-5zm-2.5 7c-.5 2-2.5 3-5 3h-2l1.5-9h2c2.5 0 4 1 3.5 3-.5 2-2.5 3-5 3h-1l.5-3h1c1.5 0 2.5.5 2 2z" fill="#003087"/>
+                    </svg>
+                </div>
+                {% elif method.payment_type == 'stripe' %}
+                <div class="modern-icon icon-stripe mb-4">
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="#635bff" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="16" fill="#fff"/>
+                        <path d="M21.5 13.5c-.5-2-2.5-3-5-3h-5.5c-.5 0-1 .5-1 1l-3 18c0 .5.5 1 1 1h4c.5 0 1-.5 1-1l.5-3h2.5c4 0 7-2.5 7.5-6 .5-2.5-1-4-2-5zm-2.5 7c-.5 2-2.5 3-5 3h-2l1.5-9h2c2.5 0 4 1 3.5 3-.5 2-2.5 3-5 3h-1l.5-3h1c1.5 0 2.5.5 2 2z" fill="#635bff"/>
+                    </svg>
+                </div>
+                {% elif method.payment_type == 'gofundme' %}
+                <div class="modern-icon icon-gofundme mb-4">
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="#00b964" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="16" fill="#fff"/>
+                        <path d="M16 10c-2.5 0-4.5 2-4.5 4.5S13.5 19 16 19s4.5-2 4.5-4.5S18.5 10 16 10zm0 7c-1.5 0-2.5-1-2.5-2.5S14.5 12 16 12s2.5 1 2.5 2.5S17.5 17 16 17z" fill="#00b964"/>
+                    </svg>
+                </div>
+                {% elif method.payment_type == 'bank_transfer' %}
+                <div class="modern-icon icon-bank mb-4">
+                    <svg class="w-8 h-8" fill="#64748b" viewBox="0 0 20 20">
+                        <rect width="20" height="20" rx="10" fill="#fff"/>
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" fill="#64748b"/>
+                    </svg>
+                </div>
+                {% else %}
+                <div class="modern-icon icon-default mb-4">
+                    <svg class="w-8 h-8" fill="#64748b" viewBox="0 0 20 20">
+                        <rect width="20" height="20" rx="10" fill="#fff"/>
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" fill="#64748b"/>
+                    </svg>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if method.description %}
+            <p class="text-gray-600 mb-4">{{ method.description }}</p>
+            {% endif %}
+            
+            <!-- Account Info -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Account Information</h4>
+                <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ method.account_info }}</div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="flex space-x-2">
+                {% if method.get_donation_url %}
+                    <a href="{{ method.get_donation_url }}" 
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="flex-1 bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200">
+                        {% if method.payment_type == 'paypal' %}
+                            Donate with PayPal
+                        {% elif method.payment_type == 'gofundme' %}
+                            Donate on GoFundMe
+                        {% elif method.payment_type == 'stripe' %}
+                            Donate with Card
+                        {% else %}
+                            Donate Now
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <button onclick="copyToClipboard('{{ method.account_info|escapejs }}')" 
+                            class="flex-1 bg-[#1e3a8a] text-white text-center py-3 px-4 rounded-md font-semibold hover:bg-[#1e3a8a] transition duration-200">
+                        Copy Details
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No donation methods available</h3>
+        <p class="text-gray-600">Please contact the church directly for donation information.</p>
+    </div>
+    {% endif %}
+
+    <!-- Additional Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Why Give -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Why Give?</h3>
+            <div class="space-y-3 text-gray-600">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-[#1e3a8a] mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Support local ministry and outreach programs</span>
+                </div>
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-[#1e3a8a] mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Help maintain church facilities and equipment</span>
+                </div>
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-[#1e3a8a] mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Enable community service and charity work</span>
+                </div>
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-[#1e3a8a] mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Support youth and children's programs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Need Help?</h3>
+            <div class="space-y-3">
+                {% if church.phone %}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                    </svg>
+                    <a href="tel:{{ church.phone }}" class="text-[#1e3a8a] hover:text-[#1e3a8a]">{{ church.phone }}</a>
+                </div>
+                {% endif %}
+                
+                {% if church.email %}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                    <a href="mailto:{{ church.email }}" class="text-[#1e3a8a] hover:text-[#1e3a8a]">{{ church.email }}</a>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-gray-600">{{ church.get_full_address }}</span>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{% url 'church_detail' church.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a]">
+                    ← Back to {{ church.name }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.remove('bg-[#1e3a8a]', 'hover:bg-[#1e3a8a]');
+        button.classList.add('bg-[#1e3a8a]');
+        
+        setTimeout(function() {
+            button.textContent = originalText;
+            button.classList.remove('bg-[#1e3a8a]');
+            button.classList.add('bg-[#1e3a8a]', 'hover:bg-[#1e3a8a]');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Could not copy to clipboard. Please copy manually.');
+    });
+}
+</script>
+{% endblock %} 

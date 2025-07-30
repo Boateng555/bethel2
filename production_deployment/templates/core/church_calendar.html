@@ -1,0 +1,95 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-deep-blue to-[#1e3a8a] text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">{{ church.name }} Events Calendar</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">View all events at {{ church.name }} in a monthly calendar format</p>
+    </div>
+</section>
+
+<!-- Calendar Navigation -->
+<div class="max-w-2xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="text-3xl text-gray-400 hover:text-[#1e3a8a] transition rounded-full p-2">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <div class="flex flex-col items-center">
+            <span class="text-4xl font-extrabold text-black tracking-tight">{{ month_name }}</span>
+            <span class="text-2xl font-semibold text-gray-500">{{ year }}</span>
+        </div>
+        <a href="?year={{ next_year }}&month={{ next_month }}" class="text-3xl text-gray-400 hover:text-[#1e3a8a] transition rounded-full p-2">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    
+    <!-- Agenda/List Style Calendar -->
+    <div class="space-y-6">
+        {% for week in calendar_data %}
+            {% for day in week %}
+                {% if day.day and day.events %}
+                    <div class="flex bg-gray-50 rounded-xl shadow-sm overflow-hidden">
+                        <div class="flex flex-col items-center justify-center bg-white px-6 py-6 border-r border-gray-200 min-w-[90px]">
+                            <span class="text-3xl font-bold text-gray-900">{{ day.day }}</span>
+                            <span class="text-lg font-semibold text-[#1e3a8a] uppercase">{{ month_name|slice:":3" }}</span>
+                        </div>
+                        <div class="flex-1 px-6 py-6">
+                            {% for event in day.events %}
+                                <div class="mb-4">
+                                    <a href="{% url 'church_event_detail' church.id event.id %}" class="text-lg font-bold text-[#1e3a8a] hover:underline">{{ event.title }}</a>
+                                    {% if event.start_time or event.end_time or event.location %}
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            {% if event.start_time %}{{ event.start_time }}{% endif %}
+                                            {% if event.end_time %} - {{ event.end_time }}{% endif %}
+                                            {% if event.location %} @ {{ event.location }}{% endif %}
+                                        </div>
+                                    {% endif %}
+                                    <a href="{% url 'event_ics' event.id %}" class="inline-block mt-1 px-3 py-1 bg-[#1e3a8a] text-white text-xs rounded hover:bg-[#1e3a8a] transition">Add to Calendar</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% empty %}
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No Events This Month</h3>
+                <p class="text-gray-500">There are no events scheduled for {{ month_name }} {{ year }}.</p>
+                <div class="mt-6">
+                    <a href="{% url 'church_events' church.id %}" class="inline-block px-6 py-3 bg-deep-blue text-white rounded-lg hover:bg-[#1e3a8a] transition">
+                        View All Events
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="max-w-2xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-deep-blue mb-4">Quick Links</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'church_events' church.id %}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i class="fas fa-calendar-day text-deep-blue mr-3"></i>
+                <span class="text-gray-700">All Events</span>
+            </a>
+            <a href="{% url 'church_ministries' church.id %}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i class="fas fa-hands-helping text-deep-blue mr-3"></i>
+                <span class="text-gray-700">Ministries</span>
+            </a>
+            <a href="{% url 'church_sermons' church.id %}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i class="fas fa-church text-deep-blue mr-3"></i>
+                <span class="text-gray-700">Sermons</span>
+            </a>
+            <a href="{% url 'church_home' church.id %}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <i class="fas fa-home text-deep-blue mr-3"></i>
+                <span class="text-gray-700">Home</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

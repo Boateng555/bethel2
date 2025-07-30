@@ -1,19 +1,19 @@
 # ImageKit Production Fix Guide
 
 ## Problem Summary
-Uploaded pictures in production were not going to ImageKit cloud because the ImageKit environment variables were missing in the Railway environment.
+Uploaded pictures in production were not going to ImageKit cloud because the ImageKit environment variables were missing in the production environment.
 
 ## Root Cause
-1. **Missing Environment Variables**: ImageKit credentials were not set in Railway environment variables
+1. **Missing Environment Variables**: ImageKit credentials were not set in production environment variables
 2. **Fallback to Local Storage**: Django automatically fell back to local storage when ImageKit credentials were missing
 3. **ImageKit Library Bug**: The ImageKit library had a bug with the `options` parameter
 
 ## Solution Steps
 
-### 1. Fix Railway Environment Variables
+### 1. Fix Production Environment Variables
 
-**Go to your Railway project dashboard:**
-1. Navigate to your Railway project
+**Go to your deployment project dashboard:**
+1. Navigate to your deployment project
 2. Go to the "Variables" tab
 3. Add these environment variables:
 
@@ -31,7 +31,7 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/9buar9mbp
 - Improved error handling
 
 #### Updated Environment Files
-- Updated `railway.env` with actual ImageKit credentials
+- Updated environment variables with actual ImageKit credentials
 - Created test scripts to verify configuration
 
 ### 3. Verification Steps
@@ -56,8 +56,8 @@ After applying the fix:
 
 ### 5. Deployment
 
-1. **Railway will automatically redeploy** when you add the environment variables
-2. **Or manually redeploy** from Railway dashboard
+1. **Your deployment platform will automatically redeploy** when you add the environment variables
+2. **Or manually redeploy** from deployment dashboard
 3. **Verify the fix** by uploading a new image and checking the URL
 
 ### 6. Monitoring
@@ -70,7 +70,7 @@ Check these indicators that ImageKit is working:
 ## Files Modified
 
 1. `core/storage.py` - Fixed ImageKit storage implementation
-2. `railway.env` - Added ImageKit credentials
+2. Environment variables - Added ImageKit credentials
 3. `test_imagekit_config.py` - Created test script
 4. `debug_imagekit.py` - Created debug script
 
@@ -78,10 +78,10 @@ Check these indicators that ImageKit is working:
 
 If images still don't upload to ImageKit:
 
-1. **Check environment variables** in Railway dashboard
+1. **Check environment variables** in deployment dashboard
 2. **Verify ImageKit credentials** are correct
 3. **Test with debug scripts** locally
-4. **Check Railway logs** for any errors
+4. **Check deployment logs** for any errors
 5. **Ensure ImageKit account** is active and has sufficient credits
 
 ## Security Notes
@@ -89,4 +89,4 @@ If images still don't upload to ImageKit:
 - ImageKit credentials are now properly configured
 - Images are served from secure CDN
 - No sensitive data in local storage
-- Environment variables are encrypted in Railway 
+- Environment variables are encrypted in your deployment platform 

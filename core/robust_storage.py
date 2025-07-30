@@ -89,19 +89,23 @@ class RobustImageKitStorage(Storage):
         try:
             upload = self.imagekit.upload_file(
                 file=file_obj,
-                file_name=os.path.basename(name)
+                file_name=name  # Use the full path instead of just basename
             )
             
             if upload.response_metadata.http_status_code != 200:
                 raise Exception(f"ImageKit upload failed: {upload.response_metadata.raw}")
             
+            # Return the full ImageKit URL instead of just the path
+            uploaded_path = upload.file_path.lstrip('/')
+            full_url = f"{self.base_url}/{uploaded_path}"
+            
             # Verify the uploaded file size
-            uploaded_size = self.size(name)
+            uploaded_size = self.size(uploaded_path)
             if uploaded_size < 100:
                 raise Exception(f"Uploaded file is too small ({uploaded_size} bytes) - upload may have failed")
             
-            logger.info(f"Successfully uploaded: {name} - Size: {uploaded_size} bytes")
-            return name
+            logger.info(f"Successfully uploaded: {full_url} - Size: {uploaded_size} bytes")
+            return full_url
             
         except Exception as e:
             logger.error(f"Upload error for {name}: {e}")
@@ -141,6 +145,12 @@ class RobustImageKitStorage(Storage):
     def url(self, name):
         if not name:
             return ''
+        
+        # If name is already a full ImageKit URL, return it as is
+        if name.startswith('https://ik.imagekit.io/'):
+            return name
+        
+        # Otherwise, construct the URL from the path
         clean_name = self._clean_name(name)
         return f"{self.base_url}/{clean_name}"
 

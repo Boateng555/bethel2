@@ -15,10 +15,6 @@ def start_local_server():
     # Set environment variables for local development
     os.environ['DJANGO_DEBUG'] = 'True'
     
-    # Remove any Railway-specific environment variables
-    if 'DATABASE_URL' in os.environ:
-        print("⚠️ DATABASE_URL found - this will be ignored for local development")
-    
     print("✅ Environment configured for local development")
     print("📦 Using SQLite database")
     print("🖼️ Using local file storage")
