@@ -510,6 +510,20 @@ class ChurchAdminInline(admin.TabularInline):
     fields = ('user', 'role', 'is_active')
     autocomplete_fields = ['user']
     show_change_link = True
+    
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        
+        def save_new(form, commit=True):
+            instance = form.save(commit=False)
+            if obj:  # obj is the Church instance
+                instance.church = obj
+            if commit:
+                instance.save()
+            return instance
+        
+        formset.save_new = save_new
+        return formset
 
 class HeroInline(admin.StackedInline):
     model = Hero
