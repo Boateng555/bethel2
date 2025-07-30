@@ -158,7 +158,7 @@ else:
 
 # Media files - Local storage
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'railway_media'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Image handling settings for better quality
 THUMBNAIL_DEBUG = False
