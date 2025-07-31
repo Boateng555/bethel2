@@ -582,7 +582,7 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
                 }),
                 ('Service Times', {
                     'fields': ('service_times',),
-                    'description': 'Enter your service times (e.g., "Sunday 10:30 AM & 1:00 PM", "Wednesday 7:00 PM")'
+                    'description': 'Enter your service times (e.g., "Sunday 9:00 AM & 11:00 AM", "11:30pm", "Wednesday 7:00 PM")'
                 }),
                 ('Location', {
                     'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
@@ -612,7 +612,7 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
                 }),
                 ('⏰ Service Times', {
                     'fields': ('service_times',),
-                    'description': 'Enter your service times (e.g., "Sunday 10:30 AM & 1:00 PM", "Wednesday 7:00 PM")'
+                    'description': 'Enter your service times (e.g., "Sunday 9:00 AM & 11:00 AM", "11:30pm", "Wednesday 7:00 PM")'
                 }),
                 ('📞 Contact Information', {
                     'fields': ('phone', 'email', 'website'),

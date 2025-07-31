@@ -504,10 +504,6 @@
                     <p class="text-gray-600">
                         {% if church.service_times %}
                             {{ church.service_times }}
-                        {% elif church.sunday_service_1 or church.wednesday_service or church.friday_service %}
-                            {% if church.sunday_service_1 %}Sunday {{ church.sunday_service_1|time:"g:i A" }}{% if church.sunday_service_2 %} & {{ church.sunday_service_2|time:"g:i A" }}{% endif %}{% endif %}
-                            {% if church.wednesday_service %}{% if church.sunday_service_1 %}<br>{% endif %}Wednesday {{ church.wednesday_service|time:"g:i A" }}{% endif %}
-                            {% if church.friday_service %}{% if church.sunday_service_1 or church.wednesday_service %}<br>{% endif %}Friday {{ church.friday_service|time:"g:i A" }}{% endif %}
                         {% else %}
                             Sunday 9:00 AM & 11:00 AM
                         {% endif %}
