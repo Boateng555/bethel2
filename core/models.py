@@ -46,6 +46,20 @@ class Church(models.Model):
     founded_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True)
     
+    # Service Times
+    service_times = models.TextField(
+        blank=True, 
+        help_text="Enter service times (e.g., 'Sunday 9:00 AM & 11:00 AM', 'Wednesday 7:00 PM')"
+    )
+    sunday_service_1 = models.TimeField(null=True, blank=True, help_text="First Sunday service time")
+    sunday_service_2 = models.TimeField(null=True, blank=True, help_text="Second Sunday service time (optional)")
+    wednesday_service = models.TimeField(null=True, blank=True, help_text="Wednesday service time (optional)")
+    friday_service = models.TimeField(null=True, blank=True, help_text="Friday service time (optional)")
+    other_services = models.TextField(
+        blank=True, 
+        help_text="Other service times (e.g., 'Youth Service: Saturday 6:00 PM')"
+    )
+    
     # Media
     logo = models.ImageField(upload_to='churches/logos/', blank=True, null=True, max_length=500)
     nav_logo = models.ImageField(upload_to='churches/nav_logos/', blank=True, null=True, max_length=500, help_text="Logo specifically for navigation bar (small, circular)")

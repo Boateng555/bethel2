@@ -521,7 +521,7 @@ class HeroInline(admin.StackedInline):
 
 class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
     form = ChurchForm
-    list_display = ['name', 'city', 'country', 'pastor_name', 'is_active', 'is_approved', 'is_featured', 'created_at']
+    list_display = ['name', 'city', 'country', 'pastor_name', 'service_times_display', 'is_active', 'is_approved', 'is_featured', 'created_at']
     list_filter = ['is_active', 'is_approved', 'is_featured', 'country', 'created_at']
     search_fields = ['name', 'city', 'country', 'pastor_name', 'email']
     prepopulated_fields = {'slug': ('name',)}
@@ -564,6 +564,10 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
         ('Navigation Logo', {
             'fields': ('nav_logo', 'nav_logo_preview'),
             'description': 'Upload a specific logo for the navigation bar (small, circular format recommended)'
+        }),
+        ('Service Times', {
+            'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
+            'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
         }),
         ('Location', {
             'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
@@ -720,6 +724,24 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
             obj.delete()
     
     # Preview methods are now handled by EnhancedImagePreviewMixin
+    
+    def service_times_display(self, obj):
+        """Display service times in a readable format"""
+        if obj.service_times:
+            return obj.service_times
+        elif obj.sunday_service_1:
+            times = []
+            if obj.sunday_service_1:
+                times.append(f"Sun {obj.sunday_service_1.strftime('%I:%M %p')}")
+            if obj.sunday_service_2:
+                times.append(f"Sun {obj.sunday_service_2.strftime('%I:%M %p')}")
+            if obj.wednesday_service:
+                times.append(f"Wed {obj.wednesday_service.strftime('%I:%M %p')}")
+            if obj.friday_service:
+                times.append(f"Fri {obj.friday_service.strftime('%I:%M %p')}")
+            return " | ".join(times) if times else "No times set"
+        return "No times set"
+    service_times_display.short_description = "Service Times"
 
 class ChurchAdminModelAdmin(LocalAdminMixin, admin.ModelAdmin):
     list_display = ['user', 'church', 'role', 'is_active', 'created_at']
