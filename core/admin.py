@@ -29,6 +29,18 @@ class ChurchForm(forms.ModelForm):
     logo = forms.ImageField(required=False)
     nav_logo = forms.ImageField(required=False)
     banner_image = forms.ImageField(required=False)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set default values for new churches
+        if not self.instance.pk:  # Only for new churches
+            from datetime import time
+            self.fields['service_times'].initial = "Sunday 9:00 AM & 11:00 AM"
+            self.fields['sunday_service_1'].initial = time(9, 0)  # 9:00 AM
+            self.fields['sunday_service_2'].initial = time(11, 0)  # 11:00 AM
+            self.fields['wednesday_service'].initial = time(19, 0)  # 7:00 PM
+            self.fields['friday_service'].initial = time(18, 0)  # 6:00 PM
+            self.fields['other_services'].initial = "Youth Service: Saturday 6:00 PM"
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -724,6 +736,26 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
             obj.delete()
     
     # Preview methods are now handled by EnhancedImagePreviewMixin
+    
+    def save_model(self, request, obj, form, change):
+        """Save the model and set default service times for new churches"""
+        if not change:  # Only for new churches
+            from datetime import time
+            # Set default service times if not already set
+            if not obj.service_times:
+                obj.service_times = "Sunday 9:00 AM & 11:00 AM"
+            if not obj.sunday_service_1:
+                obj.sunday_service_1 = time(9, 0)  # 9:00 AM
+            if not obj.sunday_service_2:
+                obj.sunday_service_2 = time(11, 0)  # 11:00 AM
+            if not obj.wednesday_service:
+                obj.wednesday_service = time(19, 0)  # 7:00 PM
+            if not obj.friday_service:
+                obj.friday_service = time(18, 0)  # 6:00 PM
+            if not obj.other_services:
+                obj.other_services = "Youth Service: Saturday 6:00 PM"
+        
+        super().save_model(request, obj, form, change)
     
     def service_times_display(self, obj):
         """Display service times in a readable format"""
