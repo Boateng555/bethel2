@@ -1907,6 +1907,16 @@ admin.site.register(LeadershipPage, LeadershipPageAdmin)
 admin.site.register(LocalLeadershipPage, LocalLeadershipPageAdmin)
 admin.site.register(LocalAboutPage, LocalAboutPageAdmin)
 
+# Register other models
+admin.site.register(Event, EventAdmin)
+admin.site.register(Ministry, MinistryAdmin)
+admin.site.register(News, NewsAdmin)
+admin.site.register(Sermon, SermonAdmin)
+admin.site.register(DonationMethod, DonationMethodAdmin)
+admin.site.register(ChurchApplication, ChurchApplicationAdmin)
+admin.site.register(Testimony, TestimonyModelAdmin)
+admin.site.register(Hero, HeroAdmin)
+
 
 
 
