@@ -581,8 +581,8 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
                     'description': 'Upload a specific logo for the navigation bar (small, circular format recommended)'
                 }),
                 ('Service Times', {
-                    'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
-                    'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
+                    'fields': ('service_times',),
+                    'description': 'Enter your service times (e.g., "Sunday 10:30 AM & 1:00 PM", "Wednesday 7:00 PM")'
                 }),
                 ('Location', {
                     'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
@@ -611,8 +611,8 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
                     'description': 'Your church location and address'
                 }),
                 ('⏰ Service Times', {
-                    'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
-                    'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
+                    'fields': ('service_times',),
+                    'description': 'Enter your service times (e.g., "Sunday 10:30 AM & 1:00 PM", "Wednesday 7:00 PM")'
                 }),
                 ('📞 Contact Information', {
                     'fields': ('phone', 'email', 'website'),
