@@ -520,8 +520,19 @@ class HeroInline(admin.StackedInline):
     help_text = "Configure the hero section for this church's homepage. After saving, you can add multiple hero images/videos by editing the hero in the separate 'Local Heroes' admin section."
 
 class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
+    def get_verbose_name(self, request):
+        """Show different verbose name based on user role"""
+        if request.user.is_superuser:
+            return "Church"
+        else:
+            return "Church Info"
     form = ChurchForm
-    list_display = ['name', 'city', 'country', 'pastor_name', 'service_times_display', 'is_active', 'is_approved', 'is_featured', 'created_at']
+    def get_list_display(self, request):
+        """Show different list display based on user role"""
+        if request.user.is_superuser:
+            return ['name', 'city', 'country', 'pastor_name', 'service_times_display', 'is_active', 'is_approved', 'is_featured', 'created_at']
+        else:
+            return ['name', 'city', 'country', 'service_times_display', 'phone', 'email']
     list_filter = ['is_active', 'is_approved', 'is_featured', 'country', 'created_at']
     search_fields = ['name', 'city', 'country', 'pastor_name', 'email']
     prepopulated_fields = {'slug': ('name',)}
@@ -557,33 +568,61 @@ class ChurchModelAdmin(EnhancedImagePreviewMixin, admin.ModelAdmin):
         # Add the enhanced preview fields
         self.add_image_preview_fields(self, image_config)
     
-    fieldsets = (
-        ('Church Information', {
-            'fields': ('name', 'slug', 'description', 'pastor_name', 'email', 'phone', 'logo', 'logo_preview')
-        }),
-        ('Navigation Logo', {
-            'fields': ('nav_logo', 'nav_logo_preview'),
-            'description': 'Upload a specific logo for the navigation bar (small, circular format recommended)'
-        }),
-        ('Service Times', {
-            'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
-            'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
-        }),
-        ('Location', {
-            'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
-        }),
-        ('Online Presence', {
-            'fields': ('website', 'shop_url'),
-            'description': 'Configure your church\'s online presence including website and online store.'
-        }),
-        ('Status', {
-            'fields': ('is_active', 'is_approved', 'is_featured')
-        }),
-        ('System', {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
+    def get_fieldsets(self, request, obj=None):
+        """Show different fieldsets based on user role"""
+        if request.user.is_superuser:
+            # Full admin interface for super users
+            return (
+                ('Church Information', {
+                    'fields': ('name', 'slug', 'description', 'pastor_name', 'email', 'phone', 'logo', 'logo_preview')
+                }),
+                ('Navigation Logo', {
+                    'fields': ('nav_logo', 'nav_logo_preview'),
+                    'description': 'Upload a specific logo for the navigation bar (small, circular format recommended)'
+                }),
+                ('Service Times', {
+                    'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
+                    'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
+                }),
+                ('Location', {
+                    'fields': ('address', 'city', 'state_province', 'country', 'postal_code', 'latitude', 'longitude')
+                }),
+                ('Online Presence', {
+                    'fields': ('website', 'shop_url'),
+                    'description': 'Configure your church\'s online presence including website and online store.'
+                }),
+                ('Status', {
+                    'fields': ('is_active', 'is_approved', 'is_featured')
+                }),
+                ('System', {
+                    'fields': ('id', 'created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                }),
+            )
+        else:
+            # Simplified interface for local church admins
+            return (
+                ('Church Information', {
+                    'fields': ('name', 'description', 'pastor_name'),
+                    'description': 'Basic information about your church'
+                }),
+                ('📍 Location', {
+                    'fields': ('address', 'city', 'state_province', 'country', 'postal_code'),
+                    'description': 'Your church location and address'
+                }),
+                ('⏰ Service Times', {
+                    'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
+                    'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
+                }),
+                ('📞 Contact Information', {
+                    'fields': ('phone', 'email', 'website'),
+                    'description': 'How people can contact your church'
+                }),
+                ('System Information', {
+                    'fields': ('id', 'created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                }),
+            )
     inlines = [ChurchAdminInline, HeroInline]
     
     def setup_default_functionality(self, request, queryset):
@@ -1765,79 +1804,7 @@ class LocalAboutPageAdmin(LocalAdminMixin, admin.ModelAdmin):
         return ""
     about_photo_3_preview.short_description = "About Photo 3 Preview"
 
-class ChurchInfoAdmin(LocalAdminMixin, admin.ModelAdmin):
-    """Simplified admin interface for church admins to manage basic church information"""
-    model = Church
-    list_display = ['name', 'city', 'country', 'service_times_display', 'phone', 'email']
-    list_filter = ['is_active', 'country']
-    search_fields = ['name', 'city', 'country']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
-    # Only show essential fields for church info management
-    fieldsets = (
-        ('Church Information', {
-            'fields': ('name', 'description', 'pastor_name'),
-            'description': 'Basic information about your church'
-        }),
-        ('📍 Location', {
-            'fields': ('address', 'city', 'state_province', 'country', 'postal_code'),
-            'description': 'Your church location and address'
-        }),
-        ('⏰ Service Times', {
-            'fields': ('service_times', 'sunday_service_1', 'sunday_service_2', 'wednesday_service', 'friday_service', 'other_services'),
-            'description': 'Configure your church service schedule. You can use the text field for custom formats or the time fields for structured data.'
-        }),
-        ('📞 Contact Information', {
-            'fields': ('phone', 'email', 'website'),
-            'description': 'How people can contact your church'
-        }),
-        ('System Information', {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def service_times_display(self, obj):
-        """Display service times in a readable format"""
-        if obj.service_times:
-            return obj.service_times
-        elif obj.sunday_service_1:
-            times = []
-            if obj.sunday_service_1:
-                times.append(f"Sun {obj.sunday_service_1.strftime('%I:%M %p')}")
-            if obj.sunday_service_2:
-                times.append(f"Sun {obj.sunday_service_2.strftime('%I:%M %p')}")
-            if obj.wednesday_service:
-                times.append(f"Wed {obj.wednesday_service.strftime('%I:%M %p')}")
-            if obj.friday_service:
-                times.append(f"Fri {obj.friday_service.strftime('%I:%M %p')}")
-            return " | ".join(times) if times else "No times set"
-        return "No times set"
-    service_times_display.short_description = "Service Times"
-    
-    def get_queryset(self, request):
-        """Only show the church for the current local admin"""
-        qs = super().get_queryset(request)
-        if not request.user.is_superuser:
-            try:
-                church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
-                if church_admin.role == 'local_admin' and church_admin.church:
-                    return qs.filter(id=church_admin.church.id)
-            except ChurchAdmin.DoesNotExist:
-                pass
-        return qs
-    
-    def has_add_permission(self, request):
-        """Local admins cannot add new churches"""
-        return request.user.is_superuser
-    
-    def has_delete_permission(self, request, obj=None):
-        """Local admins cannot delete churches"""
-        return request.user.is_superuser
-    
-    class Meta:
-        verbose_name = "Church Info"
-        verbose_name_plural = "Church Info"
+
 
 class HeroAdmin(GlobalAdminMixin, admin.ModelAdmin):
     form = HeroForm
@@ -1938,7 +1905,6 @@ admin.site.register(LeadershipPage, LeadershipPageAdmin)
 admin.site.register(LocalLeadershipPage, LocalLeadershipPageAdmin)
 admin.site.register(LocalAboutPage, LocalAboutPageAdmin)
 
-# Register Church Info admin for local church admins
-admin.site.register(Church, ChurchInfoAdmin, name='church_info')
+
 
 
