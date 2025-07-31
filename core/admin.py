@@ -1804,68 +1804,7 @@ class LocalAboutPageAdmin(LocalAdminMixin, admin.ModelAdmin):
         return ""
     about_photo_3_preview.short_description = "About Photo 3 Preview"
 
-class LocalChurchInfoAdmin(LocalAdminMixin, admin.ModelAdmin):
-    """Simplified admin interface for local church admins to manage basic church information"""
-    model = Church
-    list_display = ['name', 'city', 'country', 'service_times_display', 'phone', 'email']
-    list_filter = ['is_active', 'country']
-    search_fields = ['name', 'city', 'country']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    
-    # Only show essential fields for local church info management
-    fieldsets = (
-        ('Church Information', {
-            'fields': ('name', 'description', 'pastor_name'),
-            'description': 'Basic information about your church'
-        }),
-        ('📍 Location', {
-            'fields': ('address', 'city', 'state_province', 'country', 'postal_code'),
-            'description': 'Your church location and address'
-        }),
-        ('⏰ Service Times', {
-            'fields': ('service_times',),
-            'description': 'Enter your service times (e.g., "Sunday 9:00 AM & 11:00 AM", "11:30pm", "Wednesday 7:00 PM")'
-        }),
-        ('📞 Contact Information', {
-            'fields': ('phone', 'email', 'website'),
-            'description': 'How people can contact your church'
-        }),
-        ('System Information', {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def service_times_display(self, obj):
-        """Display service times in a readable format"""
-        if obj.service_times:
-            return obj.service_times
-        return "No times set"
-    service_times_display.short_description = "Service Times"
-    
-    def get_queryset(self, request):
-        """Only show the church for the current local admin"""
-        qs = super().get_queryset(request)
-        if not request.user.is_superuser:
-            try:
-                church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
-                if church_admin.role == 'local_admin' and church_admin.church:
-                    return qs.filter(id=church_admin.church.id)
-            except ChurchAdmin.DoesNotExist:
-                pass
-        return qs
-    
-    def has_add_permission(self, request):
-        """Local admins cannot add new churches"""
-        return request.user.is_superuser
-    
-    def has_delete_permission(self, request, obj=None):
-        """Local admins cannot delete churches"""
-        return request.user.is_superuser
-    
-    class Meta:
-        verbose_name = "Local Church Info"
-        verbose_name_plural = "Local Church Info"
+
 
 
 
@@ -1968,8 +1907,7 @@ admin.site.register(LeadershipPage, LeadershipPageAdmin)
 admin.site.register(LocalLeadershipPage, LocalLeadershipPageAdmin)
 admin.site.register(LocalAboutPage, LocalAboutPageAdmin)
 
-# Register Local Church Info admin for local church admins
-admin.site.register(Church, LocalChurchInfoAdmin, name='local_church_info')
+
 
 
 
