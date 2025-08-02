@@ -1670,6 +1670,15 @@ class GlobalSettings(models.Model):
         help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
     )
     
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

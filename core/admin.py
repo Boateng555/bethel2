@@ -1859,6 +1859,10 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
         ('Global Settings', {
             'fields': ('site_name', 'site_description', 'global_contact_email', 'global_contact_phone', 'global_nav_logo', 'global_nav_logo_preview')
         }),
+        ('Local Church Redirect Settings', {
+            'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
+            'description': 'Configure automatic redirect behavior and fallback church'
+        }),
         ('System Information', {
             'fields': ('id', 'created_at', 'updated_at'),
             'classes': ('collapse',)

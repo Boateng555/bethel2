@@ -292,9 +292,22 @@ def smart_home(request):
         else:
             print("DEBUG: Could not determine user location")
         
-        # If we can't determine location, no nearby church, or match quality is low, show church list
-        print("DEBUG: Redirecting to church list")
-        return redirect('church_list')
+        # If we can't determine location, no nearby church, or match quality is low, 
+        # try to redirect to main global church as fallback
+        try:
+            global_settings = GlobalSettings.objects.first()
+            if global_settings and global_settings.main_global_church:
+                print(f"DEBUG: No local church found, redirecting to main global church: {global_settings.main_global_church.name}")
+                request.session['global_church_fallback'] = True
+                request.session['redirected_church'] = global_settings.main_global_church.name
+                request.session.modified = True
+                return redirect('church_home', church_id=global_settings.main_global_church.id)
+            else:
+                print("DEBUG: No main global church configured, showing church list")
+                return redirect('church_list')
+        except Exception as e:
+            print(f"DEBUG: Error getting main global church: {e}")
+            return redirect('church_list')
         
     except Exception as e:
         print(f"DEBUG: Unexpected error in smart_home: {e}")
@@ -2268,6 +2281,8 @@ def clear_redirect_notification(request):
         # Clear the session variables
         if 'local_church_redirect' in request.session:
             del request.session['local_church_redirect']
+        if 'global_church_fallback' in request.session:
+            del request.session['global_church_fallback']
         if 'redirected_church' in request.session:
             del request.session['redirected_church']
         if 'clear_redirect_notification' in request.session:
