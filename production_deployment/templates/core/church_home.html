@@ -489,6 +489,25 @@
                 </a>
             </div>
         </div>
+        
+        <!-- Scroll Down Indicator -->
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+            <div class="flex flex-col items-center text-white">
+                <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
+                <div class="relative">
+                    <!-- Main double chevron -->
+                    <div class="flex flex-col items-center animate-bounce">
+                        <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
+                        <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
+                    </div>
+                    <!-- Reflection effect -->
+                    <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
+                        <i class="fas fa-chevron-down text-xl mb-1"></i>
+                        <i class="fas fa-chevron-down text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% else %}
         <!-- Fallback hero -->
         <div class="absolute inset-0 bg-deep-blue"></div>
@@ -503,6 +522,25 @@
                 <a href="{% url 'home' %}?global=1" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-sm">
                     Go to Global Site
                 </a>
+            </div>
+        </div>
+        
+        <!-- Scroll Down Indicator -->
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+            <div class="flex flex-col items-center text-white">
+                <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
+                <div class="relative">
+                    <!-- Main double chevron -->
+                    <div class="flex flex-col items-center animate-bounce">
+                        <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
+                        <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
+                    </div>
+                    <!-- Reflection effect -->
+                    <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
+                        <i class="fas fa-chevron-down text-xl mb-1"></i>
+                        <i class="fas fa-chevron-down text-xl"></i>
+                    </div>
+                </div>
             </div>
         </div>
     {% endif %}

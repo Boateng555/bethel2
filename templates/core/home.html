@@ -152,6 +152,61 @@
         .relative.z-10 {
           z-index: 10 !important; /* Lower than swipe area */
         }
+        
+        /* Cool scroll down animation */
+        @keyframes coolBounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0) translateX(-50%);
+          }
+          40% {
+            transform: translateY(-15px) translateX(-50%);
+          }
+          60% {
+            transform: translateY(-8px) translateX(-50%);
+          }
+        }
+        
+        @keyframes coolPulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.1);
+          }
+        }
+        
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(30, 58, 138, 0.6);
+          }
+        }
+        
+        .scroll-indicator {
+          animation: coolBounce 2s infinite;
+          background: rgba(30, 58, 138, 0.9);
+          border-radius: 25px;
+          padding: 15px 25px;
+          border: 2px solid white;
+          animation: coolBounce 2s infinite, glow 3s infinite;
+        }
+        
+        .scroll-arrow {
+          animation: coolPulse 1.5s infinite;
+          color: white;
+          font-size: 24px;
+        }
+        
+        .scroll-text {
+          color: white;
+          font-weight: bold;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+          margin-bottom: 8px;
+        }
       }
     </style>
 </head>
@@ -283,8 +338,27 @@
                 <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">{{ hero.title }}</h1>
                 <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">{{ hero.subtitle }}</p>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">{{ hero.primary_button_text }}</a>
+                    <a href="/churches/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Find Nearest Church</a>
                     <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">{{ hero.secondary_button_text }}</a>
+                </div>
+            </div>
+            
+            <!-- Scroll Down Indicator -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+                <div class="flex flex-col items-center text-white">
+                    <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
+                    <div class="relative">
+                        <!-- Main double chevron -->
+                        <div class="flex flex-col items-center animate-bounce">
+                            <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
+                            <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
+                        </div>
+                        <!-- Reflection effect -->
+                        <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
+                            <i class="fas fa-chevron-down text-xl mb-1"></i>
+                            <i class="fas fa-chevron-down text-xl"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% else %}
@@ -298,12 +372,31 @@
                     Join us in worship and community as we grow together in faith.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                    <a href="/churches/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
                         Find Nearest Church
                     </a>
                     <a href="/watch" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
                         Watch Online
                     </a>
+                </div>
+            </div>
+            
+            <!-- Scroll Down Indicator -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+                <div class="flex flex-col items-center text-white">
+                    <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
+                    <div class="relative">
+                        <!-- Main double chevron -->
+                        <div class="flex flex-col items-center animate-bounce">
+                            <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
+                            <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
+                        </div>
+                        <!-- Reflection effect -->
+                        <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
+                            <i class="fas fa-chevron-down text-xl mb-1"></i>
+                            <i class="fas fa-chevron-down text-xl"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endif %}
