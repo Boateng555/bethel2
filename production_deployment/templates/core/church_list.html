@@ -198,8 +198,8 @@
                            title="Open in Google Maps">
                             {{ church.address }}
                         </a>
-                        <span class="text-xs text-[#1e3a8a] ml-2 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}" style="display: none;">
-                            <span class="distance-text"></span>
+                        <span class="text-xs text-[#1e3a8a] ml-2 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}">
+                            <span class="distance-text">Getting distance...</span>
                         </span>
                         {% else %}
                         <span class="text-sm">{{ church.address }}</span>
@@ -278,11 +278,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Format distance for display
 function formatDistance(distance) {
     if (distance < 1) {
-        return Math.round(distance * 1000) + 'm';
+        return Math.round(distance * 1000) + 'm from you';
     } else if (distance < 10) {
-        return distance.toFixed(1) + 'km';
+        return distance.toFixed(1) + 'km from you';
     } else {
-        return Math.round(distance) + 'km';
+        return Math.round(distance) + 'km from you';
     }
 }
 
@@ -294,57 +294,121 @@ function updateDistances(userLat, userLng) {
         const churchLng = parseFloat(element.dataset.lng);
         const distance = calculateDistance(userLat, userLng, churchLat, churchLng);
         const distanceText = element.querySelector('.distance-text');
-        distanceText.textContent = `(${formatDistance(distance)})`;
+        distanceText.textContent = formatDistance(distance);
         element.style.display = 'inline';
     });
 }
 
 // Initialize geolocation and distance calculation
 window.addEventListener('DOMContentLoaded', function() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
+    // Try to get user location automatically
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            // Use high accuracy and shorter timeout for better user experience
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 300000 // 5 minutes cache
+            };
             
-            // Update distances for all churches
-            updateDistances(userLat, userLng);
-            
-            // Use a free geocoding API to get city/country from lat/lng
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.address) {
-                        const country = data.address.country;
-                        const city = data.address.city || data.address.town || data.address.village;
-                        // Set the select fields if not already set
-                        const countrySelect = document.getElementById('country');
-                        const citySelect = document.getElementById('city');
-                        if (countrySelect && !countrySelect.value && country) {
-                            for (let opt of countrySelect.options) {
-                                if (opt.text === country) {
-                                    opt.selected = true;
-                                    break;
-                                }
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Update distances for all churches
+                    updateDistances(userLat, userLng);
+                    
+                    // Auto-fill location filters
+                    autoFillLocationFilters(userLat, userLng);
+                },
+                function(error) {
+                    console.log('Geolocation failed:', error);
+                    // Fallback to IP-based geolocation
+                    getLocationFromIP();
+                },
+                options
+            );
+        } else {
+            console.log('Geolocation not supported');
+            // Fallback to IP-based geolocation
+            getLocationFromIP();
+        }
+    }
+    
+    // IP-based geolocation fallback
+    function getLocationFromIP() {
+        fetch('https://ipapi.co/json/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.latitude && data.longitude) {
+                    const userLat = parseFloat(data.latitude);
+                    const userLng = parseFloat(data.longitude);
+                    
+                    // Update distances for all churches
+                    updateDistances(userLat, userLng);
+                    
+                    // Auto-fill location filters
+                    autoFillLocationFilters(userLat, userLng);
+                } else {
+                    showDistanceMessage('Location unavailable');
+                }
+            })
+            .catch(error => {
+                console.log('IP geolocation failed:', error);
+                showDistanceMessage('Location unavailable');
+            });
+    }
+    
+    // Auto-fill location filters
+    function autoFillLocationFilters(userLat, userLng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.address) {
+                    const country = data.address.country;
+                    const city = data.address.city || data.address.town || data.address.village;
+                    
+                    // Set the select fields if not already set
+                    const countrySelect = document.getElementById('country');
+                    const citySelect = document.getElementById('city');
+                    
+                    if (countrySelect && !countrySelect.value && country) {
+                        for (let opt of countrySelect.options) {
+                            if (opt.text === country) {
+                                opt.selected = true;
+                                break;
                             }
-                        }
-                        if (citySelect && !citySelect.value && city) {
-                            for (let opt of citySelect.options) {
-                                if (opt.text === city) {
-                                    opt.selected = true;
-                                    break;
-                                }
-                            }
-                        }
-                        // Optionally auto-submit the form if both are set
-                        if (countrySelect.value && citySelect.value) {
-                            countrySelect.form.submit();
                         }
                     }
-                });
-        }, function(error) {
-            console.log('Geolocation not available or denied');
+                    
+                    if (citySelect && !citySelect.value && city) {
+                        for (let opt of citySelect.options) {
+                            if (opt.text === city) {
+                                opt.selected = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Error getting location details:', error);
+            });
+    }
+    
+    // Show distance message
+    function showDistanceMessage(message) {
+        const distanceElements = document.querySelectorAll('.distance-info');
+        distanceElements.forEach(element => {
+            const distanceText = element.querySelector('.distance-text');
+            distanceText.textContent = message;
+            element.style.display = 'inline';
         });
     }
+    
+    // Start location detection immediately
+    getUserLocation();
 });
 </script>
 {% endblock %} 
