@@ -1679,6 +1679,15 @@ class GlobalSettings(models.Model):
         help_text="Main global church to redirect to when no local church is found"
     )
     
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
