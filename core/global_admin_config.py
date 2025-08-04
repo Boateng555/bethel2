@@ -1,8 +1,18 @@
 from django.contrib import admin
 from django import forms
 from .models import (
-    Convention, NewsletterSignup, Hero
+    Convention, NewsletterSignup, Hero, HeroMedia
 )
+
+class GlobalHeroMediaInline(admin.TabularInline):
+    model = HeroMedia
+    extra = 3  # Allow adding 3 new media items at once
+    max_num = 10  # Maximum 10 media items per hero
+    fields = ('image', 'video', 'order')
+    verbose_name = "Hero Media Item"
+    verbose_name_plural = "Hero Media Items"
+    help_text = "Add multiple images and videos for the hero carousel. Images and videos will be displayed in order. You can add up to 10 media items."
+    fk_name = 'hero'
 
 class GlobalAdminMixin:
     """Mixin for global admin content that's not tied to any church"""
@@ -63,6 +73,7 @@ class GlobalHeroAdmin(GlobalAdminMixin, admin.ModelAdmin):
     list_filter = ['background_type', 'is_active', 'created_at']
     search_fields = ['title', 'subtitle']
     readonly_fields = ['id', 'created_at', 'updated_at']
+    inlines = [GlobalHeroMediaInline]
     
     fieldsets = (
         ('Hero Information', {
@@ -70,6 +81,10 @@ class GlobalHeroAdmin(GlobalAdminMixin, admin.ModelAdmin):
         }),
         ('Background', {
             'fields': ('background_type', 'background_image', 'background_video')
+        }),
+        ('Hero Media', {
+            'fields': (),  # No direct fields, managed via GlobalHeroMediaInline
+            'description': 'Add multiple images and videos for the hero carousel using the "Hero Media Items" section below.'
         }),
         ('Buttons', {
             'fields': ('primary_button_text', 'primary_button_link', 'secondary_button_text', 'secondary_button_link')

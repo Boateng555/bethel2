@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
 from rest_framework import generics
-from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings
+from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings, PrayerRequest, ContactMessage, LiveStreamSettings
 from .serializers import EventSerializer, MinistrySerializer, NewsSerializer, NewsletterSignupSerializer
 from datetime import datetime, timedelta, time
 from django.utils import timezone
@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.core.management import call_command
-from .forms import TestimonyForm, MinistryJoinRequestForm, EventRegistrationForm
+from .forms import TestimonyForm, MinistryJoinRequestForm, EventRegistrationForm, PrayerRequestForm, ContactMessageForm
 from django.utils.http import urlencode
 import qrcode
 import io
@@ -610,12 +610,71 @@ def shop(request):
     return render(request, 'core/shop.html', context)
 
 def watch(request):
-    all_events = Event.objects.filter(is_public=True)
-    all_ministries = Ministry.objects.filter(is_public=True)
+    """Watch page - displays sermons and live streams"""
+    # Get filter parameters
+    keyword = request.GET.get('keyword', '').strip()
+    preacher = request.GET.get('preacher', '').strip()
+    date_filter = request.GET.get('date', '').strip()
+    
+    # Start with all public sermons
+    sermons = Sermon.objects.filter(is_public=True)
+    
+    # Apply keyword filter (search in title and description)
+    if keyword:
+        sermons = sermons.filter(
+            models.Q(title__icontains=keyword) |
+            models.Q(description__icontains=keyword) |
+            models.Q(scripture_reference__icontains=keyword)
+        )
+    
+    # Apply preacher filter
+    if preacher:
+        sermons = sermons.filter(preacher__icontains=preacher)
+    
+    # Apply date filter
+    if date_filter:
+        try:
+            # Convert date string to date object
+            from datetime import datetime
+            filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            sermons = sermons.filter(date=filter_date)
+        except ValueError:
+            # If date format is invalid, ignore the filter
+            pass
+    
+    # Order by date (newest first)
+    sermons = sermons.order_by('-date')
+    
+    # Get featured sermons (for hero section)
+    featured_sermons = sermons.filter(is_featured=True)[:3]
+    
+    # Get recent sermons
+    recent_sermons = sermons[:6]
+    
+    # Get all preachers for filter dropdown
+    preachers = Sermon.objects.filter(is_public=True).values_list('preacher', flat=True).distinct()
+    
+    # Get live stream settings
+    try:
+        live_stream_settings = LiveStreamSettings.objects.first()
+        is_live = live_stream_settings.get_live_status() if live_stream_settings else False
+        next_service = live_stream_settings.get_next_service_time() if live_stream_settings else "No upcoming services"
+    except:
+        live_stream_settings = None
+        is_live = False
+        next_service = "No upcoming services"
     
     context = {
-        'all_events': all_events,
-        'all_ministries': all_ministries,
+        'sermons': sermons,
+        'featured_sermons': featured_sermons,
+        'recent_sermons': recent_sermons,
+        'preachers': preachers,
+        'live_stream_settings': live_stream_settings,
+        'is_live': is_live,
+        'next_service': next_service,
+        'keyword': keyword,
+        'preacher': preacher,
+        'date_filter': date_filter,
     }
     return render(request, 'core/watch.html', context)
 
@@ -1801,6 +1860,221 @@ def testimonies(request):
         'form': form,
     }
     return render(request, 'core/testimonies.html', context)
+
+def volunteer(request):
+    """Volunteer page - shows all ministries and allows joining"""
+    # Get all active ministries from all churches
+    ministries = Ministry.objects.filter(is_active=True, is_public=True).select_related('church')
+    
+    # Group ministries by church
+    churches_with_ministries = {}
+    for ministry in ministries:
+        church = ministry.church
+        if church not in churches_with_ministries:
+            churches_with_ministries[church] = []
+        churches_with_ministries[church].append(ministry)
+    
+    # Handle ministry join requests
+    join_success = False
+    selected_ministry = None
+    
+    if request.method == 'POST':
+        form = MinistryJoinRequestForm(request.POST)
+        if form.is_valid():
+            ministry_id = request.POST.get('ministry_id')
+            try:
+                ministry = Ministry.objects.get(id=ministry_id, is_active=True)
+                join_request = form.save(commit=False)
+                join_request.ministry = ministry
+                join_request.church = ministry.church
+                join_request.save()
+                join_success = True
+                selected_ministry = ministry
+                form = MinistryJoinRequestForm()  # Reset form
+            except Ministry.DoesNotExist:
+                pass
+    else:
+        form = MinistryJoinRequestForm()
+    
+    context = {
+        'churches_with_ministries': churches_with_ministries,
+        'join_form': form,
+        'join_success': join_success,
+        'selected_ministry': selected_ministry,
+    }
+    return render(request, 'core/volunteer.html', context)
+
+def prayer_request(request):
+    """Prayer requests page - submit and view prayer requests"""
+    # Handle prayer request submission
+    submit_success = False
+    
+    if request.method == 'POST':
+        form = PrayerRequestForm(request.POST)
+        if form.is_valid():
+            prayer_request = form.save(commit=False)
+            # Auto-assign church if user is on a church-specific page
+            if hasattr(request, 'church'):
+                prayer_request.church = request.church
+            prayer_request.save()
+            messages.success(request, 'Thank you for your prayer request! It will be reviewed and published soon.')
+            return redirect('prayer_request')
+    else:
+        form = PrayerRequestForm()
+    
+    # Get approved prayer requests
+    prayer_requests = PrayerRequest.objects.filter(
+        is_approved=True, 
+        is_public=True
+    ).order_by('-created_at')
+    
+    # Filter by category if requested
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        prayer_requests = prayer_requests.filter(category=category_filter)
+    
+    # Get answered prayers
+    answered_prayers = PrayerRequest.objects.filter(
+        is_approved=True,
+        is_public=True,
+        is_answered=True
+    ).order_by('-answered_date')
+    
+    context = {
+        'form': form,
+        'prayer_requests': prayer_requests,
+        'answered_prayers': answered_prayers,
+        'category_filter': category_filter,
+        'submit_success': submit_success,
+    }
+    return render(request, 'core/prayer_request.html', context)
+
+def contact(request):
+    """Contact page - allows users to send messages"""
+    # Get global settings for contact info
+    try:
+        global_settings = GlobalSettings.get_settings()
+    except:
+        global_settings = None
+    
+    # Handle contact form submissions
+    contact_success = False
+    
+    if request.method == 'POST':
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            contact_message = form.save(commit=False)
+            # Auto-assign church if user is on a church-specific page
+            if hasattr(request, 'church'):
+                contact_message.church = request.church
+            contact_message.save()
+            contact_success = True
+            form = ContactMessageForm()  # Reset form
+    else:
+        form = ContactMessageForm()
+    
+    context = {
+        'form': form,
+        'contact_success': contact_success,
+        'global_settings': global_settings,
+    }
+    return render(request, 'core/contact.html', context)
+
+def services(request):
+    """Services page - showcases church services and ministries"""
+    # Get global settings for contact info
+    try:
+        global_settings = GlobalSettings.get_settings()
+    except:
+        global_settings = None
+    
+    # Get all active ministries from all churches
+    ministries = Ministry.objects.filter(is_active=True, is_public=True).select_related('church')
+    
+    # Group ministries by type
+    ministry_types = {}
+    for ministry in ministries:
+        ministry_type = ministry.ministry_type
+        if ministry_type not in ministry_types:
+            ministry_types[ministry_type] = []
+        ministry_types[ministry_type].append(ministry)
+    
+    # Define service categories
+    service_categories = [
+        {
+            'title': 'Worship Services',
+            'description': 'Join us for inspiring worship services where we come together to praise, pray, and grow in faith.',
+            'icon': '🎵',
+            'services': [
+                'Sunday Services',
+                'Wednesday Prayer Meetings',
+                'Special Worship Events',
+                'Praise and Worship Ministry'
+            ]
+        },
+        {
+            'title': 'Children & Youth',
+            'description': 'Nurturing the next generation through age-appropriate programs and activities.',
+            'icon': '👶',
+            'services': [
+                'Sunday School',
+                'Youth Ministry',
+                'Children\'s Church',
+                'Vacation Bible School'
+            ]
+        },
+        {
+            'title': 'Community Outreach',
+            'description': 'Serving our community through various outreach programs and initiatives.',
+            'icon': '🤝',
+            'services': [
+                'Food Bank Ministry',
+                'Homeless Outreach',
+                'Community Service Projects',
+                'Mission Trips'
+            ]
+        },
+        {
+            'title': 'Spiritual Growth',
+            'description': 'Deepen your faith through Bible study, discipleship, and spiritual development programs.',
+            'icon': '📖',
+            'services': [
+                'Bible Study Groups',
+                'Discipleship Classes',
+                'Prayer Ministry',
+                'Counseling Services'
+            ]
+        },
+        {
+            'title': 'Family & Support',
+            'description': 'Supporting families and individuals through life\'s challenges and celebrations.',
+            'icon': '👨‍👩‍👧‍👦',
+            'services': [
+                'Marriage Counseling',
+                'Family Ministry',
+                'Grief Support',
+                'Addiction Recovery'
+            ]
+        },
+        {
+            'title': 'Special Events',
+            'description': 'Join us for special events, conferences, and celebrations throughout the year.',
+            'icon': '🎉',
+            'services': [
+                'Annual Conferences',
+                'Revival Services',
+                'Holiday Celebrations',
+                'Community Events'
+            ]
+        }
+    ]
+    
+    context = {
+        'service_categories': service_categories,
+        'ministry_types': ministry_types,
+        'global_settings': global_settings,
+    }
+    return render(request, 'core/services.html', context)
 
 def church_leadership(request, church_id):
     """Leadership page for individual churches"""

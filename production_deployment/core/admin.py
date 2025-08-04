@@ -1753,7 +1753,7 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
     form = GlobalSettingsForm
     """Admin for global settings"""
     list_display = ['site_name', 'updated_at']
-    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview', 'global_hero_preview']
     
     def global_nav_logo_preview(self, obj):
         """Display a preview of the global navigation logo"""
@@ -1764,6 +1764,40 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
             )
         return "No global navigation logo uploaded"
     global_nav_logo_preview.short_description = "Global Navigation Logo Preview"
+    
+    def global_hero_preview(self, obj):
+        """Display a preview of the global hero"""
+        if obj.global_hero:
+            hero = obj.global_hero
+            preview_html = f'<div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">'
+            preview_html += f'<h4 style="margin: 0 0 10px 0; color: #333;">{hero.title}</h4>'
+            preview_html += f'<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">{hero.subtitle[:100]}{"..." if len(hero.subtitle) > 100 else ""}</p>'
+            
+            if hero.background_image:
+                preview_html += f'<img src="{hero.get_background_image_url()}" style="max-width: 200px; max-height: 120px; border-radius: 4px; object-fit: cover;" />'
+            elif hero.background_video:
+                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">📹 Video Background</div>'
+            else:
+                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">No Background Media</div>'
+            
+            preview_html += f'<div style="margin-top: 10px; font-size: 12px; color: #888;">'
+            preview_html += f'Status: {"✅ Active" if hero.is_active else "❌ Inactive"} | '
+            preview_html += f'Order: {hero.order}'
+            preview_html += f'</div></div>'
+            
+            return format_html(preview_html)
+        return "No global hero selected"
+    global_hero_preview.short_description = "Global Hero Preview"
+    
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize the form to show only global heroes in the dropdown"""
+        form = super().get_form(request, obj, **kwargs)
+        if 'global_hero' in form.base_fields:
+            # Filter to show only global heroes (no church association)
+            from .models import Hero
+            form.base_fields['global_hero'].queryset = Hero.objects.filter(church__isnull=True).order_by('order', 'title')
+            form.base_fields['global_hero'].help_text = "Select a global hero (no church association) to display on the main site homepage"
+        return form
     
     def has_add_permission(self, request):
         """Only allow one global settings instance"""
@@ -1776,6 +1810,14 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Global Settings', {
             'fields': ('site_name', 'site_description', 'global_contact_email', 'global_contact_phone', 'global_nav_logo', 'global_nav_logo_preview')
+        }),
+        ('Global Hero Settings', {
+            'fields': ('global_hero', 'global_hero_preview', 'global_hero_rotation_enabled', 'global_hero_rotation_interval', 'global_hero_fallback_enabled'),
+            'description': 'Configure the hero banner that appears on the main global site homepage. Select a hero that has no church association (global heroes only).'
+        }),
+        ('Local Church Redirect Settings', {
+            'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
+            'description': 'Configure automatic redirect behavior and fallback church'
         }),
         ('System Information', {
             'fields': ('id', 'created_at', 'updated_at'),

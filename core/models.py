@@ -1688,6 +1688,20 @@ class GlobalSettings(models.Model):
         help_text="Global hero banner to display on the main global site homepage"
     )
     
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1720,3 +1734,5239 @@ class GlobalSettings(models.Model):
         """Get the global settings instance, create if doesn't exist"""
         settings, created = cls.objects.get_or_create()
         return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(instance, 'photo', max_width=300, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event speaker images: {e}")
+
+# @receiver(pre_save, sender=AboutPage)
+# def resize_about_page_images(sender, instance, **kwargs):
+#     """Resize about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing about page images: {e}")
+
+# @receiver(pre_save, sender=LeadershipPage)
+# def resize_leadership_page_images(sender, instance, **kwargs):
+#     """Resize leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['chairman_image', 'vice_chairman_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalLeadershipPage)
+# def resize_local_leadership_page_images(sender, instance, **kwargs):
+#     """Resize local leadership page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['pastor_image', 'assistant_pastor_image', 'board_image', 'team_image', 
+#                            'leadership_photo_1', 'leadership_photo_2', 'leadership_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=400, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local leadership page images: {e}")
+
+# @receiver(pre_save, sender=LocalAboutPage)
+# def resize_local_about_page_images(sender, instance, **kwargs):
+#     """Resize local about page images before saving - ALWAYS run"""
+#     try:
+#         for field_name in ['logo', 'founder_image', 'extra_image', 'about_photo_1', 'about_photo_2', 'about_photo_3']:
+#             field = getattr(instance, field_name)
+#             if field and not str(field).startswith('http'):
+#                 resize_image_field(instance, field_name, max_width=600, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing local about page images: {e}")
+
+# @receiver(pre_save, sender=EventHeroMedia)
+# def resize_event_hero_media_images(sender, instance, **kwargs):
+#     """Resize event hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event hero media images: {e}")
+
+class GlobalSettings(models.Model):
+    """Global settings for the entire Bethel platform"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Global Navigation Logo
+    global_nav_logo = models.ImageField(
+        upload_to='global/nav_logos/', 
+        blank=True, 
+        null=True, 
+        max_length=500, 
+        help_text="Global navigation logo that appears on all church pages"
+    )
+    
+    # Site Settings
+    site_name = models.CharField(max_length=200, default="Bethel Prayer Ministry International")
+    site_description = models.TextField(blank=True, help_text="Global site description")
+    
+    # Contact Information
+    global_contact_email = models.EmailField(blank=True)
+    global_contact_phone = models.CharField(max_length=20, blank=True)
+    
+    # Local Church Redirect Settings
+    local_church_redirect_enabled = models.BooleanField(
+        default=True, 
+        help_text="Enable automatic redirect to nearest church based on user location"
+    )
+    local_church_redirect_min_score = models.IntegerField(
+        default=100,
+        help_text="Minimum score required for church redirect (50=country match, 100=partial city, 200=exact city)"
+    )
+    local_church_redirect_max_distance_km = models.IntegerField(
+        default=50,
+        help_text="Maximum distance in kilometers for church redirect (when coordinates are available)"
+    )
+    
+    # Global Church Fallback
+    main_global_church = models.ForeignKey(
+        Church, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Main global church to redirect to when no local church is found"
+    )
+    
+    # Global Hero
+    global_hero = models.ForeignKey(
+        Hero, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Global hero banner to display on the main global site homepage"
+    )
+    
+    # Global Hero Settings
+    global_hero_rotation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable automatic rotation of multiple global heroes"
+    )
+    global_hero_rotation_interval = models.IntegerField(
+        default=5,
+        help_text="Rotation interval in seconds (minimum 3 seconds)"
+    )
+    global_hero_fallback_enabled = models.BooleanField(
+        default=True,
+        help_text="Show fallback hero if selected hero is inactive"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+    
+    def __str__(self):
+        return f"Global Settings - {self.site_name}"
+    
+    def get_global_nav_logo_url(self):
+        """Returns the correct URL for the global navigation logo"""
+        if self.global_nav_logo:
+            logo_str = str(self.global_nav_logo)
+            if logo_str.startswith('http'):
+                return logo_str
+            else:
+                return self.global_nav_logo.url
+        return ''
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one global settings instance exists
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValueError("Only one GlobalSettings instance can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the global settings instance, create if doesn't exist"""
+        settings, created = cls.objects.get_or_create()
+        return settings
+
+class PrayerRequest(models.Model):
+    """Prayer requests submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Request Details
+    name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Prayer Request
+    title = models.CharField(max_length=200, help_text="Brief title for your prayer request")
+    request = models.TextField(help_text="Share your prayer request here")
+    
+    # Optional Details
+    category = models.CharField(max_length=50, choices=[
+        ('health', 'Health & Healing'),
+        ('family', 'Family'),
+        ('financial', 'Financial'),
+        ('spiritual', 'Spiritual Growth'),
+        ('relationships', 'Relationships'),
+        ('work', 'Work/Career'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Privacy Settings
+    is_anonymous = models.BooleanField(default=False, help_text="Hide name when displaying")
+    is_public = models.BooleanField(default=True, help_text="Allow others to see and pray for this request")
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_answered = models.BooleanField(default=False, help_text="Mark as answered when prayer is fulfilled")
+    answered_date = models.DateTimeField(null=True, blank=True)
+    answer_notes = models.TextField(blank=True, help_text="Notes about how the prayer was answered")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Prayer Request'
+        verbose_name_plural = 'Prayer Requests'
+    
+    def __str__(self):
+        return f"{self.get_display_name()} - {self.title}"
+    
+    def get_display_name(self):
+        """Returns the name to display (anonymous or actual name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.name
+    
+    def get_short_request(self):
+        """Returns a shortened version of the prayer request"""
+        if len(self.request) <= 100:
+            return self.request
+        return self.request[:100] + "..."
+    
+    def mark_as_answered(self, notes=""):
+        """Mark the prayer request as answered"""
+        self.is_answered = True
+        self.answered_date = timezone.now()
+        self.answer_notes = notes
+        self.save()
+
+class ContactMessage(models.Model):
+    """Contact form messages submitted by users"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Contact Details
+    name = models.CharField(max_length=100, help_text="Your full name")
+    email = models.EmailField(help_text="Your email address")
+    phone = models.CharField(max_length=20, blank=True, help_text="Phone number (optional)")
+    
+    # Message Details
+    subject = models.CharField(max_length=200, help_text="Subject of your message")
+    message = models.TextField(help_text="Your message")
+    
+    # Category
+    category = models.CharField(max_length=50, choices=[
+        ('general', 'General Inquiry'),
+        ('prayer', 'Prayer Request'),
+        ('donation', 'Donation Question'),
+        ('event', 'Event Information'),
+        ('ministry', 'Ministry Question'),
+        ('technical', 'Technical Support'),
+        ('other', 'Other'),
+    ], default='general')
+    
+    # Status
+    is_read = models.BooleanField(default=False, help_text="Mark as read when reviewed")
+    is_replied = models.BooleanField(default=False, help_text="Mark as replied when responded to")
+    reply_message = models.TextField(blank=True, help_text="Admin reply to the user")
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact_replies')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_short_message(self):
+        """Returns a shortened version of the message"""
+        if len(self.message) <= 100:
+            return self.message
+        return self.message[:100] + "..."
+    
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
+    
+    def reply_to_message(self, reply_text, replied_by_user):
+        """Reply to the contact message"""
+        self.is_replied = True
+        self.reply_message = reply_text
+        self.replied_by = replied_by_user
+        self.replied_at = timezone.now()
+        self.save()
+
+# Signal to automatically set up new churches with default functionality
+@receiver(post_save, sender=Church)
+def setup_new_church(sender, instance, created, **kwargs):
+    """Automatically set up new churches with default functionality"""
+    if created:
+        # Use the church's setup method
+        instance.setup_default_functionality()
+
+@receiver(post_save, sender=ChurchAdmin)
+def setup_church_for_local_admin(sender, instance, created, **kwargs):
+    """Ensure default functionality is set up when a local admin is assigned to a church."""
+    if instance.role == 'local_admin' and instance.church:
+        # Setup default functionality
+        instance.church.setup_default_functionality()
+        
+        # Ensure Local Hero exists with Hero Media for local admins
+        if not Hero.objects.filter(church=instance.church).exists():
+            hero = Hero.objects.create(
+                church=instance.church,
+                title=f'Welcome to {instance.church.name}',
+                subtitle=f'Join us in worship and fellowship in {instance.church.city}, {instance.church.country}',
+                background_type='image',
+                primary_button_text='Plan Your Visit',
+                primary_button_link=f'/church/{instance.church.id}/about/',
+                secondary_button_text='Watch Online',
+                secondary_button_link=f'/church/{instance.church.id}/sermons/',
+                is_active=True,
+                order=1
+            )
+            
+            # Create default Hero Media for the hero
+            HeroMedia.objects.create(
+                hero=hero,
+                image=None,  # Will be uploaded by admin
+                video=None,  # Will be uploaded by admin
+                order=1
+            )
+
+@receiver(post_save, sender=ChurchAdmin)
+def assign_local_admin_permissions(sender, instance, created, **kwargs):
+    if instance.role == 'local_admin':
+        from django.contrib.auth.models import Permission
+        model_codenames = [
+            'ministry', 'event', 'news', 'sermon', 'hero', 'heromedia', 'donationmethod', 'localhero', 'eventheromedia', 'ministryjoinrequest'
+        ]
+        for codename in model_codenames:
+            for action in ['add', 'change', 'delete', 'view']:
+                perm_codename = f"{action}_{codename}"
+                try:
+                    perm = Permission.objects.get(codename=perm_codename)
+                    instance.user.user_permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+        instance.user.save()
+
+class LocalHero(Hero):
+    """Proxy model for local church heroes"""
+    class Meta:
+        proxy = True
+        verbose_name = "Local Hero"
+        verbose_name_plural = "Local Heroes"
+    
+    def save(self, *args, **kwargs):
+        """Ensure local heroes always have a church assigned"""
+        if not self.church:
+            raise ValueError("Local heroes must have a church assigned")
+        super().save(*args, **kwargs)
+
+class Testimony(models.Model):
+    """User-submitted testimonies"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Testimony Details
+    author_name = models.CharField(max_length=100, help_text="Your name (can be anonymous)")
+    author_email = models.EmailField(help_text="Your email (will not be displayed publicly)")
+    title = models.CharField(max_length=200, help_text="Brief title for your testimony")
+    content = models.TextField(help_text="Share your testimony here")
+    
+    # Optional Details
+    location = models.CharField(max_length=100, blank=True, help_text="City, Country (optional)")
+    category = models.CharField(max_length=50, choices=[
+        ('salvation', 'Salvation Story'),
+        ('healing', 'Healing'),
+        ('deliverance', 'Deliverance'),
+        ('blessing', 'Blessing'),
+        ('ministry', 'Ministry Impact'),
+        ('family', 'Family'),
+        ('other', 'Other'),
+    ], default='other')
+    
+    # Status
+    is_approved = models.BooleanField(default=False, help_text="Admin approval required before publishing")
+    is_featured = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False, help_text="Hide author name when displaying")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Testimonies"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        if self.is_anonymous:
+            return f"Anonymous Testimony - {self.title}"
+        return f"{self.author_name} - {self.title}"
+    
+    def get_display_name(self):
+        """Get the name to display (anonymous or real name)"""
+        if self.is_anonymous:
+            return "Anonymous"
+        return self.author_name
+
+class AboutPage(models.Model):
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    logo = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    founder_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    extra_image = models.ImageField(upload_to='about/', blank=True, null=True, max_length=500)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Page"
+
+    def __str__(self):
+        return self.title
+
+class LeadershipPage(models.Model):
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Chairman", max_length=500)
+    vice_chairman_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Photo of the Vice Chairman", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Leadership Page"
+        verbose_name_plural = "Leadership Page"
+    
+    def __str__(self):
+        return f"Leadership Page - {self.updated_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page exists
+        if not self.pk:
+            LeadershipPage.objects.all().delete()
+        super().save(*args, **kwargs)
+
+class LocalLeadershipPage(models.Model):
+    """Leadership page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='leadership_page')
+    title = models.CharField(max_length=200, default="Leadership")
+    intro = models.TextField("Introduction", blank=True)
+    current_leadership = models.TextField("Current Leadership", blank=True)
+    board_members = models.TextField("Board Members", blank=True)
+    leadership_team = models.TextField("Leadership Team", blank=True)
+    vision_statement = models.TextField("Vision Statement", blank=True)
+    mission_statement = models.TextField("Mission Statement", blank=True)
+    
+    # Images
+    pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Pastor", max_length=500)
+    assistant_pastor_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Photo of the Assistant Pastor", max_length=500)
+    board_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of board members", max_length=500)
+    team_image = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Group photo of leadership team", max_length=500)
+    leadership_photo_1 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 1", max_length=500)
+    leadership_photo_2 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 2", max_length=500)
+    leadership_photo_3 = models.ImageField(upload_to='leadership/local/', blank=True, null=True, help_text="Additional leadership photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local Leadership Page"
+        verbose_name_plural = "Local Leadership Pages"
+    
+    def __str__(self):
+        return f"Leadership - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one leadership page per church
+        if not self.pk:
+            LocalLeadershipPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class LocalAboutPage(models.Model):
+    """About page for individual churches"""
+    church = models.OneToOneField(Church, on_delete=models.CASCADE, related_name='about_page')
+    title = models.CharField(max_length=200, default="About Us")
+    intro = models.TextField("Intro/Mission", blank=True)
+    founding_story = models.TextField("Founding Story", blank=True)
+    timeline = models.TextField("Timeline", blank=True)
+    leadership_timeline = models.TextField("Leadership Timeline", blank=True)
+    ministry_today = models.TextField("Ministry Today", blank=True)
+    quick_facts = models.TextField("Quick Facts", blank=True)
+    
+    # Images
+    logo = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Church logo", max_length=500)
+    founder_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Photo of church founder or pastor", max_length=500)
+    extra_image = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional church photo", max_length=500)
+    about_photo_1 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 1", max_length=500)
+    about_photo_2 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 2", max_length=500)
+    about_photo_3 = models.ImageField(upload_to='about/local/', blank=True, null=True, help_text="Additional about page photo 3", max_length=500)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Local About Page"
+        verbose_name_plural = "Local About Pages"
+    
+    def __str__(self):
+        return f"About - {self.church.name}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one about page per church
+        if not self.pk:
+            LocalAboutPage.objects.filter(church=self.church).delete()
+        super().save(*args, **kwargs)
+
+class MinistryJoinRequest(models.Model):
+    """User requests to join a ministry"""
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, related_name='join_requests')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Ministry Join Request'
+        verbose_name_plural = 'Ministry Join Requests'
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name} ({self.church.name})"
+
+class EventRegistration(models.Model):
+    """Event registrations for big events"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    # Attendee Info
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # Registration Details
+    registration_date = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Special Requirements
+    dietary_restrictions = models.TextField(blank=True)
+    special_needs = models.TextField(blank=True)
+    additional_notes = models.TextField(blank=True)
+    
+    # Status
+    is_confirmed = models.BooleanField(default=False)
+    confirmation_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-registration_date']
+        verbose_name = 'Event Registration'
+        verbose_name_plural = 'Event Registrations'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.event.title}"
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class EventHighlight(models.Model):
+    """Past event highlights and memories"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='highlights', null=True, blank=True)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    year = models.IntegerField(help_text="Year of the event")
+    
+    # Media
+    image = models.ImageField(upload_to='event_highlights/', blank=True, null=True, max_length=500)
+    video_url = models.URLField(blank=True, null=True, help_text="If a video is provided, it will be shown as the main media for this highlight. Otherwise, the image will be used. Enter a YouTube or Vimeo URL.")
+    
+    # Stats (optional)
+    attendees_count = models.IntegerField(null=True, blank=True)
+    testimonial = models.TextField(blank=True)
+    testimonial_author = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    is_featured = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-year', '-created_at']
+        verbose_name = 'Event Highlight'
+        verbose_name_plural = 'Event Highlights'
+    
+    def __str__(self):
+        return f"{self.title} ({self.year}) - {self.church.name}"
+
+class EventSpeaker(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='speakers')
+    name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='events/speakers/', blank=True, null=True, max_length=500)
+    title = models.CharField(max_length=100, blank=True)
+    bio = models.TextField(blank=True)
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class EventScheduleItem(models.Model):
+    event = models.ForeignKey('Event', on_delete=models.CASCADE, related_name='schedule_items')
+    day = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    location = models.CharField(max_length=200, blank=True)
+    
+    def __str__(self):
+        return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
+
+class EventHeroMedia(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='hero_media')
+    image = models.ImageField(upload_to='hero/', blank=True, null=True, max_length=500)
+    video = models.FileField(upload_to='hero/videos/', blank=True, null=True, max_length=500)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Media for {self.event.title} ({self.id})"
+    
+    def get_image_url(self):
+        """Returns the correct URL for the image field"""
+        if self.image:
+            image_str = str(self.image)
+            if image_str.startswith('http'):
+                return image_str
+            else:
+                return self.image.url
+        return ''
+    
+    def get_video_url(self):
+        """Returns the correct URL for the video field"""
+        if self.video:
+            video_str = str(self.video)
+            if video_str.startswith('http'):
+                return video_str
+            else:
+                return self.video.url
+        return ''
+
+# TEMPORARILY DISABLED - Image resizing signals causing issues with ImageKit
+# @receiver(pre_save, sender=Church)
+# def resize_church_images(sender, instance, **kwargs):
+#     """Resize church images before saving - ALWAYS run"""
+#     try:
+#         if instance.logo and not str(instance.logo).startswith('http'):
+#             resize_image_field(instance, 'logo', max_width=400, max_height=400, quality=85)
+#         if instance.banner_image and not str(instance.banner_image).startswith('http'):
+#             resize_image_field(instance, 'banner_image', max_width=1200, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing church images: {e}")
+
+# @receiver(pre_save, sender=Ministry)
+# def resize_ministry_images(sender, instance, **kwargs):
+#     """Resize ministry images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=600, max_height=400, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing ministry images: {e}")
+
+# @receiver(pre_save, sender=News)
+# def resize_news_images(sender, instance, **kwargs):
+#     """Resize news images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing news images: {e}")
+
+# @receiver(pre_save, sender=Sermon)
+# def resize_sermon_images(sender, instance, **kwargs):
+#     """Resize sermon images before saving - ALWAYS run"""
+#     try:
+#         if instance.thumbnail and not str(instance.thumbnail).startswith('http'):
+#             resize_image_field(instance, 'thumbnail', max_width=400, max_height=300, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing sermon images: {e}")
+
+# @receiver(pre_save, sender=Hero)
+# def resize_hero_images(sender, instance, **kwargs):
+#     """Resize hero images before saving - ALWAYS run"""
+#     try:
+#         if instance.background_image and not str(instance.background_image).startswith('http'):
+#             resize_image_field(instance, 'background_image', max_width=1920, max_height=1080, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero images: {e}")
+
+# @receiver(pre_save, sender=HeroMedia)
+# def resize_hero_media_images(sender, instance, **kwargs):
+#     """Resize hero media images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=1200, max_height=800, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing hero media images: {e}")
+
+# @receiver(pre_save, sender=EventHighlight)
+# def resize_event_highlight_images(sender, instance, **kwargs):
+#     """Resize event highlight images before saving - ALWAYS run"""
+#     try:
+#         if instance.image and not str(instance.image).startswith('http'):
+#             resize_image_field(instance, 'image', max_width=800, max_height=600, quality=85)
+#     except Exception as e:
+#         print(f"⚠️ Error resizing event highlight images: {e}")
+
+# @receiver(pre_save, sender=EventSpeaker)
+# def resize_event_speaker_images(sender, instance, **kwargs):
+#     """Resize event speaker images before saving - ALWAYS run"""
+#     try:
+#         if instance.photo and not str(instance.photo).startswith('http'):
+#             resize_image_field(
+
+
+class LiveStreamSettings(models.Model):
+    """Live streaming configuration settings"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(Church, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Platform settings
+    platform = models.CharField(max_length=20, choices=[
+        ('youtube', 'YouTube Live'),
+        ('facebook', 'Facebook Live'),
+        ('instagram', 'Instagram Live'),
+        ('zoom', 'Zoom'),
+        ('other', 'Other'),
+    ], default='youtube', help_text="Choose your live streaming platform")
+    
+    # YouTube settings
+    youtube_channel_id = models.CharField(max_length=100, blank=True, help_text="Your YouTube channel ID")
+    youtube_stream_key = models.CharField(max_length=200, blank=True, help_text="YouTube stream key (keep private)")
+    youtube_live_url = models.URLField(blank=True, help_text="Your YouTube live stream URL")
+    
+    # Facebook settings
+    facebook_page_id = models.CharField(max_length=100, blank=True, help_text="Your Facebook page ID")
+    facebook_live_url = models.URLField(blank=True, help_text="Your Facebook live stream URL")
+    
+    # General settings
+    is_live = models.BooleanField(default=False, help_text="Check when you're currently live streaming")
+    stream_title = models.CharField(max_length=200, blank=True, help_text="Title of your current live stream")
+    stream_description = models.TextField(blank=True, help_text="Description of your live stream")
+    
+    # Schedule settings
+    sunday_morning_time = models.TimeField(default='09:00', help_text="Sunday morning service time")
+    sunday_evening_time = models.TimeField(default='18:00', help_text="Sunday evening service time")
+    wednesday_time = models.TimeField(default='19:00', help_text="Wednesday service time")
+    friday_time = models.TimeField(default='18:00', help_text="Friday service time")
+    
+    # Auto-detection settings
+    auto_detect_live = models.BooleanField(default=True, help_text="Automatically detect when live based on schedule")
+    notify_congregation = models.BooleanField(default=True, help_text="Send notifications when going live")
+    
+    # Chat settings
+    enable_chat = models.BooleanField(default=True, help_text="Enable live chat during streams")
+    moderate_chat = models.BooleanField(default=True, help_text="Moderate chat messages")
+    
+    # Embed settings
+    embed_width = models.IntegerField(default=100, help_text="Embed width percentage")
+    embed_height = models.IntegerField(default=400, help_text="Embed height in pixels")
+    autoplay = models.BooleanField(default=True, help_text="Autoplay live stream when page loads")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Live Stream Settings'
+        verbose_name_plural = 'Live Stream Settings'
+    
+    def __str__(self):
+        return f"Live Stream Settings - {self.church.name if self.church else 'Global'}"
+    
+    def get_embed_code(self):
+        """Generate embed code based on platform"""
+        if self.platform == 'youtube' and self.youtube_channel_id:
+            return f"""
+<iframe 
+    width="{self.embed_width}%" 
+    height="{self.embed_height}" 
+    src="https://www.youtube.com/embed/live_stream?channel={self.youtube_channel_id}&autoplay={'1' if self.autoplay else '0'}"
+    frameborder="0" 
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+</iframe>
+            """.strip()
+        elif self.platform == 'facebook' and self.facebook_live_url:
+            return f"""
+<iframe 
+    width="{self.embed_width}%" 
+    height="{self.embed_height}" 
+    src="{self.facebook_live_url}"
+    frameborder="0" 
+    allowfullscreen>
+</iframe>
+            """.strip()
+        else:
+            return "<!-- No embed code available -->"
+    
+    def get_live_status(self):
+        """Check if currently live based on schedule and manual setting"""
+        if self.is_live:
+            return True
+        
+        if not self.auto_detect_live:
+            return False
+        
+        now = timezone.now()
+        day_of_week = now.weekday()  # Monday=0, Sunday=6
+        current_time = now.time()
+        
+        # Check if it's Sunday and during service times
+        if day_of_week == 6:  # Sunday
+            morning_start = self.sunday_morning_time
+            morning_end = (datetime.combine(datetime.today(), morning_start) + timedelta(hours=3)).time()
+            evening_start = self.sunday_evening_time
+            evening_end = (datetime.combine(datetime.today(), evening_start) + timedelta(hours=3)).time()
+            
+            if (morning_start <= current_time <= morning_end) or (evening_start <= current_time <= evening_end):
+                return True
+        
+        # Check other service days
+        elif day_of_week == 2 and self.wednesday_time:  # Wednesday
+            service_start = self.wednesday_time
+            service_end = (datetime.combine(datetime.today(), service_start) + timedelta(hours=2)).time()
+            if service_start <= current_time <= service_end:
+                return True
+        
+        elif day_of_week == 4 and self.friday_time:  # Friday
+            service_start = self.friday_time
+            service_end = (datetime.combine(datetime.today(), service_start) + timedelta(hours=2)).time()
+            if service_start <= current_time <= service_end:
+                return True
+        
+        return False
+    
+    def get_next_service_time(self):
+        """Get the next scheduled service time"""
+        now = timezone.now()
+        today = now.date()
+        current_time = now.time()
+        
+        # Check today's remaining services
+        if now.weekday() == 6:  # Sunday
+            if current_time < self.sunday_morning_time:
+                return f"Today at {self.sunday_morning_time.strftime('%I:%M %p')}"
+            elif current_time < self.sunday_evening_time:
+                return f"Today at {self.sunday_evening_time.strftime('%I:%M %p')}"
+        
+        # Find next service
+        days_ahead = 0
+        while days_ahead < 7:
+            check_date = today + timedelta(days=days_ahead)
+            check_weekday = check_date.weekday()
+            
+            if check_weekday == 6:  # Sunday
+                if days_ahead == 0 and current_time < self.sunday_morning_time:
+                    return f"Today at {self.sunday_morning_time.strftime('%I:%M %p')}"
+                elif days_ahead == 0 and current_time < self.sunday_evening_time:
+                    return f"Today at {self.sunday_evening_time.strftime('%I:%M %p')}"
+                else:
+                    return f"{check_date.strftime('%A')} at {self.sunday_morning_time.strftime('%I:%M %p')}"
+            
+            elif check_weekday == 2 and self.wednesday_time:  # Wednesday
+                if days_ahead == 0 and current_time < self.wednesday_time:
+                    return f"Today at {self.wednesday_time.strftime('%I:%M %p')}"
+                else:
+                    return f"{check_date.strftime('%A')} at {self.wednesday_time.strftime('%I:%M %p')}"
+            
+            elif check_weekday == 4 and self.friday_time:  # Friday
+                if days_ahead == 0 and current_time < self.friday_time:
+                    return f"Today at {self.friday_time.strftime('%I:%M %p')}"
+                else:
+                    return f"{check_date.strftime('%A')} at {self.friday_time.strftime('%I:%M %p')}"
+            
+            days_ahead += 1
+        
+        return "No upcoming services"

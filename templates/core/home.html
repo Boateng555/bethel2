@@ -323,11 +323,14 @@
                     <!-- Add Pagination -->
                     <div class="swiper-pagination"></div>
                 </div>
-                {% elif hero.background_video %}
+                {% elif hero.background_type == 'video' and hero.background_video %}
                     <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
-                        <source src="{{ hero.background_video }}" type="video/mp4" />
+                        <source src="{{ hero.get_background_video_url }}" type="video/mp4" />
                     </video>
-                {% elif hero.background_image %}
+                {% elif hero.background_type == 'image' and hero.background_image %}
+                    <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                {% elif hero.background_type == 'video' and hero.background_image %}
+                    <!-- Fallback to image when video is selected but no video file exists -->
                     <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
                 {% else %}
                     <div class="absolute inset-0 bg-gray-500"></div>

@@ -2,7 +2,7 @@ from django import forms
 from django.forms.widgets import ClearableFileInput
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Testimony, MinistryJoinRequest, EventRegistration
+from .models import Testimony, MinistryJoinRequest, EventRegistration, PrayerRequest, ContactMessage
 
 class TestimonyForm(forms.ModelForm):
     """Form for users to submit testimonies"""
@@ -67,6 +67,33 @@ class MinistryJoinRequestForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone (optional)'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Why do you want to join? (optional)', 'rows': 3}),
         }
+
+class PrayerRequestForm(forms.ModelForm):
+    class Meta:
+        model = PrayerRequest
+        fields = ['name', 'email', 'phone', 'title', 'request', 'category', 'is_anonymous', 'is_public']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Your Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Your Email'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone (optional)'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Brief title for your prayer request'}),
+            'request': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Share your prayer request here...', 'rows': 5}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'is_anonymous': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        name = cleaned_data.get('name')
+        is_anonymous = cleaned_data.get('is_anonymous')
+        
+        if not name and not is_anonymous:
+            raise forms.ValidationError(
+                "Please provide your name or check 'Share anonymously'"
+            )
+        
+        return cleaned_data
 
 class EventRegistrationForm(forms.ModelForm):
     class Meta:
@@ -147,3 +174,32 @@ class EnhancedImageField(forms.ImageField):
     def __init__(self, max_height=600, show_info=True, *args, **kwargs):
         kwargs['widget'] = EnhancedImageWidget(max_height=max_height, show_info=show_info)
         super().__init__(*args, **kwargs) 
+
+class ContactMessageForm(forms.ModelForm):
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone', 'subject', 'message', 'category']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Your Full Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Your Email Address'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number (optional)'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Subject of your message'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Your message...', 'rows': 6}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'name': 'Full Name',
+            'email': 'Email Address',
+            'phone': 'Phone Number (optional)',
+            'subject': 'Subject',
+            'message': 'Message',
+            'category': 'Category',
+        }
+        help_texts = {
+            'name': 'Your full name',
+            'email': 'Your email address',
+            'phone': 'Phone number (optional)',
+            'subject': 'Subject of your message',
+            'message': 'Your message',
+            'category': 'Select the category that best fits your inquiry',
+        } 

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test</title>
+    <style>
+        body { margin: 0; padding: 0; }
+        .hero-section {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #374151; /* gray-800 */
+        }
+        .video-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+        .content {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            color: white;
+            text-align: center;
+        }
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debug-info">
+        Loading...
+    </div>
+    
+    <div class="hero-section">
+        <div class="video-container">
+            <video class="video" autoplay muted loop playsinline id="test-video">
+                <source src="/media/hero/videos/WhatsApp_Video_2025-05-01_at_21_NesT7JS.54.17_76ddbd98.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="overlay"></div>
+        <div class="content">
+            <h1 style="font-size: 4rem; margin-bottom: 1rem;">Video Test</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 2rem;">If you can see this text, the overlay is working</p>
+            <p style="font-size: 1rem;">If you can see a video playing behind this text, the video is working!</p>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('test-video');
+        const debugInfo = document.getElementById('debug-info');
+        
+        function updateDebugInfo() {
+            const info = [
+                `Video found: ${video ? 'Yes' : 'No'}`,
+                `Video dimensions: ${video ? video.offsetWidth + 'x' + video.offsetHeight : 'N/A'}`,
+                `Video visible: ${video ? (video.offsetParent !== null) : 'N/A'}`,
+                `Video readyState: ${video ? video.readyState : 'N/A'}`,
+                `Video paused: ${video ? video.paused : 'N/A'}`,
+                `Video currentTime: ${video ? video.currentTime : 'N/A'}`,
+                `Video duration: ${video ? video.duration : 'N/A'}`
+            ];
+            debugInfo.innerHTML = info.join('<br>');
+        }
+        
+        if (video) {
+            video.addEventListener('loadstart', () => {
+                console.log('Video load started');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('loadeddata', () => {
+                console.log('Video data loaded');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('canplay', () => {
+                console.log('Video can play');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('error', (e) => {
+                console.error('Video error:', e);
+                console.error('Video error details:', video.error);
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('play', () => {
+                console.log('Video started playing');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('pause', () => {
+                console.log('Video paused');
+                updateDebugInfo();
+            });
+        }
+        
+        // Update debug info every second
+        setInterval(updateDebugInfo, 1000);
+        updateDebugInfo();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,201 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Volunteer - Bethel Prayer Ministry International{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Volunteer With Us</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Join our ministries and make a difference in our community. Find the perfect opportunity to serve and grow in your faith.
+        </p>
+    </div>
+</section>
+
+<!-- Success Message -->
+{% if join_success %}
+<div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <strong>Thank you!</strong> Your volunteer request for <strong>{{ selected_ministry.name }}</strong> has been submitted successfully. We'll contact you soon!
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ministries Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Available Ministries</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Discover opportunities to serve in various ministries across our churches. Click on any ministry to learn more and join.
+            </p>
+        </div>
+
+        {% if churches_with_ministries %}
+            {% for church, ministries in churches_with_ministries.items %}
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                    {{ church.name }}
+                    {% if church.city and church.country %}
+                        <span class="text-lg font-normal text-gray-600">- {{ church.city }}, {{ church.country }}</span>
+                    {% endif %}
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for ministry in ministries %}
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                        {% if ministry.image %}
+                        <div class="h-48 bg-gray-200">
+                            <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-full object-cover">
+                        </div>
+                        {% else %}
+                        <div class="h-48 bg-gradient-to-br from-[#1e3a8a] to-[#3b82f6] flex items-center justify-center">
+                            <svg class="w-16 h-16 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="p-6">
+                            <h4 class="text-xl font-semibold text-gray-900 mb-2">{{ ministry.name }}</h4>
+                            <p class="text-gray-600 mb-4 line-clamp-3">{{ ministry.description|truncatewords:20 }}</p>
+                            
+                            {% if ministry.leader_name %}
+                            <p class="text-sm text-gray-500 mb-4">
+                                <strong>Leader:</strong> {{ ministry.leader_name }}
+                            </p>
+                            {% endif %}
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="inline-block bg-[#1e3a8a] text-white text-xs px-2 py-1 rounded-full">
+                                    {{ ministry.get_ministry_type_display }}
+                                </span>
+                                <button 
+                                    onclick="openJoinModal('{{ ministry.id }}', '{{ ministry.name }}', '{{ ministry.description|escapejs }}')"
+                                    class="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Join Ministry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="bg-gray-100 rounded-lg p-8 max-w-md mx-auto">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Ministries Available</h3>
+                    <p class="text-gray-600">Check back soon for volunteer opportunities!</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Join Ministry Modal -->
+<div id="joinModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Join Ministry</h3>
+                <button onclick="closeJoinModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-gray-600" id="modalDescription"></p>
+            </div>
+            
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="ministry_id" id="ministryId">
+                
+                <div>
+                    <label for="{{ join_form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Your Name *
+                    </label>
+                    {{ join_form.name }}
+                    {% if join_form.name.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ join_form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ join_form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address *
+                    </label>
+                    {{ join_form.email }}
+                    {% if join_form.email.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ join_form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ join_form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number (Optional)
+                    </label>
+                    {{ join_form.phone }}
+                    {% if join_form.phone.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ join_form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ join_form.message.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Why do you want to join? (Optional)
+                    </label>
+                    {{ join_form.message }}
+                    {% if join_form.message.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ join_form.message.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeJoinModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openJoinModal(ministryId, ministryName, ministryDescription) {
+    document.getElementById('ministryId').value = ministryId;
+    document.getElementById('modalTitle').textContent = 'Join ' + ministryName;
+    document.getElementById('modalDescription').textContent = ministryDescription;
+    document.getElementById('joinModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeJoinModal() {
+    document.getElementById('joinModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.getElementById('joinModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeJoinModal();
+    }
+});
+</script>
+{% endblock %} 

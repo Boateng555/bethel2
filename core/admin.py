@@ -11,7 +11,7 @@ from .models import (
     Church, ChurchAdmin, Event, Ministry, News, Sermon, 
     DonationMethod, Convention,
     NewsletterSignup, Hero, LocalHero, ChurchApplication, GlobalFeatureRequest, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, MinistryJoinRequest,
-    EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, GlobalSettings
+    EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, GlobalSettings, LiveStreamSettings
 )
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -174,10 +174,21 @@ class SermonForm(forms.ModelForm):
 
 class HeroMediaForm(forms.ModelForm):
     image = forms.ImageField(required=False)
+    video = forms.FileField(required=False)
     
     class Meta:
         model = HeroMedia
         fields = ['image', 'video', 'order']
+        help_texts = {
+            'image': 'Upload an image for the hero carousel (recommended size: 1920x1080px). Images will be displayed in the carousel.',
+            'video': 'Upload a video file (MP4 recommended). Videos will appear in the hero carousel and take priority over images.',
+            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first in the carousel.'
+        }
+        labels = {
+            'image': 'Hero Image',
+            'video': 'Hero Video',
+            'order': 'Display Order'
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -189,14 +200,15 @@ class HeroMediaForm(forms.ModelForm):
 
 class EventHeroMediaForm(forms.ModelForm):
     image = forms.ImageField(required=False)
+    video = forms.FileField(required=False)
     
     class Meta:
         model = EventHeroMedia
         fields = ('image', 'video', 'order')
         help_texts = {
-            'image': 'Upload an image for this event (recommended size: 1200x800px). This will be used on event cards and in the hero carousel.',
+            'image': 'Upload an image for this event (recommended size: 1920x1080px). This will be used on event cards and in the hero carousel.',
             'video': 'Upload a video file (MP4 recommended). Videos will appear in the hero carousel and take priority over images.',
-            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first.'
+            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first in the carousel.'
         }
         labels = {
             'image': 'Event Image',
@@ -803,14 +815,15 @@ class ChurchAdminModelAdmin(LocalAdminMixin, admin.ModelAdmin):
 
 class EventHeroMediaForm(forms.ModelForm):
     image = forms.ImageField(required=False)
+    video = forms.FileField(required=False)
     
     class Meta:
         model = EventHeroMedia
         fields = ('image', 'video', 'order')
         help_texts = {
-            'image': 'Upload an image for this event (recommended size: 1200x800px). This will be used on event cards and in the hero carousel.',
+            'image': 'Upload an image for this event (recommended size: 1920x1080px). This will be used on event cards and in the hero carousel.',
             'video': 'Upload a video file (MP4 recommended). Videos will appear in the hero carousel and take priority over images.',
-            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first.'
+            'order': 'Display order (1 = first, 2 = second, etc.). Lower numbers appear first in the carousel.'
         }
         labels = {
             'image': 'Event Image',
@@ -821,11 +834,12 @@ class EventHeroMediaForm(forms.ModelForm):
 class EventHeroMediaInline(admin.StackedInline):
     model = EventHeroMedia
     form = EventHeroMediaForm
-    extra = 1
+    extra = 3  # Allow adding 3 new media items at once
+    max_num = 10  # Maximum 10 media items per event
     fields = ('image', 'video', 'order')
     verbose_name = "Event Media"
     verbose_name_plural = "Event Media"
-    help_text = "Add images and videos for your event. Images will be used on event cards and in the hero carousel. Videos will appear in the hero carousel."
+    help_text = "Add images and videos for your event. Images will be used on event cards and in the hero carousel. Videos will appear in the hero carousel. You can add up to 10 media items."
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -919,6 +933,26 @@ class MinistryJoinRequestInline(admin.TabularInline):
     show_change_link = True
     verbose_name = 'Join Request'
     verbose_name_plural = 'Join Requests'
+
+class MinistryJoinRequestAdmin(LocalAdminMixin, admin.ModelAdmin):
+    list_display = ['name', 'email', 'phone', 'ministry', 'church', 'created_at', 'is_reviewed']
+    list_filter = ['ministry', 'church', 'is_reviewed', 'created_at']
+    search_fields = ['name', 'email', 'phone', 'message', 'ministry__name', 'church__name']
+    readonly_fields = ['created_at']
+    actions = ['mark_as_reviewed']
+
+    def mark_as_reviewed(self, request, queryset):
+        for obj in queryset:
+            if not obj.is_reviewed:
+                # Send email notification
+                send_mail(
+                    subject='Your Ministry Join Request Has Been Reviewed',
+                    message=f"Dear {obj.name},\n\nYour request to join the ministry '{obj.ministry.name}' at {obj.church.name} has been reviewed by our team. We appreciate your interest and will be in touch if any further steps are needed.\n\nGod bless you!\n\nBethel Church Team",
+                    from_email=None,  # Use DEFAULT_FROM_EMAIL
+                    recipient_list=[obj.email],
+                    fail_silently=True,
+                )
+        queryset.update(is_reviewed=True)
 
 class MinistryForm(forms.ModelForm):
     image = forms.ImageField(required=False)
@@ -1316,11 +1350,13 @@ class GlobalFeatureRequestAdmin(GlobalAdminMixin, admin.ModelAdmin):
 class HeroMediaInline(admin.TabularInline):
     model = HeroMedia
     form = HeroMediaForm
-    extra = 1
+    extra = 3  # Allow adding 3 new media items at once
+    max_num = 10  # Maximum 10 media items per hero
     fields = ('image', 'video', 'order')
-    verbose_name_plural = "Hero Media"
-    help_text = "Images and videos added here will be used for the homepage hero carousel."
-    fk_name = 'hero'  # Explicitly set the FK for proxy model
+    verbose_name = "Hero Media Item"
+    verbose_name_plural = "Hero Media Items"
+    help_text = "Add multiple images and videos for the hero carousel. Images and videos will be displayed in order. You can add up to 10 media items."
+    fk_name = 'hero'
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -1529,14 +1565,41 @@ class LocalHeroAdmin(LocalAdminMixin, admin.ModelAdmin):
         }
         js = ('js/localhero_admin.js',)
 
-# Register only the new admin classes that are not registered elsewhere
-admin.site.register(Event, EventAdmin)
-admin.site.register(Ministry, MinistryAdmin)
-admin.site.register(News, NewsAdmin)
-admin.site.register(Sermon, SermonAdmin)
-admin.site.register(DonationMethod, DonationMethodAdmin)
-admin.site.register(ChurchApplication, ChurchApplicationAdmin)
-# Note: Hero, Convention, ConventionRegistration, and NewsletterSignup are registered in global_admin_config.py
+class HeroAdmin(GlobalAdminMixin, admin.ModelAdmin):
+    form = HeroForm
+    list_display = ['title', 'is_active', 'is_global_featured', 'order', 'created_at']
+    list_filter = ['is_active', 'is_global_featured', 'created_at']
+    search_fields = ['title', 'subtitle']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    inlines = [HeroMediaInline]
+    
+    def get_inline_instances(self, request, obj=None):
+        """Get inline instances for the admin"""
+        inline_instances = []
+        for inline_class in self.inlines:
+            inline = inline_class(self.model, self.admin_site)
+            inline_instances.append(inline)
+        return inline_instances
+    
+    fieldsets = (
+        ('Hero Information', {
+            'fields': ('title', 'subtitle', 'background_type', 'background_image', 'background_video')
+        }),
+        ('Hero Media', {
+            'fields': (),  # No direct fields, managed via HeroMediaInline
+            'description': 'Add multiple images and videos for the hero carousel using the "Hero Media Items" section below.'
+        }),
+        ('Buttons', {
+            'fields': ('primary_button_text', 'primary_button_link', 'secondary_button_text', 'secondary_button_link')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'is_global_featured', 'global_feature_status', 'global_feature_date', 'order')
+        }),
+        ('System', {
+            'fields': ('id', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 class TestimonyModelAdmin(LocalAdminMixin, admin.ModelAdmin):
     list_display = ['title', 'get_display_name', 'category', 'church', 'is_approved', 'is_featured', 'created_at']
@@ -1602,8 +1665,88 @@ class TestimonyModelAdmin(LocalAdminMixin, admin.ModelAdmin):
             
         return qs.none()
 
-# Register Testimony model
-admin.site.register(Testimony, TestimonyModelAdmin)
+class EventRegistrationAdmin(admin.ModelAdmin):
+    list_display = (
+        'first_name', 'last_name', 'email', 'phone', 'event', 'registration_date', 'payment_status'
+    )
+    search_fields = ('first_name', 'last_name', 'email', 'event__title')
+    list_filter = ('event', 'payment_status', 'registration_date')
+
+class GlobalSettingsAdmin(admin.ModelAdmin):
+    form = GlobalSettingsForm
+    """Admin for global settings"""
+    list_display = ['site_name', 'updated_at']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview', 'global_hero_preview']
+    
+    def global_nav_logo_preview(self, obj):
+        """Display a preview of the global navigation logo"""
+        if obj.global_nav_logo:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                obj.get_global_nav_logo_url()
+            )
+        return "No global navigation logo uploaded"
+    global_nav_logo_preview.short_description = "Global Navigation Logo Preview"
+    
+    def global_hero_preview(self, obj):
+        """Display a preview of the global hero"""
+        if obj.global_hero:
+            hero = obj.global_hero
+            preview_html = f'<div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">'
+            preview_html += f'<h4 style="margin: 0 0 10px 0; color: #333;">{hero.title}</h4>'
+            preview_html += f'<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">{hero.subtitle[:100]}{"..." if len(hero.subtitle) > 100 else ""}</p>'
+            
+            if hero.background_image:
+                preview_html += f'<img src="{hero.get_background_image_url()}" style="max-width: 200px; max-height: 120px; border-radius: 4px; object-fit: cover;" />'
+            elif hero.background_video:
+                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">📹 Video Background</div>'
+            else:
+                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">No Background Media</div>'
+            
+            preview_html += f'<div style="margin-top: 10px; font-size: 12px; color: #888;">'
+            preview_html += f'Status: {"✅ Active" if hero.is_active else "❌ Inactive"} | '
+            preview_html += f'Order: {hero.order}'
+            preview_html += f'</div></div>'
+            
+            return format_html(preview_html)
+        return "No global hero selected"
+    global_hero_preview.short_description = "Global Hero Preview"
+    
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize the form to show only global heroes in the dropdown"""
+        form = super().get_form(request, obj, **kwargs)
+        if 'global_hero' in form.base_fields:
+            # Filter to show only global heroes (no church association)
+            from .models import Hero
+            form.base_fields['global_hero'].queryset = Hero.objects.filter(church__isnull=True).order_by('order', 'title')
+            form.base_fields['global_hero'].help_text = "Select a global hero (no church association) to display on the main site homepage"
+        return form
+    
+    def has_add_permission(self, request):
+        """Only allow one global settings instance"""
+        return not GlobalSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of global settings"""
+        return False
+    
+    fieldsets = (
+        ('Global Settings', {
+            'fields': ('site_name', 'site_description', 'global_contact_email', 'global_contact_phone', 'global_nav_logo', 'global_nav_logo_preview')
+        }),
+        ('Global Hero Settings', {
+            'fields': ('global_hero', 'global_hero_preview', 'global_hero_rotation_enabled', 'global_hero_rotation_interval', 'global_hero_fallback_enabled'),
+            'description': 'Configure the hero banner that appears on the main global site homepage. Select a hero that has no church association (global heroes only).'
+        }),
+        ('Local Church Redirect Settings', {
+            'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
+            'description': 'Configure automatic redirect behavior and fallback church'
+        }),
+        ('System Information', {
+            'fields': ('id', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 class AboutPageAdmin(admin.ModelAdmin):
     form = AboutPageForm
@@ -1804,103 +1947,17 @@ class LocalAboutPageAdmin(LocalAdminMixin, admin.ModelAdmin):
         return ""
     about_photo_3_preview.short_description = "About Photo 3 Preview"
 
-
-
-
-
-class HeroAdmin(GlobalAdminMixin, admin.ModelAdmin):
-    form = HeroForm
-    list_display = ['title', 'is_active', 'is_global_featured', 'order', 'created_at']
-    list_filter = ['is_active', 'is_global_featured', 'created_at']
-    search_fields = ['title', 'subtitle']
-    readonly_fields = ['id', 'created_at', 'updated_at']
-    inlines = [HeroMediaInline]
-    fieldsets = (
-        ('Hero Information', {
-            'fields': ('title', 'subtitle', 'background_type', 'background_image', 'background_video')
-        }),
-        ('Buttons', {
-            'fields': ('primary_button_text', 'primary_button_link', 'secondary_button_text', 'secondary_button_link')
-        }),
-        ('Status', {
-            'fields': ('is_active', 'is_global_featured', 'global_feature_status', 'global_feature_date', 'order')
-        }),
-        ('System', {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-class GlobalSettingsAdmin(admin.ModelAdmin):
-    form = GlobalSettingsForm
-    """Admin for global settings"""
-    list_display = ['site_name', 'updated_at']
-    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview']
-    
-    def global_nav_logo_preview(self, obj):
-        """Display a preview of the global navigation logo"""
-        if obj.global_nav_logo:
-            return format_html(
-                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
-                obj.get_global_nav_logo_url()
-            )
-        return "No global navigation logo uploaded"
-    global_nav_logo_preview.short_description = "Global Navigation Logo Preview"
-    
-    def has_add_permission(self, request):
-        """Only allow one global settings instance"""
-        return not GlobalSettings.objects.exists()
-    
-    def has_delete_permission(self, request, obj=None):
-        """Prevent deletion of global settings"""
-        return False
-    
-    fieldsets = (
-        ('Global Settings', {
-            'fields': ('site_name', 'site_description', 'global_contact_email', 'global_contact_phone', 'global_nav_logo', 'global_nav_logo_preview', 'global_hero')
-        }),
-        ('Local Church Redirect Settings', {
-            'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
-            'description': 'Configure automatic redirect behavior and fallback church'
-        }),
-        ('System Information', {
-            'fields': ('id', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-
-
-class EventRegistrationAdmin(admin.ModelAdmin):
-    list_display = (
-        'first_name', 'last_name', 'email', 'phone', 'event', 'registration_date', 'payment_status'
-    )
-    search_fields = ('first_name', 'last_name', 'email', 'event__title')
-    list_filter = ('event', 'payment_status', 'registration_date')
-
-class MinistryJoinRequestAdmin(LocalAdminMixin, admin.ModelAdmin):
-    list_display = ['name', 'email', 'phone', 'ministry', 'church', 'created_at', 'is_reviewed']
-    list_filter = ['ministry', 'church', 'is_reviewed', 'created_at']
-    search_fields = ['name', 'email', 'phone', 'message', 'ministry__name', 'church__name']
-    readonly_fields = ['created_at']
-    actions = ['mark_as_reviewed']
-
-    def mark_as_reviewed(self, request, queryset):
-        for obj in queryset:
-            if not obj.is_reviewed:
-                # Send email notification
-                send_mail(
-                    subject='Your Ministry Join Request Has Been Reviewed',
-                    message=f"Dear {obj.name},\n\nYour request to join the ministry '{obj.ministry.name}' at {obj.church.name} has been reviewed by our team. We appreciate your interest and will be in touch if any further steps are needed.\n\nGod bless you!\n\nBethel Church Team",
-                    from_email=None,  # Use DEFAULT_FROM_EMAIL
-                    recipient_list=[obj.email],
-                    fail_silently=True,
-                )
-        queryset.update(is_reviewed=True)
-
-# Register all admin classes (final registration)
+# Register only the new admin classes that are not registered elsewhere
+admin.site.register(Event, EventAdmin)
+admin.site.register(Ministry, MinistryAdmin)
+admin.site.register(News, NewsAdmin)
+admin.site.register(Sermon, SermonAdmin)
+admin.site.register(DonationMethod, DonationMethodAdmin)
+admin.site.register(ChurchApplication, ChurchApplicationAdmin)
+admin.site.register(Testimony, TestimonyModelAdmin)
 admin.site.register(GlobalFeatureRequest, GlobalFeatureRequestAdmin)
 admin.site.register(LocalHero, LocalHeroAdmin)
+# Note: Hero is already registered in global_admin_config.py with GlobalHeroAdmin
 admin.site.register(Church, ChurchModelAdmin)
 admin.site.register(ChurchAdmin, ChurchAdminModelAdmin)
 admin.site.register(EventRegistration, EventRegistrationAdmin)
@@ -1910,6 +1967,157 @@ admin.site.register(AboutPage, AboutPageAdmin)
 admin.site.register(LeadershipPage, LeadershipPageAdmin)
 admin.site.register(LocalLeadershipPage, LocalLeadershipPageAdmin)
 admin.site.register(LocalAboutPage, LocalAboutPageAdmin)
+
+
+class LiveStreamSettingsAdmin(LocalAdminMixin, admin.ModelAdmin):
+    """Admin for live streaming settings"""
+    list_display = ['church', 'platform', 'is_live', 'stream_title', 'updated_at']
+    list_filter = ['platform', 'is_live', 'auto_detect_live', 'created_at']
+    search_fields = ['stream_title', 'stream_description', 'church__name']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'embed_code_preview']
+    
+    fieldsets = (
+        ('Platform Settings', {
+            'fields': ('church', 'platform'),
+            'description': 'Choose your live streaming platform and configure basic settings.'
+        }),
+        ('YouTube Settings', {
+            'fields': ('youtube_channel_id', 'youtube_stream_key', 'youtube_live_url'),
+            'description': 'Configure YouTube Live streaming settings. Your stream key should be kept private.',
+            'classes': ('collapse',)
+        }),
+        ('Facebook Settings', {
+            'fields': ('facebook_page_id', 'facebook_live_url'),
+            'description': 'Configure Facebook Live streaming settings.',
+            'classes': ('collapse',)
+        }),
+        ('Live Stream Status', {
+            'fields': ('is_live', 'stream_title', 'stream_description'),
+            'description': 'Set when you are currently live streaming and provide stream details.'
+        }),
+        ('Service Schedule', {
+            'fields': ('sunday_morning_time', 'sunday_evening_time', 'wednesday_time', 'friday_time'),
+            'description': 'Set your regular service times for automatic live detection.'
+        }),
+        ('Auto-Detection Settings', {
+            'fields': ('auto_detect_live', 'notify_congregation'),
+            'description': 'Configure automatic live detection based on your service schedule.'
+        }),
+        ('Chat Settings', {
+            'fields': ('enable_chat', 'moderate_chat'),
+            'description': 'Configure live chat settings for your streams.'
+        }),
+        ('Embed Settings', {
+            'fields': ('embed_width', 'embed_height', 'autoplay'),
+            'description': 'Configure how the live stream appears on your website.'
+        }),
+        ('Embed Code Preview', {
+            'fields': ('embed_code_preview',),
+            'description': 'Preview of the embed code that will be used on your website.',
+            'classes': ('collapse',)
+        }),
+        ('System Information', {
+            'fields': ('id', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def embed_code_preview(self, obj):
+        """Display a preview of the embed code"""
+        if obj.platform == 'youtube' and obj.youtube_channel_id:
+            embed_html = f"""
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                <h4 style="margin: 0 0 10px 0; color: #333;">YouTube Live Embed Preview</h4>
+                <div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">
+                    📺 YouTube Live Stream<br>
+                    Channel ID: {obj.youtube_channel_id}<br>
+                    Size: {obj.embed_width}% × {obj.embed_height}px<br>
+                    Autoplay: {'✅ Enabled' if obj.autoplay else '❌ Disabled'}
+                </div>
+            </div>
+            """
+            return format_html(embed_html)
+        elif obj.platform == 'facebook' and obj.facebook_live_url:
+            embed_html = f"""
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                <h4 style="margin: 0 0 10px 0; color: #333;">Facebook Live Embed Preview</h4>
+                <div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">
+                    📘 Facebook Live Stream<br>
+                    URL: {obj.facebook_live_url[:50]}...<br>
+                    Size: {obj.embed_width}% × {obj.embed_height}px
+                </div>
+            </div>
+            """
+            return format_html(embed_html)
+        else:
+            return format_html(
+                '<div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; color: #666;">'
+                '⚠️ No embed code available. Please configure your platform settings.'
+                '</div>'
+            )
+    embed_code_preview.short_description = "Embed Code Preview"
+    
+    def get_queryset(self, request):
+        """Filter queryset based on user permissions"""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        elif hasattr(request.user, 'churchadmin'):
+            church_admin = request.user.churchadmin
+            if church_admin.role == 'global_admin':
+                return qs
+            elif church_admin.church:
+                return qs.filter(church=church_admin.church)
+        return qs.none()
+    
+    def save_model(self, request, obj, form, change):
+        """Auto-assign church for local admins"""
+        if not obj.church and hasattr(request.user, 'churchadmin'):
+            church_admin = request.user.churchadmin
+            if church_admin.church:
+                obj.church = church_admin.church
+        super().save_model(request, obj, form, change)
+    
+    def has_add_permission(self, request):
+        """Allow local admins to add live stream settings for their church"""
+        if request.user.is_superuser:
+            return True
+        elif hasattr(request.user, 'churchadmin'):
+            church_admin = request.user.churchadmin
+            if church_admin.role == 'global_admin':
+                return True
+            elif church_admin.church:
+                # Check if they already have live stream settings
+                existing = LiveStreamSettings.objects.filter(church=church_admin.church).exists()
+                return not existing
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow local admins to edit their church's live stream settings"""
+        if request.user.is_superuser:
+            return True
+        elif hasattr(request.user, 'churchadmin'):
+            church_admin = request.user.churchadmin
+            if church_admin.role == 'global_admin':
+                return True
+            elif church_admin.church and obj:
+                return obj.church == church_admin.church
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow local admins to delete their church's live stream settings"""
+        return self.has_change_permission(request, obj)
+    
+    def is_global_admin(self, user):
+        """Check if user is a global admin"""
+        if user.is_superuser:
+            return True
+        elif hasattr(user, 'churchadmin'):
+            return user.churchadmin.role == 'global_admin'
+        return False
+
+
+admin.site.register(LiveStreamSettings, LiveStreamSettingsAdmin)
 
 
 

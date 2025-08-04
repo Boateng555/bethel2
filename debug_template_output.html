@@ -153,48 +153,71 @@
           z-index: 10 !important; /* Lower than swipe area */
         }
         
-        /* Custom scroll down animation */
-        @keyframes bounce {
+        /* Cool scroll down animation */
+        @keyframes coolBounce {
           0%, 20%, 50%, 80%, 100% {
             transform: translateY(0) translateX(-50%);
           }
           40% {
-            transform: translateY(-10px) translateX(-50%);
+            transform: translateY(-15px) translateX(-50%);
           }
           60% {
-            transform: translateY(-5px) translateX(-50%);
+            transform: translateY(-8px) translateX(-50%);
           }
         }
         
-        @keyframes pulse {
+        @keyframes coolPulse {
           0%, 100% {
             opacity: 1;
+            transform: scale(1);
           }
           50% {
-            opacity: 0.5;
+            opacity: 0.7;
+            transform: scale(1.1);
+          }
+        }
+        
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(30, 58, 138, 0.6);
           }
         }
         
         .scroll-indicator {
-          animation: bounce 2s infinite;
+          animation: coolBounce 2s infinite;
+          background: rgba(30, 58, 138, 0.9);
+          border-radius: 25px;
+          padding: 15px 25px;
+          border: 2px solid white;
+          animation: coolBounce 2s infinite, glow 3s infinite;
         }
         
         .scroll-arrow {
-          animation: pulse 2s infinite;
+          animation: coolPulse 1.5s infinite;
+          color: white;
+          font-size: 24px;
+        }
+        
+        .scroll-text {
+          color: white;
+          font-weight: bold;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+          margin-bottom: 8px;
         }
       }
     </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
-{% load static %}
+
     <!-- NAVBAR -->
     <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
-            {% if global_settings.global_nav_logo %}
-                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
-            {% else %}
-                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
-            {% endif %}
+            
+                <img src="/media/global/nav_logos/unnamed.jpg" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+            
             <span class="text-2xl font-bold font-serif">Bethel Prayer Ministry</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
@@ -207,22 +230,18 @@
                 <div class="dropdown-menu">
                     <a href="/events/" class="all-link">All Events</a>
                     <a href="/events/calendar/" class="text-sm">Calendar</a>
-                    {% for event in all_events %}
-                    <a href="/events/{{ event.id }}/" class="text-sm">{{ event.title }}</a>
-                    {% empty %}
+                    
                     <span class="no-items">No events available</span>
-                    {% endfor %}
+                    
                 </div>
             </div>
             <div class="dropdown-container">
                 <button class="hover:text-white transition-colors">Ministries ▾</button>
                 <div class="dropdown-menu">
                     <a href="/ministries/" class="all-link">All Ministries</a>
-                    {% for ministry in all_ministries %}
-                    <a href="/ministries/{{ ministry.id }}/" class="text-sm">{{ ministry.name }}</a>
-                    {% empty %}
+                    
                     <span class="no-items">No ministries available</span>
-                    {% endfor %}
+                    
                 </div>
             </div>
             <a href="/leadership" class="hover:text-white transition-colors">Leadership</a>
@@ -260,61 +279,43 @@
     </div>
 
     <!-- Messages -->
-    {% if messages %}
-    <div class="max-w-7xl mx-auto px-6 py-4">
-        {% for message in messages %}
-        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-[#1e3a8a] text-white{% elif message.tags == 'error' %}bg-[#1e3a8a] text-white{% else %}bg-[#1e3a8a] text-white{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    
 
 
 
     <!-- 1. Hero Section -->
     <section class="relative w-full h-screen overflow-hidden">
-        {% if hero %}
+        
             <div id="hero-media-container" class="absolute inset-0 w-full h-full">
-                {% if hero.hero_media.all %}
-                <!-- Swiper Carousel -->
-                <div class="swiper hero-swiper h-full">
-                    <div class="swiper-wrapper h-full">
-                        {% for media in hero.hero_media.all|dictsort:'order' %}
-                            {% if media.image %}
-                            <div class="swiper-slide h-full">
-                                <img src="{{ media.get_image_url }}" alt="Hero Media" class="w-full h-full object-cover" />
-                            </div>
-                            {% endif %}
-                            {% if media.video %}
-                            <div class="swiper-slide h-full">
-                                <video class="w-full h-full object-cover" autoplay muted loop>
-                                    <source src="{{ media.get_video_url }}" type="video/mp4" />
-                                </video>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <!-- Add Pagination -->
-                    <div class="swiper-pagination"></div>
-                </div>
-                {% elif hero.background_type == 'video' and hero.background_video %}
-                    <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
-                        <source src="{{ hero.get_background_video_url }}" type="video/mp4" />
+                
+                    <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover" id="hero-video">
+                        <source src="/media/hero/videos/WhatsApp_Video_2025-05-01_at_21_NesT7JS.54.17_76ddbd98.mp4" type="video/mp4" />
+                        Your browser does not support the video tag.
                     </video>
-                {% elif hero.background_type == 'image' and hero.background_image %}
-                    <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
-                {% else %}
-                    <div class="absolute inset-0 bg-gray-500"></div>
-                {% endif %}
+                    <script>
+                        console.log('Hero video debug - Video should be playing');
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const video = document.getElementById('hero-video');
+                            if (video) {
+                                console.log('Video element found');
+                                video.addEventListener('error', function(e) {
+                                    console.error('Video error:', e);
+                                });
+                                video.play().catch(function(error) {
+                                    console.error('Video play failed:', error);
+                                });
+                            }
+                        });
+                    </script>
+                
             </div>
             <div class="absolute inset-0 bg-black bg-opacity-40"></div>
             <div class="absolute inset-0 flex flex-col justify-center items-center z-10 px-6 text-center max-w-5xl mx-auto">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">{{ hero.title }}</h1>
-                <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">{{ hero.subtitle }}</p>
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">gndfxg gx</h1>
+                <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl">vgh</p>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="/churches/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Find Nearest Church</a>
-                    <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">{{ hero.secondary_button_text }}</a>
+                    <a href="/watch" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
                 </div>
             </div>
             
@@ -336,45 +337,7 @@
                     </div>
                 </div>
             </div>
-        {% else %}
-            <!-- Fallback hero without hero content -->
-            <div class="absolute inset-0 bg-gray-500"></div>
-            <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white">
-                    Welcome to Bethel
-                </h1>
-                <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl">
-                    Join us in worship and community as we grow together in faith.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="/churches/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
-                        Find Nearest Church
-                    </a>
-                    <a href="/watch" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">
-                        Watch Online
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Scroll Down Indicator -->
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-                <div class="flex flex-col items-center text-white">
-                    <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
-                    <div class="relative">
-                        <!-- Main double chevron -->
-                        <div class="flex flex-col items-center animate-bounce">
-                            <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
-                            <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
-                        </div>
-                        <!-- Reflection effect -->
-                        <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
-                            <i class="fas fa-chevron-down text-xl mb-1"></i>
-                            <i class="fas fa-chevron-down text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
+        
     </section>
 
     <!-- 2. Featured Events -->
@@ -383,13 +346,11 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Upcoming Events</h2>
             <!-- Upcoming Events Section -->
             <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
-                {% for event in upcoming_events %}
-                    <div class="min-w-[280px] md:min-w-0">{% include 'core/_event_card.html' with event=event %}</div>
-                {% empty %}
+                
                 <div class="col-span-3 text-center text-gray-600">
                     <p>No upcoming events at the moment. Check back soon!</p>
                 </div>
-                {% endfor %}
+                
             </div>
             <div class="text-center mt-8">
                 <a href="/events/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
@@ -404,26 +365,11 @@
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Our Ministries</h2>
             <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-                {% for ministry in ministries %}
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
-                    {% if ministry.image %}
-                    <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
-                    {% else %}
-                    <div class="h-32 bg-gradient-to-br from-indigo-500 to-indigo-200 flex items-center justify-center">
-                        <i class="fas fa-hands-helping text-white text-6xl"></i>
-                    </div>
-                    {% endif %}
-                    <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
-                        <p class="text-gray-700 text-sm mb-4 line-clamp-2">{{ ministry.description }}</p>
-                        <a href="{% url 'ministry_detail' ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Learn More →</a>
-                    </div>
-                </div>
-                {% empty %}
+                
                 <div class="col-span-3 text-center text-gray-600">
                     <p>Ministry information coming soon!</p>
                 </div>
-                {% endfor %}
+                
             </div>
             <div class="text-center mt-8">
                 <a href="/ministries/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
@@ -439,29 +385,14 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-deep-blue">Latest Sermons</h2>
             <!-- Latest Sermons Section -->
             <div class="auto-scroll-sermons flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
-                {% for sermon in sermons %}
-                <a href="/sermon/" class="block min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
-                    {% if sermon.thumbnail %}
-                    <img src="{{ sermon.get_thumbnail_url }}" alt="{{ sermon.title }}" class="w-full h-32 object-cover">
-                    {% else %}
-                    <div class="h-32 bg-gradient-to-br from-blue-500 to-blue-200 flex items-center justify-center">
-                        <i class="fas fa-microphone-alt text-white text-6xl"></i>
-                    </div>
-                    {% endif %}
-                    <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ sermon.title }}</h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description }}</p>
-                        <span class="text-[#1e3a8a] font-semibold">{{ sermon.date|date:"M d, Y" }}</span>
-                    </div>
-                </a>
-                {% empty %}
+                
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-xl font-semibold mb-2 text-deep-blue">No Sermons Yet</h3>
                         <p class="text-gray-600 mb-4">Check back soon for inspiring messages from our pastors.</p>
                     </div>
                 </div>
-                {% endfor %}
+                
             </div>
             <div class="text-center mt-8">
                 <a href="/sermon" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
@@ -477,26 +408,11 @@
             <h2 class="text-4xl font-bold text-center mb-12 text-[#1e3a8a]">Latest News</h2>
             <!-- Latest News Section -->
             <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
-                {% for news_item in news %}
-                <a href="{% url 'news_detail' news_item.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
-                    {% if news_item.image %}
-                    <img src="{{ news_item.get_image_url }}" alt="{{ news_item.title }}" class="w-full h-32 object-cover">
-                    {% else %}
-                    <div class="h-32 bg-gradient-to-br from-purple-500 to-purple-200 flex items-center justify-center">
-                        <i class="fas fa-newspaper text-white text-6xl"></i>
-                    </div>
-                    {% endif %}
-                    <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ news_item.title }}</h3>
-                        <div class="text-gray-600 text-sm mb-4 line-clamp-2">{{ news_item.content|truncatewords:20|safe }}</div>
-                        <span class="text-[#1e3a8a] font-semibold">{{ news_item.date|date:"M d, Y" }}</span>
-                    </div>
-                </a>
-                {% empty %}
+                
                 <div class="col-span-3 text-center text-[#1e3a8a]">
                     <p>No news articles at the moment.</p>
                 </div>
-                {% endfor %}
+                
             </div>
         </div>
     </section>
@@ -507,21 +423,13 @@
             <h2 class="text-4xl font-bold mb-8 text-deep-blue">Recent Testimonies</h2>
             <!-- Recent Testimonies Section -->
             <div class="auto-scroll-testimonies flex space-x-4 overflow-x-auto md:grid md:grid-cols-3 md:space-x-0 md:gap-8">
-                {% for testimony in recent_testimonies %}
-                <div class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col min-h-[340px] h-full">
-                    <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-semibold mb-2 text-deep-blue">{{ testimony.title }}</h3>
-                        <div class="text-gray-600 text-sm mb-4 line-clamp-2">{{ testimony.content|truncatewords:20|safe }}</div>
-                        <span class="text-[#1e3a8a] font-semibold">{{ testimony.get_display_name }}</span>
-                    </div>
-                </div>
-                {% empty %}
+                
                 <div class="col-span-3 text-center text-[#1e3a8a]">
                     <p>No testimonies at the moment.</p>
                 </div>
-                {% endfor %}
+                
             </div>
-            <a href="{% url 'testimonies' %}" class="inline-block bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Read More Testimonies</a>
+            <a href="/testimonies/" class="inline-block bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Read More Testimonies</a>
         </div>
     </section>
 
@@ -531,7 +439,7 @@
             <h2 class="text-4xl font-bold mb-6 text-white">Stay Connected</h2>
             <p class="text-xl mb-8 text-very-white">Get the latest updates, events, and inspiring content delivered to your inbox.</p>
             <form method="post" action="/newsletter-signup/" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                {% csrf_token %}
+                <input type="hidden" name="csrfmiddlewaretoken" value="X4dsg4xNdGfkNwogXp1oZZPoW8Pwi7iCbsyXpWvVLe8K8lQWN6eYLYfNDubFeI2m">
                 <input 
                     type="email" 
                     name="email" 
@@ -566,7 +474,7 @@
                 <div>
                     <h4 class="font-semibold mb-4">Connect</h4>
                     <ul class="space-y-2 text-very-white">
-                        <li><a href="{% url 'donation' %}" class="hover:text-white">Give</a></li>
+                        <li><a href="/donation/" class="hover:text-white">Give</a></li>
                         <li><a href="/volunteer" class="hover:text-white">Volunteer</a></li>
                         <li><a href="/prayer" class="hover:text-white">Prayer Requests</a></li>
                         <li><a href="/resources" class="hover:text-white">Resources</a></li>
@@ -693,6 +601,233 @@
     </script>
     
     <!-- Cookie Consent Popup -->
-    {% include 'core/cookie_consent.html' %}
+    <!-- Cookie Consent Popup -->
+<div id="cookie-consent-popup" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl transform translate-y-full transition-transform duration-500 ease-in-out z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <!-- Cookie Icon and Text -->
+            <div class="flex items-start space-x-4 flex-1">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-[#1e3a8a] rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">We value your privacy</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        We use cookies and similar technologies to provide you with the best possible experience on our website. 
+                        By clicking "Accept All", you consent to our use of cookies for analytics, personalization, and marketing purposes. 
+                        You can customize your preferences or learn more in our <a href="/privacy/" class="text-[#1e3a8a] hover:underline font-medium">Privacy Policy</a>.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+                <button id="cookie-settings-btn" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 text-sm">
+                    Customize
+                </button>
+                <button id="cookie-accept-all-btn" class="px-6 py-3 bg-[#1e3a8a] text-white rounded-lg font-medium hover:bg-[#1e3a8a] transition-colors duration-200 text-sm">
+                    Accept All
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Settings Modal -->
+<div id="cookie-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-900">Cookie Preferences</h2>
+                    <button id="close-settings-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-2">Manage your cookie preferences to control how we use your data.</p>
+            </div>
+            
+            <!-- Cookie Categories -->
+            <div class="p-6 space-y-6">
+                <!-- Essential Cookies -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Essential Cookies</h3>
+                            <p class="text-sm text-gray-600">Required for the website to function properly</p>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="essential-cookies" checked disabled class="w-4 h-4 text-[#1e3a8a] bg-gray-100 border-gray-300 rounded focus:ring-[#1e3a8a] focus:ring-2">
+                            <label for="essential-cookies" class="sr-only">Essential cookies</label>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">These cookies are necessary for the website to function and cannot be switched off. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms.</p>
+                </div>
+                
+                <!-- Analytics Cookies -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Analytics Cookies</h3>
+                            <p class="text-sm text-gray-600">Help us understand how visitors interact with our website</p>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="analytics-cookies" class="w-4 h-4 text-[#1e3a8a] bg-gray-100 border-gray-300 rounded focus:ring-[#1e3a8a] focus:ring-2">
+                            <label for="analytics-cookies" class="sr-only">Analytics cookies</label>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site.</p>
+                </div>
+                
+                <!-- Marketing Cookies -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Marketing Cookies</h3>
+                            <p class="text-sm text-gray-600">Used to deliver personalized content and advertisements</p>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="marketing-cookies" class="w-4 h-4 text-[#1e3a8a] bg-gray-100 border-gray-300 rounded focus:ring-[#1e3a8a] focus:ring-2">
+                            <label for="marketing-cookies" class="sr-only">Marketing cookies</label>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">These cookies may be set through our site by our advertising partners. They may be used by those companies to build a profile of your interests and show you relevant adverts on other sites.</p>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="save-preferences-btn" class="px-6 py-3 bg-[#1e3a8a] text-white rounded-lg font-medium hover:bg-[#1e3a8a] transition-colors duration-200">
+                        Save Preferences
+                    </button>
+                    <button id="accept-all-settings-btn" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
+                        Accept All
+                    </button>
+                    <button id="reject-all-btn" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
+                        Reject All
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">
+                    You can change your cookie preferences at any time by clicking the "Cookie Settings" link in the footer.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieConsentPopup = document.getElementById('cookie-consent-popup');
+    const cookieSettingsModal = document.getElementById('cookie-settings-modal');
+    const acceptAllBtn = document.getElementById('cookie-accept-all-btn');
+    const settingsBtn = document.getElementById('cookie-settings-btn');
+    const closeSettingsBtn = document.getElementById('close-settings-modal');
+    const savePreferencesBtn = document.getElementById('save-preferences-btn');
+    const acceptAllSettingsBtn = document.getElementById('accept-all-settings-btn');
+    const rejectAllBtn = document.getElementById('reject-all-btn');
+    
+    // Check if user has already made a choice
+    const hasConsented = localStorage.getItem('cookieConsent');
+    
+    if (!hasConsented) {
+        // Show popup after a short delay
+        setTimeout(() => {
+            cookieConsentPopup.classList.remove('translate-y-full');
+        }, 1000);
+    }
+    
+    // Accept all cookies
+    function acceptAllCookies() {
+        localStorage.setItem('cookieConsent', 'all');
+        localStorage.setItem('cookiePreferences', JSON.stringify({
+            essential: true,
+            analytics: true,
+            marketing: true
+        }));
+        hidePopup();
+    }
+    
+    // Save custom preferences
+    function savePreferences() {
+        const preferences = {
+            essential: true, // Always true
+            analytics: document.getElementById('analytics-cookies').checked,
+            marketing: document.getElementById('marketing-cookies').checked
+        };
+        
+        localStorage.setItem('cookieConsent', 'custom');
+        localStorage.setItem('cookiePreferences', JSON.stringify(preferences));
+        hidePopup();
+        hideModal();
+    }
+    
+    // Reject all non-essential cookies
+    function rejectAllCookies() {
+        localStorage.setItem('cookieConsent', 'rejected');
+        localStorage.setItem('cookiePreferences', JSON.stringify({
+            essential: true,
+            analytics: false,
+            marketing: false
+        }));
+        hidePopup();
+        hideModal();
+    }
+    
+    // Hide popup
+    function hidePopup() {
+        cookieConsentPopup.classList.add('translate-y-full');
+    }
+    
+    // Hide modal
+    function hideModal() {
+        cookieSettingsModal.classList.add('hidden');
+    }
+    
+    // Show modal
+    function showModal() {
+        cookieSettingsModal.classList.remove('hidden');
+        hidePopup();
+    }
+    
+    // Event listeners
+    acceptAllBtn.addEventListener('click', acceptAllCookies);
+    settingsBtn.addEventListener('click', showModal);
+    closeSettingsBtn.addEventListener('click', hideModal);
+    savePreferencesBtn.addEventListener('click', savePreferences);
+    acceptAllSettingsBtn.addEventListener('click', acceptAllCookies);
+    rejectAllBtn.addEventListener('click', rejectAllCookies);
+    
+    // Footer cookie settings link
+    const footerCookieSettings = document.getElementById('footer-cookie-settings');
+    if (footerCookieSettings) {
+        footerCookieSettings.addEventListener('click', function(e) {
+            e.preventDefault();
+            showModal();
+        });
+    }
+    
+    // Close modal when clicking outside
+    cookieSettingsModal.addEventListener('click', function(e) {
+        if (e.target === cookieSettingsModal) {
+            hideModal();
+        }
+    });
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !cookieSettingsModal.classList.contains('hidden')) {
+            hideModal();
+        }
+    });
+});
+</script> 
 </body>
 </html> 

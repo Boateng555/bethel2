@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Video Test</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .video-test {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            margin: 20px 0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Video Display Test</h1>
+        
+        <div id="status" class="status info">Testing video...</div>
+        
+        <div class="video-test">
+            <video class="video" autoplay muted loop playsinline id="test-video">
+                <source src="/media/hero/videos/WhatsApp_Video_2025-05-01_at_21_NesT7JS.54.17_76ddbd98.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div>
+            <button onclick="playVideo()">Play Video</button>
+            <button onclick="pauseVideo()">Pause Video</button>
+            <button onclick="checkVideoStatus()">Check Status</button>
+            <button onclick="testVideoURL()">Test URL</button>
+        </div>
+        
+        <div id="debug-info" class="status info">
+            <strong>Debug Information:</strong><br>
+            <span id="debug-text">Loading...</span>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('test-video');
+        const status = document.getElementById('status');
+        const debugText = document.getElementById('debug-text');
+        
+        function updateStatus(message, type = 'info') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateDebugInfo() {
+            if (!video) {
+                debugText.innerHTML = 'Video element not found';
+                return;
+            }
+            
+            const info = [
+                `Video found: Yes`,
+                `Video dimensions: ${video.offsetWidth} x ${video.offsetHeight}`,
+                `Video visible: ${video.offsetParent !== null ? 'Yes' : 'No'}`,
+                `Video readyState: ${video.readyState}`,
+                `Video paused: ${video.paused}`,
+                `Video currentTime: ${video.currentTime.toFixed(2)}s`,
+                `Video duration: ${video.duration ? video.duration.toFixed(2) + 's' : 'Unknown'}`,
+                `Video networkState: ${video.networkState}`,
+                `Video error: ${video.error ? video.error.message : 'None'}`
+            ];
+            debugText.innerHTML = info.join('<br>');
+        }
+        
+        function playVideo() {
+            if (video) {
+                video.play().then(() => {
+                    updateStatus('Video play started successfully', 'success');
+                }).catch((error) => {
+                    updateStatus(`Video play failed: ${error.message}`, 'error');
+                });
+            }
+        }
+        
+        function pauseVideo() {
+            if (video) {
+                video.pause();
+                updateStatus('Video paused', 'info');
+            }
+        }
+        
+        function checkVideoStatus() {
+            updateDebugInfo();
+            updateStatus('Video status checked', 'info');
+        }
+        
+        function testVideoURL() {
+            fetch('/media/hero/videos/WhatsApp_Video_2025-05-01_at_21_NesT7JS.54.17_76ddbd98.mp4', {method: 'HEAD'})
+                .then(response => {
+                    if (response.ok) {
+                        updateStatus(`Video URL accessible (${response.status})`, 'success');
+                    } else {
+                        updateStatus(`Video URL error (${response.status})`, 'error');
+                    }
+                })
+                .catch(error => {
+                    updateStatus(`Video URL test failed: ${error.message}`, 'error');
+                });
+        }
+        
+        // Video event listeners
+        if (video) {
+            video.addEventListener('loadstart', () => {
+                console.log('Video load started');
+                updateStatus('Video load started', 'info');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('loadeddata', () => {
+                console.log('Video data loaded');
+                updateStatus('Video data loaded', 'success');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('canplay', () => {
+                console.log('Video can play');
+                updateStatus('Video can play', 'success');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('play', () => {
+                console.log('Video started playing');
+                updateStatus('Video started playing', 'success');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('pause', () => {
+                console.log('Video paused');
+                updateStatus('Video paused', 'info');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('error', (e) => {
+                console.error('Video error:', e);
+                console.error('Video error details:', video.error);
+                updateStatus(`Video error: ${video.error ? video.error.message : 'Unknown error'}`, 'error');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('stalled', () => {
+                console.log('Video stalled');
+                updateStatus('Video stalled', 'error');
+                updateDebugInfo();
+            });
+            
+            video.addEventListener('waiting', () => {
+                console.log('Video waiting');
+                updateStatus('Video waiting for data', 'info');
+                updateDebugInfo();
+            });
+        }
+        
+        // Update debug info every 2 seconds
+        setInterval(updateDebugInfo, 2000);
+        
+        // Initial status
+        updateStatus('Video test page loaded', 'info');
+        updateDebugInfo();
+    </script>
+</body>
+</html> 

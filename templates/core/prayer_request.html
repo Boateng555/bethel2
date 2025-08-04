@@ -1,0 +1,233 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Prayer Requests - Bethel Prayer Ministry International{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Prayer Requests</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Submit your prayer requests and join us in praying for others. Together, we believe in the power of prayer to transform lives.
+        </p>
+    </div>
+</section>
+
+<!-- Submit Prayer Request Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Submit Your Prayer Request</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Share your prayer request with our community. We believe in the power of collective prayer and will lift your needs before God.
+            </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Your Name *
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address *
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number (Optional)
+                    </label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Prayer Request Title *
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Category
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.request.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Prayer Request *
+                    </label>
+                    {{ form.request }}
+                    {% if form.request.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.request.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex items-center">
+                        {{ form.is_anonymous }}
+                        <label for="{{ form.is_anonymous.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            Share anonymously
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        {{ form.is_public }}
+                        <label for="{{ form.is_public.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                            Allow others to see and pray for this request
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                        Submit Prayer Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Prayer Requests Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Prayer Requests</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Join us in praying for these requests from our community. Your prayers make a difference.
+            </p>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+            <a href="{% url 'prayer_request' %}" class="px-4 py-2 rounded-full text-sm font-medium {% if not category_filter %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                All Requests
+            </a>
+            <a href="{% url 'prayer_request' %}?category=health" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'health' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Health & Healing
+            </a>
+            <a href="{% url 'prayer_request' %}?category=family" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'family' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Family
+            </a>
+            <a href="{% url 'prayer_request' %}?category=financial" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'financial' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Financial
+            </a>
+            <a href="{% url 'prayer_request' %}?category=spiritual" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'spiritual' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Spiritual Growth
+            </a>
+            <a href="{% url 'prayer_request' %}?category=relationships" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'relationships' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Relationships
+            </a>
+            <a href="{% url 'prayer_request' %}?category=work" class="px-4 py-2 rounded-full text-sm font-medium {% if category_filter == 'work' %}bg-[#1e3a8a] text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %} transition-colors">
+                Work/Career
+            </a>
+        </div>
+
+        {% if prayer_requests %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for prayer in prayer_requests %}
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ prayer.title }}</h3>
+                        <span class="inline-block bg-[#1e3a8a] text-white text-xs px-2 py-1 rounded-full">
+                            {{ prayer.get_category_display }}
+                        </span>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4">{{ prayer.get_short_request }}</p>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <span>By {{ prayer.get_display_name }}</span>
+                        <span>{{ prayer.created_at|date:"M j, Y" }}</span>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <button class="w-full bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            🙏 I'm Praying
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="bg-white rounded-lg p-8 max-w-md mx-auto">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Prayer Requests</h3>
+                    <p class="text-gray-600">Be the first to submit a prayer request!</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Answered Prayers Section -->
+{% if answered_prayers %}
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Answered Prayers</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Praise God for these answered prayers! His faithfulness endures forever.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for prayer in answered_prayers %}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ prayer.title }}</h3>
+                    <span class="inline-block bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                        Answered
+                    </span>
+                </div>
+                
+                <p class="text-gray-600 mb-4">{{ prayer.get_short_request }}</p>
+                
+                {% if prayer.answer_notes %}
+                <div class="bg-white rounded p-3 mb-4">
+                    <p class="text-sm text-gray-700"><strong>Answer:</strong> {{ prayer.answer_notes }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <span>By {{ prayer.get_display_name }}</span>
+                    <span>Answered {{ prayer.answered_date|date:"M j, Y" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %} 

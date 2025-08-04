@@ -1,1 +1,471 @@
- 
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Watch Online - Bethel Prayer Ministry International{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Watch Online</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Watch our latest sermons, live streams, and spiritual content from anywhere in the world.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#live-stream" class="bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Live Stream
+            </a>
+            <a href="#sermons" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-deep-blue transition-colors">
+                Browse Sermons
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Live Stream Section -->
+<section id="live-stream" class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Live Stream</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Join us live for our Sunday services and special events. Experience the power of worship and the Word of God in real-time.
+            </p>
+        </div>
+
+        <!-- Live Stream Status -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 {% if is_live %}bg-red-500 animate-pulse{% else %}bg-gray-400{% endif %} rounded-full"></div>
+                    <span class="text-lg font-semibold text-gray-900">{% if is_live %}LIVE NOW{% else %}OFFLINE{% endif %}</span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    {{ next_service }}
+                </div>
+            </div>
+
+            {% if live_stream_settings and live_stream_settings.platform == 'youtube' and live_stream_settings.youtube_channel_id %}
+                <!-- YouTube Live Embed -->
+                <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe 
+                        id="youtube-live"
+                        class="w-full h-full"
+                        src="https://www.youtube.com/embed/live_stream?channel={{ live_stream_settings.youtube_channel_id }}&autoplay={% if live_stream_settings.autoplay %}1{% else %}0{% endif %}"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            {% elif live_stream_settings and live_stream_settings.platform == 'facebook' and live_stream_settings.facebook_live_url %}
+                <!-- Facebook Live Embed -->
+                <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe 
+                        class="w-full h-full"
+                        src="{{ live_stream_settings.facebook_live_url }}"
+                        frameborder="0"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            {% else %}
+                <!-- Setup Instructions -->
+                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <div class="text-6xl mb-4">📺</div>
+                        <h3 class="text-2xl font-bold mb-2">Live Stream Coming Soon</h3>
+                        <p class="text-lg mb-4">Join us every Sunday at 9:00 AM and 6:00 PM</p>
+                        <div class="bg-white rounded-lg p-4 inline-block text-gray-900">
+                            <p class="text-sm mb-2">To set up live streaming:</p>
+                            <ol class="text-sm text-left space-y-1">
+                                <li>1. Go to Django Admin → Live Stream Settings</li>
+                                <li>2. Choose your platform (YouTube/Facebook)</li>
+                                <li>3. Enter your channel ID or live URL</li>
+                                <li>4. Set your service schedule</li>
+                                <li>5. Check "Is Live" when streaming</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Live Stream Info -->
+            <div class="mt-6 grid md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Next Service</div>
+                    <div class="text-lg text-gray-600">{{ next_service }}</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Status</div>
+                    <div class="text-lg text-gray-600">{% if is_live %}🟢 Live{% else %}🔴 Offline{% endif %}</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Platform</div>
+                    <div class="text-lg text-gray-600">
+                        {% if live_stream_settings %}
+                            {% if live_stream_settings.platform == 'youtube' %}📺 YouTube{% elif live_stream_settings.platform == 'facebook' %}📘 Facebook{% else %}{{ live_stream_settings.platform|title }}{% endif %}
+                        {% else %}
+                            Not Configured
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Streaming Setup Instructions -->
+        <div class="bg-blue-50 rounded-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-blue-900 mb-4">🎥 How to Set Up Live Streaming</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-blue-800 mb-2">Option 1: YouTube Live (Recommended)</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-blue-700">
+                        <li>Create a YouTube channel for your church</li>
+                        <li>Enable live streaming in YouTube Studio</li>
+                        <li>Use OBS Studio or Streamlabs to broadcast</li>
+                        <li>Copy your live stream URL to the embed above</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-blue-800 mb-2">Option 2: Facebook Live</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-blue-700">
+                        <li>Go to your church's Facebook page</li>
+                        <li>Click "Live" to start streaming</li>
+                        <li>Use your phone or computer camera</li>
+                        <li>Share the live link with your congregation</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Schedule -->
+        <div id="schedule" class="bg-white rounded-lg shadow-lg p-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Service Schedule</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h4 class="font-semibold text-lg text-gray-900">Sunday Services</h4>
+                    <p class="text-gray-600">9:00 AM - Morning Service</p>
+                    <p class="text-gray-600">6:00 PM - Evening Service</p>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-lg text-gray-900">Special Events</h4>
+                    <p class="text-gray-600">Wednesday - Bible Study (7:00 PM)</p>
+                    <p class="text-gray-600">Friday - Prayer Meeting (6:00 PM)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Sermons Section -->
+{% if featured_sermons %}
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Sermons</h2>
+            <p class="text-lg text-gray-600">Don't miss these powerful messages</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for sermon in featured_sermons %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if sermon.thumbnail %}
+                <div class="aspect-video bg-gray-200">
+                    <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-full object-cover">
+                </div>
+                {% else %}
+                <div class="aspect-video bg-gray-200 flex items-center justify-center">
+                    <div class="text-4xl text-gray-400">📖</div>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
+                    <p class="text-gray-600 mb-2">by {{ sermon.preacher }}</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ sermon.date|date:"F j, Y" }}</p>
+                    <p class="text-gray-700 mb-4">{{ sermon.description|truncatewords:20 }}</p>
+                    
+                    {% if sermon.link %}
+                    <a href="{{ sermon.link }}" target="_blank" class="inline-block bg-deep-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Watch Now
+                    </a>
+                    {% elif sermon.video_file %}
+                    <a href="{{ sermon.video_file.url }}" class="inline-block bg-deep-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Watch Now
+                    </a>
+                    {% else %}
+                    <span class="inline-block bg-gray-300 text-gray-600 px-4 py-2 rounded-lg cursor-not-allowed">
+                        Coming Soon
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Sermon Library Section -->
+<section id="sermons" class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Sermon Library</h2>
+            <p class="text-lg text-gray-600">Browse our collection of sermons and spiritual teachings</p>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="keyword" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" name="keyword" id="keyword" value="{{ keyword }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent"
+                           placeholder="Search sermons...">
+                </div>
+                <div>
+                    <label for="preacher" class="block text-sm font-medium text-gray-700 mb-1">Preacher</label>
+                    <select name="preacher" id="preacher" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent">
+                        <option value="">All Preachers</option>
+                        {% for preacher_name in preachers %}
+                        <option value="{{ preacher_name }}" {% if preacher == preacher_name %}selected{% endif %}>
+                            {{ preacher_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input type="date" name="date" id="date" value="{{ date_filter }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-deep-blue focus:border-transparent">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-deep-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sermons Grid -->
+        {% if sermons %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for sermon in sermons %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if sermon.thumbnail %}
+                <div class="aspect-video bg-gray-200">
+                    <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-full object-cover">
+                </div>
+                {% else %}
+                <div class="aspect-video bg-gray-200 flex items-center justify-center">
+                    <div class="text-4xl text-gray-400">📖</div>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
+                    <p class="text-gray-600 mb-2">by {{ sermon.preacher }}</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ sermon.date|date:"F j, Y" }}</p>
+                    
+                    {% if sermon.scripture_reference %}
+                    <p class="text-sm text-gray-600 mb-4">
+                        <strong>Scripture:</strong> {{ sermon.scripture_reference }}
+                    </p>
+                    {% endif %}
+                    
+                    <p class="text-gray-700 mb-4">{{ sermon.description|truncatewords:15 }}</p>
+                    
+                    {% if sermon.link %}
+                    <a href="{{ sermon.link }}" target="_blank" class="inline-block bg-deep-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Watch Now
+                    </a>
+                    {% elif sermon.video_file %}
+                    <a href="{{ sermon.video_file.url }}" class="inline-block bg-deep-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Watch Now
+                    </a>
+                    {% else %}
+                    <span class="inline-block bg-gray-300 text-gray-600 px-4 py-2 rounded-lg cursor-not-allowed">
+                        Coming Soon
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="text-6xl mb-4">📺</div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Sermons Found</h3>
+            <p class="text-gray-600">Try adjusting your search criteria or check back later for new content.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-16 bg-deep-blue text-white">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Stay Connected</h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Never miss a sermon or live stream. Subscribe to our channel and get notified when we go live.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'newsletter-signup' %}" class="bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Subscribe to Updates
+            </a>
+            <a href="{% url 'contact' %}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-deep-blue transition-colors">
+                Contact Us
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Additional Information Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Need Help?</h2>
+            <p class="text-lg text-gray-600">We're here to help you access our content</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-deep-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Service Times</h3>
+                <p class="text-gray-600 mb-4">Check our live stream schedule</p>
+                <a href="#live-stream" class="text-deep-blue hover:underline font-semibold">View Schedule</a>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 bg-deep-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Technical Support</h3>
+                <p class="text-gray-600 mb-4">Having trouble watching?</p>
+                <a href="{% url 'contact' %}" class="text-deep-blue hover:underline font-semibold">Get Help</a>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 bg-deep-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Mobile App</h3>
+                <p class="text-gray-600 mb-4">Watch on the go</p>
+                <a href="#" class="text-deep-blue hover:underline font-semibold">Coming Soon</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Streaming JavaScript -->
+<script>
+// Live streaming functionality
+let isLive = false;
+let viewerCount = 0;
+
+// Check if live stream is active
+function checkLiveStatus() {
+    const liveIndicator = document.querySelector('.bg-red-500');
+    const liveText = document.querySelector('.text-lg.font-semibold.text-gray-900');
+    const fallback = document.getElementById('live-fallback');
+    const iframe = document.getElementById('youtube-live');
+    
+    // Simulate checking live status (replace with actual API call)
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday
+    const hour = now.getHours();
+    
+    // Check if it's Sunday and during service times
+    if (dayOfWeek === 0 && (hour >= 8 && hour <= 12 || hour >= 17 && hour <= 21)) {
+        isLive = true;
+        liveIndicator.classList.remove('bg-red-500');
+        liveIndicator.classList.add('bg-green-500');
+        liveText.textContent = 'LIVE NOW';
+        fallback.classList.add('hidden');
+        iframe.classList.remove('hidden');
+        updateViewerCount();
+    } else {
+        isLive = false;
+        liveIndicator.classList.remove('bg-green-500');
+        liveIndicator.classList.add('bg-red-500');
+        liveText.textContent = 'OFFLINE';
+        fallback.classList.remove('hidden');
+        iframe.classList.add('hidden');
+        document.getElementById('viewer-count').textContent = '0';
+    }
+}
+
+// Update viewer count (simulated)
+function updateViewerCount() {
+    if (isLive) {
+        viewerCount = Math.floor(Math.random() * 100) + 50; // Simulate 50-150 viewers
+        document.getElementById('viewer-count').textContent = viewerCount;
+        setTimeout(updateViewerCount, 5000); // Update every 5 seconds
+    }
+}
+
+// Open live chat
+function openChat() {
+    if (isLive) {
+        // Open YouTube chat in new window
+        window.open('https://www.youtube.com/live_chat?is_popout=1&v=YOUR_VIDEO_ID', '_blank');
+    } else {
+        alert('Live stream is not currently active. Please check back during service times.');
+    }
+}
+
+// Initialize live status check
+document.addEventListener('DOMContentLoaded', function() {
+    checkLiveStatus();
+    // Check status every minute
+    setInterval(checkLiveStatus, 60000);
+});
+
+// YouTube Live Setup Instructions
+function showYouTubeSetup() {
+    const instructions = `
+🎥 YouTube Live Setup Guide:
+
+1. Create YouTube Channel:
+   - Go to youtube.com
+   - Click "Create Account" or use existing Google account
+   - Create a channel for your church
+
+2. Enable Live Streaming:
+   - Go to YouTube Studio (studio.youtube.com)
+   - Click "Create" → "Go live"
+   - Complete phone verification if required
+
+3. Set Up Broadcasting Software:
+   - Download OBS Studio (free): obsproject.com
+   - Or use Streamlabs: streamlabs.com
+   - Connect your camera and microphone
+
+4. Get Stream Key:
+   - In YouTube Studio, go to "Go live"
+   - Copy the stream key
+   - Paste it into OBS/Streamlabs
+
+5. Start Broadcasting:
+   - Set up your scene in OBS
+   - Click "Start Streaming"
+   - Your stream will appear on YouTube
+
+6. Embed on Your Website:
+   - Copy your live stream URL
+   - Replace 'YOUR_CHANNEL_ID' in the iframe src
+   - Update the embed code above
+
+Need help? Contact your web developer!
+    `;
+    alert(instructions);
+}
+</script>
+
+{% endblock %} 
