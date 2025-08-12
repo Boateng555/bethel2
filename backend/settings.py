@@ -99,6 +99,7 @@ INSTALLED_APPS = [
 # Middleware - Optimized for production
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -153,11 +154,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/myproject/static'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Memory optimization: Use simpler static file storage
-if USE_PROD_DB:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-else:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Static file storage - Use default Django storage for production stability
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files - Local storage
 MEDIA_URL = '/media/'
