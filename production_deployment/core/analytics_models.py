@@ -1,3 +1,8 @@
+"""
+Production-safe analytics models
+These models are designed to work without any external dependencies
+"""
+
 import uuid
 from django.db import models
 from django.utils import timezone
@@ -6,8 +11,10 @@ from datetime import timedelta
 # Try to import Church model, but handle gracefully if it doesn't exist
 try:
     from .models import Church
+    CHURCH_AVAILABLE = True
 except ImportError:
     Church = None
+    CHURCH_AVAILABLE = False
 
 class VisitorSession(models.Model):
     """Track visitor sessions for analytics"""
@@ -39,7 +46,10 @@ class VisitorSession(models.Model):
     referrer_domain = models.CharField(max_length=200, blank=True, help_text="Domain of referrer")
     
     # Church Context (if applicable)
-    church = models.ForeignKey(Church, on_delete=models.SET_NULL, null=True, blank=True, help_text="Church context if visiting church page") if Church else None
+    if CHURCH_AVAILABLE:
+        church = models.ForeignKey(Church, on_delete=models.SET_NULL, null=True, blank=True, help_text="Church context if visiting church page")
+    else:
+        church = None
     
     # Session Stats
     page_views_count = models.PositiveIntegerField(default=0, help_text="Number of pages viewed in this session")
@@ -85,7 +95,10 @@ class PageView(models.Model):
     view_name = models.CharField(max_length=100, blank=True, help_text="Django view name")
     
     # Church Context
-    church = models.ForeignKey(Church, on_delete=models.SET_NULL, null=True, blank=True, help_text="Church context if church page") if Church else None
+    if CHURCH_AVAILABLE:
+        church = models.ForeignKey(Church, on_delete=models.SET_NULL, null=True, blank=True, help_text="Church context if church page")
+    else:
+        church = None
     
     # Performance
     load_time = models.PositiveIntegerField(null=True, blank=True, help_text="Page load time in milliseconds")
