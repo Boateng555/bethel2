@@ -304,6 +304,9 @@
                     </video>
                 {% elif hero.background_type == 'image' and hero.background_image %}
                     <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
+                {% elif hero.background_type == 'video' and hero.background_image %}
+                    <!-- Fallback to image when video is selected but no video file exists -->
+                    <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
                 {% else %}
                     <div class="absolute inset-0 bg-gray-500"></div>
                 {% endif %}

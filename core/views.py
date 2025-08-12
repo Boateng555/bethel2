@@ -344,15 +344,14 @@ def home(request):
     # If no churches, or user chose global, show the global homepage
     # Show the global site with aggregated content from all churches
     
-    # Get global hero from GlobalSettings
+    # Get global hero from GlobalSettings (explicit selection)
     try:
         from .models import GlobalSettings
         global_settings = GlobalSettings.get_settings()
         hero = global_settings.global_hero
-        if hero and hero.is_active:
-            hero = hero  # Keep the hero if it's active
-        else:
-            hero = None
+        if not (hero and hero.is_active):
+            # Fallback: try most recent global hero with media
+            hero = Hero.objects.filter(is_active=True, church__isnull=True).prefetch_related('hero_media').order_by('order', '-created_at').first()
     except Exception as e:
         print(f"DEBUG: Error getting global hero: {e}")
         hero = None
