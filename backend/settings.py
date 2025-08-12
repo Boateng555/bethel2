@@ -98,16 +98,15 @@ INSTALLED_APPS = [
 
 # Middleware - Optimized for production
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.DatabaseIndependentMiddleware',  # Add database-independent mode
+    'core.middleware.DatabaseIndependentMiddleware',
+    'core.middleware.AnalyticsMiddleware',  # Add analytics tracking
 ]
 
 # URL config

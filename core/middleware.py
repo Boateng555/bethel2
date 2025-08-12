@@ -2,6 +2,15 @@ import os
 from django.http import HttpResponse
 from django.conf import settings
 
+import re
+from urllib.parse import urlparse
+from user_agents import parse
+import geoip2.database
+import geoip2.errors
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+
 class DatabaseIndependentMiddleware:
     """
     Middleware to handle requests when database is unavailable.
@@ -205,3 +214,193 @@ class DatabaseIndependentMiddleware:
         """
         
         return HttpResponse(html_content, content_type='text/html') 
+
+class AnalyticsMiddleware:
+    """Middleware to track visitor analytics"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # Initialize GeoIP reader if available
+        self.geoip_reader = None
+        try:
+            # You can download GeoLite2-City.mmdb from MaxMind
+            geoip_path = getattr(settings, 'GEOIP_PATH', None)
+            if geoip_path:
+                self.geoip_reader = geoip2.database.Reader(geoip_path)
+        except Exception:
+            pass
+    
+    def __call__(self, request):
+        # Skip tracking for admin, static files, and API calls
+        if self._should_skip_tracking(request):
+            return self.get_response(request)
+        
+        # Track the visit
+        self._track_visit(request)
+        
+        response = self.get_response(request)
+        return response
+    
+    def _should_skip_tracking(self, request):
+        """Determine if we should skip tracking for this request"""
+        skip_patterns = [
+            r'^/admin/',
+            r'^/static/',
+            r'^/media/',
+            r'^/api/',
+            r'^/favicon\.ico$',
+            r'^/robots\.txt$',
+        ]
+        
+        path = request.path
+        for pattern in skip_patterns:
+            if re.match(pattern, path):
+                return True
+        
+        return False
+    
+    def _track_visit(self, request):
+        """Track the current visit"""
+        try:
+            from .analytics_models import VisitorSession, PageView, AnalyticsSettings
+            
+            # Check if tracking is enabled
+            settings = AnalyticsSettings.get_settings()
+            if not settings.enable_tracking:
+                return
+            
+            # Get or create session
+            session = self._get_or_create_session(request, settings)
+            if not session:
+                return
+            
+            # Create page view
+            self._create_page_view(request, session)
+            
+        except Exception as e:
+            # Log error but don't break the request
+            print(f"Analytics tracking error: {e}")
+    
+    def _get_or_create_session(self, request, analytics_settings):
+        """Get existing session or create new one"""
+        from .analytics_models import VisitorSession
+        
+        session_id = request.session.session_key
+        if not session_id:
+            request.session.create()
+            session_id = request.session.session_key
+        
+        # Try to get existing active session
+        try:
+            session = VisitorSession.objects.get(session_id=session_id)
+            
+            # Update last activity
+            session.last_activity = timezone.now()
+            session.page_views_count += 1
+            session.save()
+            
+            return session
+            
+        except VisitorSession.DoesNotExist:
+            # Create new session
+            return self._create_new_session(request, session_id, analytics_settings)
+    
+    def _create_new_session(self, request, session_id, analytics_settings):
+        """Create a new visitor session"""
+        from .analytics_models import VisitorSession
+        
+        # Get IP address
+        ip_address = self._get_client_ip(request)
+        
+        # Parse user agent
+        user_agent_string = request.META.get('HTTP_USER_AGENT', '')
+        user_agent = parse(user_agent_string)
+        
+        # Get geographic data
+        country = city = region = ''
+        if analytics_settings.track_geolocation and self.geoip_reader:
+            try:
+                response = self.geoip_reader.city(ip_address)
+                country = response.country.name or ''
+                city = response.city.name or ''
+                region = response.subdivisions.most_specific.name or ''
+            except (geoip2.errors.AddressNotFoundError, ValueError):
+                pass
+        
+        # Determine device type
+        device_type = 'other'
+        if user_agent.is_mobile:
+            device_type = 'mobile'
+        elif user_agent.is_tablet:
+            device_type = 'tablet'
+        elif user_agent.is_pc:
+            device_type = 'desktop'
+        
+        # Get referrer
+        referrer = request.META.get('HTTP_REFERER', '')
+        referrer_domain = ''
+        if referrer and analytics_settings.track_referrers:
+            try:
+                parsed = urlparse(referrer)
+                referrer_domain = parsed.netloc
+            except:
+                pass
+        
+        # Determine church context
+        church = None
+        if hasattr(request, 'church'):
+            church = request.church
+        
+        # Create session
+        session = VisitorSession.objects.create(
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent_string if analytics_settings.track_user_agent else '',
+            country=country,
+            city=city,
+            region=region,
+            device_type=device_type,
+            browser=user_agent.browser.family if analytics_settings.track_user_agent else '',
+            browser_version=user_agent.browser.version_string if analytics_settings.track_user_agent else '',
+            os=user_agent.os.family if analytics_settings.track_user_agent else '',
+            referrer=referrer,
+            referrer_domain=referrer_domain,
+            church=church,
+            page_views_count=1
+        )
+        
+        return session
+    
+    def _create_page_view(self, request, session):
+        """Create a page view record"""
+        from .analytics_models import PageView
+        
+        # Get page info
+        url = request.build_absolute_uri()
+        path = request.path
+        page_title = getattr(request, 'page_title', '')
+        view_name = getattr(request.resolver_match, 'view_name', '') if hasattr(request, 'resolver_match') and request.resolver_match else ''
+        
+        # Determine church context
+        church = None
+        if hasattr(request, 'church'):
+            church = request.church
+        
+        # Create page view
+        PageView.objects.create(
+            session=session,
+            url=url,
+            path=path,
+            page_title=page_title,
+            view_name=view_name,
+            church=church
+        )
+    
+    def _get_client_ip(self, request):
+        """Get the client's real IP address"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip 

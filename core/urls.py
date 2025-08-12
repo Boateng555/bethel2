@@ -14,6 +14,7 @@ from .views import (
     all_event_highlights, news_detail,
     check_production_status, debug_env, test_local_upload_endpoint, upload_test_endpoint,
     health_check, startup_health_check, static_fallback, clear_redirect_notification,
+    analytics_dashboard,
 )
 
 urlpatterns = [
@@ -94,6 +95,7 @@ urlpatterns = [
     path('startup-health/', startup_health_check, name='startup_health_check'),
     path('fallback/', static_fallback, name='static_fallback'),
     path('clear-redirect-notification/', clear_redirect_notification, name='clear_redirect_notification'),
+    path('analytics/', analytics_dashboard, name='analytics_dashboard'),
 ]
 
 urlpatterns += [

@@ -13,6 +13,7 @@ from .models import (
     NewsletterSignup, Hero, LocalHero, ChurchApplication, GlobalFeatureRequest, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, MinistryJoinRequest,
     EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, GlobalSettings, LiveStreamSettings
 )
+from .analytics_models import VisitorSession, PageView, AnalyticsSettings
 from django.utils import timezone
 from django.core.mail import send_mail
 from .admin_utils import EnhancedImagePreviewMixin
@@ -2118,6 +2119,73 @@ class LiveStreamSettingsAdmin(LocalAdminMixin, admin.ModelAdmin):
 
 
 admin.site.register(LiveStreamSettings, LiveStreamSettingsAdmin)
+
+
+@admin.register(VisitorSession)
+class VisitorSessionAdmin(admin.ModelAdmin):
+    list_display = ['session_id_short', 'ip_address', 'country', 'city', 'device_type', 'browser', 'page_views_count', 'duration_formatted', 'started_at', 'is_active_display']
+    list_filter = ['device_type', 'browser', 'country', 'started_at', 'church']
+    search_fields = ['session_id', 'ip_address', 'country', 'city', 'user_agent']
+    readonly_fields = ['id', 'session_id', 'ip_address', 'user_agent', 'country', 'city', 'region', 'device_type', 'browser', 'browser_version', 'os', 'referrer', 'referrer_domain', 'page_views_count', 'duration', 'started_at', 'last_activity', 'ended_at']
+    date_hierarchy = 'started_at'
+    
+    def session_id_short(self, obj):
+        return obj.session_id[:12] + '...' if len(obj.session_id) > 12 else obj.session_id
+    session_id_short.short_description = 'Session ID'
+    
+    def duration_formatted(self, obj):
+        if obj.duration:
+            minutes = obj.duration // 60
+            seconds = obj.duration % 60
+            return f"{minutes}m {seconds}s"
+        return "Active"
+    duration_formatted.short_description = 'Duration'
+    
+    def is_active_display(self, obj):
+        return "Yes" if obj.is_active else "No"
+    is_active_display.short_description = 'Active'
+    
+    def has_add_permission(self, request):
+        return False  # Sessions are created automatically
+    
+    def has_change_permission(self, request, obj=None):
+        return False  # Sessions are read-only
+
+
+@admin.register(PageView)
+class PageViewAdmin(admin.ModelAdmin):
+    list_display = ['path_short', 'page_title', 'session_ip', 'church', 'viewed_at']
+    list_filter = ['viewed_at', 'church', 'view_name']
+    search_fields = ['url', 'path', 'page_title', 'session__ip_address']
+    readonly_fields = ['id', 'session', 'url', 'path', 'page_title', 'view_name', 'church', 'load_time', 'viewed_at']
+    date_hierarchy = 'viewed_at'
+    
+    def path_short(self, obj):
+        return obj.path[:50] + '...' if len(obj.path) > 50 else obj.path
+    path_short.short_description = 'Path'
+    
+    def session_ip(self, obj):
+        return obj.session.ip_address
+    session_ip.short_description = 'IP Address'
+    
+    def has_add_permission(self, request):
+        return False  # Page views are created automatically
+    
+    def has_change_permission(self, request, obj=None):
+        return False  # Page views are read-only
+
+
+@admin.register(AnalyticsSettings)
+class AnalyticsSettingsAdmin(admin.ModelAdmin):
+    list_display = ['id', 'enable_tracking', 'track_geolocation', 'track_user_agent', 'track_referrers', 'anonymize_ips', 'retention_days']
+    list_editable = ['enable_tracking', 'track_geolocation', 'track_user_agent', 'track_referrers', 'anonymize_ips', 'retention_days']
+    
+    def has_add_permission(self, request):
+        # Only allow one settings instance
+        return not AnalyticsSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        return False  # Don't allow deletion of settings
 
 
 

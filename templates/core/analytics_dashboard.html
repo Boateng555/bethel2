@@ -1,0 +1,496 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.1);
+        clip-path: polygon(0 0, 100% 0, 100% 30%, 0 70%);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+    .stat-icon {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+        opacity: 0.3;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 1.5rem;
+    }
+    .map-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    #worldMap {
+        height: 400px;
+        border-radius: 10px;
+        margin-top: 1rem;
+    }
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    .analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .analytics-table th,
+    .analytics-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .analytics-table th {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        font-weight: 600;
+    }
+    .analytics-table tr:hover {
+        background-color: #f8fafc;
+    }
+    .page-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 3rem 2rem;
+        margin: -2rem -2rem 2rem -2rem;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #1e3a8a;
+    }
+    .metric-title {
+        font-size: 0.9rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1e3a8a;
+    }
+    .metric-change {
+        font-size: 0.8rem;
+        color: #10b981;
+        margin-top: 0.5rem;
+    }
+    .metric-change.negative {
+        color: #ef4444;
+    }
+    .realtime-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    .chart-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    .chart-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: #1e3a8a;
+        margin-right: 0.75rem;
+        border-radius: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 Analytics Dashboard</h1>
+    <p><span class="realtime-indicator"></span>Real-time website visitor statistics for the last 30 days</p>
+</div>
+
+<!-- Key Stats -->
+<div class="stats-grid">
+    <div class="stats-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-number">{{ total_sessions|floatformat:0 }}</div>
+        <div class="stat-label">Total Sessions</div>
+    </div>
+    <div class="stats-card">
+        <div class="stat-icon">📄</div>
+        <div class="stat-number">{{ total_page_views|floatformat:0 }}</div>
+        <div class="stat-label">Page Views</div>
+    </div>
+    <div class="stats-card">
+        <div class="stat-icon">👤</div>
+        <div class="stat-number">{{ unique_visitors|floatformat:0 }}</div>
+        <div class="stat-label">Unique Visitors</div>
+    </div>
+    <div class="stats-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-number">{{ avg_duration|floatformat:0 }}s</div>
+        <div class="stat-label">Avg Session Duration</div>
+    </div>
+</div>
+
+<!-- World Map -->
+<div class="map-container">
+    <div class="chart-title">🌍 Visitor Locations</div>
+    <div id="worldMap"></div>
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-container">
+        <div class="chart-title">📈 Daily Visitors Trend</div>
+        <canvas id="dailyVisitorsChart" width="400" height="200"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">📱 Device Types</div>
+        <canvas id="deviceChart" width="400" height="200"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">🌐 Top Browsers</div>
+        <canvas id="browserChart" width="400" height="200"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">🌍 Top Countries</div>
+        <canvas id="countryChart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Tables -->
+<div class="chart-grid">
+    <div class="table-container">
+        <div class="chart-title">🔥 Most Popular Pages</div>
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Views</th>
+                    <th>% of Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in page_stats %}
+                <tr>
+                    <td>{{ page.path|truncatechars:50 }}</td>
+                    <td>{{ page.views }}</td>
+                    <td>{{ page.views|div:total_page_views|mul:100|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="table-container">
+        <div class="chart-title">🔗 Top Referrers</div>
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>Domain</th>
+                    <th>Visitors</th>
+                    <th>% of Traffic</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for referrer in referrer_stats %}
+                <tr>
+                    <td>{{ referrer.referrer_domain }}</td>
+                    <td>{{ referrer.count }}</td>
+                    <td>{{ referrer.count|div:total_sessions|mul:100|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if church_stats %}
+<div class="table-container">
+    <div class="chart-title">⛪ Church-Specific Stats</div>
+    <table class="analytics-table">
+        <thead>
+            <tr>
+                <th>Church</th>
+                <th>Sessions</th>
+                <th>Page Views</th>
+                <th>Avg Views/Session</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for church in church_stats %}
+            <tr>
+                <td>{{ church.church__name }}</td>
+                <td>{{ church.sessions }}</td>
+                <td>{{ church.page_views }}</td>
+                <td>{{ church.page_views|div:church.sessions|floatformat:1 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<script>
+// Initialize the world map
+const map = L.map('worldMap').setView([20, 0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Add visitor markers (sample data - you can enhance this with real coordinates)
+const visitorData = [
+    {% for session in visitor_sessions %}
+    {% if session.country %}
+    {
+        country: "{{ session.country }}",
+        city: "{{ session.city }}",
+        count: {{ session.count }},
+        lat: {{ session.lat|default:0 }},
+        lng: {{ session.lng|default:0 }}
+    },
+    {% endif %}
+    {% endfor %}
+];
+
+// Add markers for each visitor location
+visitorData.forEach(location => {
+    if (location.lat && location.lng) {
+        const marker = L.marker([location.lat, location.lng]).addTo(map);
+        marker.bindPopup(`
+            <strong>${location.city}, ${location.country}</strong><br>
+            ${location.count} visitors
+        `);
+    }
+});
+
+// Enhanced Daily Visitors Chart
+const dailyVisitorsCtx = document.getElementById('dailyVisitorsChart').getContext('2d');
+new Chart(dailyVisitorsCtx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_visitors|safe }}.map(item => new Date(item.date).toLocaleDateString()),
+        datasets: [{
+            label: 'Visitors',
+            data: {{ daily_visitors|safe }}.map(item => item.visitors),
+            borderColor: '#1e3a8a',
+            backgroundColor: 'rgba(30, 58, 138, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#1e3a8a',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Enhanced Device Types Chart
+const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+new Chart(deviceCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ device_stats|safe }}.map(item => item.device_type),
+        datasets: [{
+            data: {{ device_stats|safe }}.map(item => item.count),
+            backgroundColor: ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1'],
+            borderWidth: 0,
+            hoverOffset: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Enhanced Browser Chart
+const browserCtx = document.getElementById('browserChart').getContext('2d');
+new Chart(browserCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ browser_stats|safe }}.map(item => item.browser),
+        datasets: [{
+            label: 'Users',
+            data: {{ browser_stats|safe }}.map(item => item.count),
+            backgroundColor: 'rgba(30, 58, 138, 0.8)',
+            borderRadius: 8,
+            borderSkipped: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Enhanced Country Chart
+const countryCtx = document.getElementById('countryChart').getContext('2d');
+new Chart(countryCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ country_stats|safe }}.map(item => item.country),
+        datasets: [{
+            label: 'Visitors',
+            data: {{ country_stats|safe }}.map(item => item.count),
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderRadius: 8,
+            borderSkipped: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Auto-refresh data every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

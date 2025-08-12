@@ -36,6 +36,10 @@ from django.db import connection
 from django.db.utils import OperationalError
 import threading
 import queue
+from django.db.models import Count, Avg, Q
+from django.db.models.functions import TruncDate, TruncHour
+from collections import defaultdict
+import json
 
 # Create your views here.
 
@@ -2569,3 +2573,142 @@ def clear_redirect_notification(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+def analytics_dashboard(request):
+    """Analytics dashboard for admins"""
+    if not request.user.is_staff:
+        return redirect('admin:login')
+    
+    from .analytics_models import VisitorSession, PageView, AnalyticsSettings
+    
+    # Get date range (last 30 days by default)
+    end_date = timezone.now()
+    start_date = end_date - timedelta(days=30)
+    
+    # Get analytics settings
+    settings = AnalyticsSettings.get_settings()
+    
+    # Basic stats
+    total_sessions = VisitorSession.objects.filter(started_at__gte=start_date).count()
+    total_page_views = PageView.objects.filter(viewed_at__gte=start_date).count()
+    unique_visitors = VisitorSession.objects.filter(started_at__gte=start_date).values('ip_address').distinct().count()
+    
+    # Average session duration
+    completed_sessions = VisitorSession.objects.filter(
+        started_at__gte=start_date,
+        ended_at__isnull=False
+    )
+    avg_duration = completed_sessions.aggregate(avg_duration=Avg('duration'))['avg_duration'] or 0
+    
+    # Device breakdown
+    device_stats = VisitorSession.objects.filter(started_at__gte=start_date).values('device_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Browser breakdown
+    browser_stats = VisitorSession.objects.filter(
+        started_at__gte=start_date,
+        browser__isnull=False
+    ).exclude(browser='').values('browser').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Top countries
+    country_stats = VisitorSession.objects.filter(
+        started_at__gte=start_date,
+        country__isnull=False
+    ).exclude(country='').values('country').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Top pages
+    page_stats = PageView.objects.filter(viewed_at__gte=start_date).values('path').annotate(
+        views=Count('id')
+    ).order_by('-views')[:10]
+    
+    # Daily visitors chart data
+    daily_visitors = VisitorSession.objects.filter(
+        started_at__gte=start_date
+    ).annotate(
+        date=TruncDate('started_at')
+    ).values('date').annotate(
+        visitors=Count('id')
+    ).order_by('date')
+    
+    # Hourly activity
+    hourly_activity = VisitorSession.objects.filter(
+        started_at__gte=start_date
+    ).annotate(
+        hour=TruncHour('started_at')
+    ).values('hour').annotate(
+        sessions=Count('id')
+    ).order_by('hour')
+    
+    # Top referrers
+    referrer_stats = VisitorSession.objects.filter(
+        started_at__gte=start_date,
+        referrer_domain__isnull=False
+    ).exclude(referrer_domain='').values('referrer_domain').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Church-specific stats (if applicable)
+    church_stats = None
+    if request.user.is_superuser:
+        church_stats = VisitorSession.objects.filter(
+            started_at__gte=start_date,
+            church__isnull=False
+        ).values('church__name').annotate(
+            sessions=Count('id'),
+            page_views=Count('page_views_count')
+        ).order_by('-sessions')[:10]
+    
+    # Get visitor sessions for map (with coordinates)
+    visitor_sessions = VisitorSession.objects.filter(
+        started_at__gte=start_date,
+        country__isnull=False
+    ).exclude(country='').values('country', 'city').annotate(
+        count=Count('id')
+    ).order_by('-count')[:20]
+    
+    # Add sample coordinates for countries (you can enhance this with a proper geocoding service)
+    country_coordinates = {
+        'United States': {'lat': 39.8283, 'lng': -98.5795},
+        'Germany': {'lat': 51.1657, 'lng': 10.4515},
+        'United Kingdom': {'lat': 55.3781, 'lng': -3.4360},
+        'Canada': {'lat': 56.1304, 'lng': -106.3468},
+        'Australia': {'lat': -25.2744, 'lng': 133.7751},
+        'France': {'lat': 46.2276, 'lng': 2.2137},
+        'Netherlands': {'lat': 52.1326, 'lng': 5.2913},
+        'Sweden': {'lat': 60.1282, 'lng': 18.6435},
+        'Norway': {'lat': 60.4720, 'lng': 8.4689},
+        'Denmark': {'lat': 56.2639, 'lng': 9.5018},
+    }
+    
+    # Add coordinates to visitor sessions
+    for session in visitor_sessions:
+        if session['country'] in country_coordinates:
+            session.update(country_coordinates[session['country']])
+        else:
+            session.update({'lat': 0, 'lng': 0})
+    
+    context = {
+        'total_sessions': total_sessions,
+        'total_page_views': total_page_views,
+        'unique_visitors': unique_visitors,
+        'avg_duration': int(avg_duration),
+        'device_stats': device_stats,
+        'browser_stats': browser_stats,
+        'country_stats': country_stats,
+        'page_stats': page_stats,
+        'referrer_stats': referrer_stats,
+        'church_stats': church_stats,
+        'visitor_sessions': list(visitor_sessions),
+        'daily_visitors': list(daily_visitors),
+        'hourly_activity': list(hourly_activity),
+        'start_date': start_date,
+        'end_date': end_date,
+        'settings': settings,
+    }
+    
+    return render(request, 'core/analytics_dashboard.html', context)
