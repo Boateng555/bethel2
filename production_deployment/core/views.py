@@ -197,126 +197,59 @@ def smart_home(request):
         return redirect('home')
 
 def home(request):
-    # Check if user wants to go to global site (by presence of the parameter)
-    go_global = 'global' in request.GET
-
-    # Get all approved and active churches with error handling
-    try:
-        churches = Church.objects.filter(is_active=True, is_approved=True)
-        church_count = churches.count()
-    except Exception as db_error:
-        print(f"DEBUG: Database error in home view: {db_error}")
-        # If database is not available, continue to show global homepage
-        church_count = 0
-
-    # If user explicitly wants global site, show it
-    if go_global:
-        pass  # Continue to show global homepage
-    elif church_count == 1:
-            # Only one church, redirect to it
-            try:
-                return redirect('church_home', church_id=churches.first().id)
-            except Exception as e:
-                print(f"DEBUG: Error redirecting to church: {e}")
-                pass  # Continue to show global homepage
-    elif church_count > 1:
-            # Multiple churches, show choose your church page
-            return redirect('church_list')
-
-    # If no churches, or user chose global, show the global homepage
-    # Show the global site with aggregated content from all churches
-    
-    # Get global hero from GlobalSettings (explicit selection)
-    try:
-        from .models import GlobalSettings
-        global_settings = GlobalSettings.get_settings()
-        hero = global_settings.global_hero
-        if hero and hero.is_active:
-            hero = hero
-        else:
-            hero = None
-    except Exception as e:
-        print(f"DEBUG: Error getting global hero: {e}")
-        hero = None
-    
-    # Get public content from all churches for the global site
-    # Events, News, Sermons, Ministries appear immediately when public (no approval needed)
-    try:
-        upcoming_events = Event.objects.filter(
-            is_public=True,
-            start_date__gte=timezone.now()
-        ).prefetch_related('hero_media').order_by('start_date')[:6]
-    except Exception as e:
-        print(f"DEBUG: Error getting upcoming events: {e}")
-        upcoming_events = []
-    
-    try:
-        featured_events = Event.objects.filter(
-            is_public=True,
-            is_featured=True
-        ).prefetch_related('hero_media').order_by('-start_date')[:3]
-    except Exception as e:
-        print(f"DEBUG: Error getting featured events: {e}")
-        featured_events = []
-    
-    try:
-        public_ministries = Ministry.objects.filter(
-            is_public=True
-        ).order_by('name')[:6]  # 6 ministries
-    except Exception as e:
-        print(f"DEBUG: Error getting ministries: {e}")
-        public_ministries = []
-    
-    try:
-        latest_news = News.objects.filter(
-            is_public=True
-        ).order_by('-date')[:4]  # 4 latest news articles
-    except Exception as e:
-        print(f"DEBUG: Error getting news: {e}")
-        latest_news = []
-    
-    try:
-        latest_sermons = Sermon.objects.filter(
-            is_public=True
-        ).order_by('-date')[:4]  # 4 latest sermons
-    except Exception as e:
-        print(f"DEBUG: Error getting sermons: {e}")
-        latest_sermons = []
-    
-    # Get user location for display
-    country, city = get_user_location(request)
-    nearest_church = None
-    if country:
-        try:
-            nearest_church = find_nearest_church(country, city)
-        except Exception as e:
-            print(f"DEBUG: Error finding nearest church: {e}")
-    
-    try:
-        all_events = Event.objects.filter(is_public=True)[:10]
-        all_ministries = Ministry.objects.filter(is_public=True)[:10]
-        recent_testimonies = Testimony.objects.filter(is_approved=True).order_by('-created_at')[:3]
-    except Exception as e:
-        print(f"DEBUG: Error getting additional data: {e}")
-        all_events = []
-        all_ministries = []
-        recent_testimonies = []
-    
-    context = {
-        'hero': hero,
-        'upcoming_events': upcoming_events,
-        'ministries': public_ministries,
-        'sermons': latest_sermons,
-        'news': latest_news,
-        'all_events': all_events,
-        'all_ministries': all_ministries,
-        'user_country': country,
-        'user_city': city,
-        'nearest_church': nearest_church,
-        'is_global_site': go_global,  # Only True if user explicitly requested global site
-        'recent_testimonies': recent_testimonies,
-    }
-    return render(request, 'core/home.html', context)
+    """Simple home view for production"""
+    return HttpResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Bethel Prayer Ministry International</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 50px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .container {
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            }
+            h1 { font-size: 2.5em; margin-bottom: 20px; }
+            p { font-size: 1.2em; margin-bottom: 30px; }
+            .admin-link {
+                background: white;
+                color: #667eea;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                display: inline-block;
+                transition: transform 0.2s;
+            }
+            .admin-link:hover {
+                transform: translateY(-2px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🙏 Bethel Prayer Ministry International</h1>
+            <p>Welcome to our ministry website!</p>
+            <p>Our website is currently being updated. Please check back soon.</p>
+            <a href="/admin/" class="admin-link">Admin Panel</a>
+        </div>
+    </body>
+    </html>
+    """)
 
 def events(request):
     # Show all public events (no approval required)
