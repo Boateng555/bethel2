@@ -106,7 +106,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.DatabaseIndependentMiddleware',
-    'core.middleware.AnalyticsMiddleware',  # Add analytics tracking
 ]
 
 # URL config
