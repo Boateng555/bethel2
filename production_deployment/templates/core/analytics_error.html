@@ -1,0 +1,67 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - Error{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .error-container {
+        background: white;
+        border-radius: 15px;
+        padding: 3rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        margin: 2rem auto;
+        max-width: 600px;
+    }
+    .error-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    .error-title {
+        font-size: 2rem;
+        color: #dc2626;
+        margin-bottom: 1rem;
+    }
+    .error-message {
+        font-size: 1.1rem;
+        color: #6b7280;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    .back-button {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.2s;
+    }
+    .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h1 class="error-title">{{ error|default:"Analytics Dashboard Error" }}</h1>
+    <p class="error-message">
+        {{ message|default:"The analytics dashboard is currently unavailable. This could be due to missing dependencies or configuration issues in the production environment." }}
+    </p>
+    <p class="error-message">
+        <strong>Note:</strong> The analytics system requires additional Python packages (user-agents, geoip2) that may not be installed in production environments.
+    </p>
+    <a href="{% url 'admin:index' %}" class="back-button">
+        ← Back to Admin
+    </a>
+</div>
+{% endblock %}
