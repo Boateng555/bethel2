@@ -13,8 +13,6 @@ import dj_database_url
 # Load .env variables
 load_dotenv()
 
-# Local media storage is used by default
-
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,6 +23,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
     '91.99.232.214',  # CyberPanel server IP
 ]
+
 # Detect if running in production
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
@@ -39,7 +38,7 @@ if USE_PROD_DB:
             DATABASES = {
                 'default': dj_database_url.parse(
                     raw_db_url,
-                    conn_max_age=60,  # Reduced for faster startup
+                    conn_max_age=60,
                     ssl_require=True
                 )
             }
@@ -70,16 +69,6 @@ else:
         }
     }
 
-# Memory optimization: Database connection pooling
-if USE_PROD_DB:
-    DATABASES['default']['CONN_MAX_AGE'] = 60  # Reduced for faster startup
-    # Add database optimizations (only valid options for PostgreSQL)
-    DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,  # Reduced for faster startup
-        'sslmode': 'require',   # Ensure SSL is required
-    }
-    print("🔧 Production database optimizations applied")
-
 # Apps
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,7 +82,7 @@ INSTALLED_APPS = [
     'core',
 ]
 
-# Middleware - Optimized for production
+# Middleware - Minimal for production safety
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -102,8 +91,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.DatabaseIndependentMiddleware',
-    # 'core.middleware.AnalyticsMiddleware',  # Commented out for production safety
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 # URL config
@@ -123,7 +111,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.global_settings',
             ],
-            # Memory optimization: Disable template caching in development
             'debug': DEBUG,
         },
     },
@@ -146,26 +133,14 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files with memory optimization
+# Static files - Basic configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/myproject/static'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Memory optimization: Use simpler static file storage
-if USE_PROD_DB:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-else:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Media files - Local storage
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-# Image handling settings for better quality
-THUMBNAIL_DEBUG = False
-THUMBNAIL_FORCE_OVERWRITE = True
-THUMBNAIL_QUALITY = 95  # High quality thumbnails
-THUMBNAIL_PRESERVE_FORMAT = True
 
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
@@ -177,84 +152,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Memory optimization: Session settings
-if USE_PROD_DB:
-    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-    SESSION_COOKIE_AGE = 1800  # Reduced to 30 minutes
-    SESSION_SAVE_EVERY_REQUEST = False
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
-# Memory optimization: Cache settings (simple in-memory cache)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 60,  # Reduced to 1 minute
-        'OPTIONS': {
-            'MAX_ENTRIES': 100,  # Reduced from 1000
-        }
-    }
-}
+# Session settings
+SESSION_COOKIE_SECURE = False  # Set to True if using HTTPS
+CSRF_COOKIE_SECURE = False     # Set to True if using HTTPS
 
-# Memory optimization: Logging (reduce verbosity)
+# Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',  # Reduced from INFO
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'WARNING',  # Reduced from INFO
-            'propagate': False,
-        },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'ERROR',  # Only show database errors
-            'propagate': False,
-        },
+        'level': 'INFO',
     },
 }
-
-# Local media storage settings
-
-# File storage - Using local Django storage
-print("Using local Django file storage")
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-# CSRF Trusted Origins
-CSRF_TRUSTED_ORIGINS = [
-    "https://your-domain.com",
-    "https://91.99.232.214",
-]
-
-# Memory optimization: REST Framework settings
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,  # Limit page size
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour'
-    }
-}
-
-# Local storage initialization completed
-print("Local Django file storage configured")
