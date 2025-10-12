@@ -1010,23 +1010,67 @@
                             }
                         });
                         
-                        // For big events hero videos, be ULTRA aggressive about removing play buttons
-                        if (isBigEventsHero) {
-                            console.log('📱 Big events hero video - ULTRA aggressive play button removal');
-                            // Remove ALL possible play button overlays
-                            const allOverlays = video.parentElement.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
-                            allOverlays.forEach(function(overlay) {
-                                overlay.remove();
-                                console.log('📱 Removed big events play button overlay');
-                            });
-                            
-                            // Also check the video element itself for any overlays
-                            const videoOverlays = video.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
-                            videoOverlays.forEach(function(overlay) {
-                                overlay.remove();
-                                console.log('📱 Removed big events video play button overlay');
-                            });
-                        }
+                    // For big events hero videos, be ULTRA aggressive about removing play buttons
+                    if (isBigEventsHero) {
+                        console.log('📱 Big events hero video - ULTRA aggressive play button removal');
+                        // Remove ALL possible play button overlays
+                        const allOverlays = video.parentElement.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                        allOverlays.forEach(function(overlay) {
+                            overlay.remove();
+                            console.log('📱 Removed big events play button overlay');
+                        });
+                        
+                        // Also check the video element itself for any overlays
+                        const videoOverlays = video.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                        videoOverlays.forEach(function(overlay) {
+                            overlay.remove();
+                            console.log('📱 Removed big events video play button overlay');
+                        });
+                        
+                        // ULTRA aggressive removal - remove ANY element that might be a play button
+                        const anyPlayElements = video.parentElement.querySelectorAll('*');
+                        anyPlayElements.forEach(function(element) {
+                            if (element.classList.contains('play') || 
+                                element.classList.contains('Play') ||
+                                element.classList.contains('overlay') ||
+                                element.classList.contains('Overlay') ||
+                                element.classList.contains('play-button') ||
+                                element.classList.contains('PlayButton') ||
+                                element.classList.contains('video-overlay') ||
+                                element.classList.contains('VideoOverlay') ||
+                                element.classList.contains('mobile-play-overlay') ||
+                                element.classList.contains('MobilePlayOverlay') ||
+                                element.getAttribute('class')?.includes('play') ||
+                                element.getAttribute('class')?.includes('Play') ||
+                                element.getAttribute('class')?.includes('overlay') ||
+                                element.getAttribute('class')?.includes('Overlay')) {
+                                element.remove();
+                                console.log('📱 Removed ANY play button element from big events hero video');
+                            }
+                        });
+                        
+                        // Also remove from the video element itself
+                        const videoPlayElements = video.querySelectorAll('*');
+                        videoPlayElements.forEach(function(element) {
+                            if (element.classList.contains('play') || 
+                                element.classList.contains('Play') ||
+                                element.classList.contains('overlay') ||
+                                element.classList.contains('Overlay') ||
+                                element.classList.contains('play-button') ||
+                                element.classList.contains('PlayButton') ||
+                                element.classList.contains('video-overlay') ||
+                                element.classList.contains('VideoOverlay') ||
+                                element.classList.contains('mobile-play-overlay') ||
+                                element.classList.contains('MobilePlayOverlay') ||
+                                element.getAttribute('class')?.includes('play') ||
+                                element.getAttribute('class')?.includes('Play') ||
+                                element.getAttribute('class')?.includes('overlay') ||
+                                element.getAttribute('class')?.includes('Overlay')) {
+                                element.remove();
+                                console.log('📱 Removed ANY play button element from big events hero video element');
+                            }
+                        });
+                    }
                     }
                     
                     // Add mobile-specific attributes
@@ -1186,6 +1230,50 @@
                                 videoOverlays.forEach(function(overlay) {
                                     overlay.remove();
                                     console.log('📱 Periodic removal: Removed big events video play button overlay');
+                                });
+                                
+                                // ULTRA aggressive periodic removal - remove ANY element that might be a play button
+                                const anyPlayElements = video.parentElement.querySelectorAll('*');
+                                anyPlayElements.forEach(function(element) {
+                                    if (element.classList.contains('play') || 
+                                        element.classList.contains('Play') ||
+                                        element.classList.contains('overlay') ||
+                                        element.classList.contains('Overlay') ||
+                                        element.classList.contains('play-button') ||
+                                        element.classList.contains('PlayButton') ||
+                                        element.classList.contains('video-overlay') ||
+                                        element.classList.contains('VideoOverlay') ||
+                                        element.classList.contains('mobile-play-overlay') ||
+                                        element.classList.contains('MobilePlayOverlay') ||
+                                        element.getAttribute('class')?.includes('play') ||
+                                        element.getAttribute('class')?.includes('Play') ||
+                                        element.getAttribute('class')?.includes('overlay') ||
+                                        element.getAttribute('class')?.includes('Overlay')) {
+                                        element.remove();
+                                        console.log('📱 Periodic removal: Removed ANY play button element from big events hero video');
+                                    }
+                                });
+                                
+                                // Also remove from the video element itself
+                                const videoPlayElements = video.querySelectorAll('*');
+                                videoPlayElements.forEach(function(element) {
+                                    if (element.classList.contains('play') || 
+                                        element.classList.contains('Play') ||
+                                        element.classList.contains('overlay') ||
+                                        element.classList.contains('Overlay') ||
+                                        element.classList.contains('play-button') ||
+                                        element.classList.contains('PlayButton') ||
+                                        element.classList.contains('video-overlay') ||
+                                        element.classList.contains('VideoOverlay') ||
+                                        element.classList.contains('mobile-play-overlay') ||
+                                        element.classList.contains('MobilePlayOverlay') ||
+                                        element.getAttribute('class')?.includes('play') ||
+                                        element.getAttribute('class')?.includes('Play') ||
+                                        element.getAttribute('class')?.includes('overlay') ||
+                                        element.getAttribute('class')?.includes('Overlay')) {
+                                        element.remove();
+                                        console.log('📱 Periodic removal: Removed ANY play button element from big events hero video element');
+                                    }
                                 });
                             }
                         }, 1000); // Check every second
@@ -1602,6 +1690,25 @@
                 if (isHeroVideo) {
                     console.log('📱 Hero video detected - NOT showing play button');
                     return; // Don't show play button for hero videos
+                }
+                
+                // For big events, be EXTRA aggressive about preventing play buttons
+                const isBigEventsHero = video.closest('.hero-swiper') || 
+                                      video.closest('.swiper') || 
+                                      video.closest('#hero-media-container') ||
+                                      video.parentElement.classList.contains('swiper-slide') ||
+                                      video.closest('.swiper-slide') ||
+                                      video.closest('.swiper-wrapper') ||
+                                      (video.classList.contains('w-full') && video.classList.contains('h-full') && video.classList.contains('object-cover')) ||
+                                      video.closest('section[class*="relative"]') ||
+                                      video.closest('section[class*="hero"]') ||
+                                      video.closest('[class*="hero"]') ||
+                                      video.closest('[class*="swiper"]') ||
+                                      video.closest('[id*="hero"]');
+                
+                if (isBigEventsHero) {
+                    console.log('📱 Big events hero video detected - NOT showing play button');
+                    return; // Don't show play button for big events hero videos
                 }
                 
                 console.log('📱 Showing play button for video');
