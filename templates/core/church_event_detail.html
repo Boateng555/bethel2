@@ -332,4 +332,223 @@
         // Hide navigation arrows since we're using swipe
         navigation: false,
     });
+</script>
+
+<!-- Mobile Video Enhancement Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track if user has interacted with the page
+    let userHasInteracted = false;
+    
+    // Listen for any user interaction to enable autoplay
+    function enableAutoplay() {
+        if (!userHasInteracted) {
+            userHasInteracted = true;
+            console.log('📱 User interaction detected, enabling autoplay...');
+            
+            // Try to play all videos that are paused
+            const videos = document.querySelectorAll('video');
+            videos.forEach(function(video) {
+                if (video.paused) {
+                    video.play().then(function() {
+                        console.log('📱 Video started after user interaction');
+                    }).catch(function(error) {
+                        console.log('📱 Video still failed to play:', error);
+                    });
+                }
+            });
+        }
+    }
+    
+    // Add event listeners for user interaction
+    document.addEventListener('touchstart', enableAutoplay, { once: true });
+    document.addEventListener('click', enableAutoplay, { once: true });
+    document.addEventListener('scroll', enableAutoplay, { once: true });
+    
+    // Enhanced mobile video handling
+    function enhanceMobileVideos() {
+        const videos = document.querySelectorAll('video');
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            console.log('📱 Mobile device detected, enhancing videos...');
+            
+            videos.forEach(function(video) {
+                console.log('📱 Processing video element');
+                
+                // Check if this is a hero background video
+                const isHeroVideo = video.classList.contains('absolute') || 
+                                  video.parentElement.classList.contains('hero-section-outer') ||
+                                  video.closest('.hero-section-outer');
+                
+                console.log('📱 Is hero video:', isHeroVideo);
+                
+                // Remove any existing play button overlays first
+                hidePlayButton(video);
+                
+                // Add mobile-specific attributes
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.setAttribute('muted', '');
+                video.setAttribute('autoplay', '');
+                video.setAttribute('loop', '');
+                
+                // Set video properties directly
+                video.muted = true;
+                video.loop = true;
+                video.autoplay = true;
+                
+                // Force autoplay on mobile
+                video.addEventListener('loadeddata', function() {
+                    console.log('📱 Video loaded, attempting autoplay...');
+                    video.play().then(function() {
+                        console.log('📱 Video autoplay successful!');
+                        hidePlayButton(video);
+                    }).catch(function(error) {
+                        console.log('📱 Autoplay failed:', error);
+                        // Only show play button for non-hero videos
+                        if (!isHeroVideo) {
+                            showPlayButton(video);
+                        } else {
+                            console.log('📱 Hero video autoplay failed, but not showing play button');
+                        }
+                    });
+                });
+                
+                // Also try autoplay on other events
+                video.addEventListener('canplay', function() {
+                    if (video.paused) {
+                        console.log('📱 Video can play, attempting autoplay...');
+                        video.play().then(function() {
+                            console.log('📱 Video autoplay successful on canplay!');
+                            hidePlayButton(video);
+                        }).catch(function(error) {
+                            console.log('📱 Autoplay failed on canplay:', error);
+                            // Only show play button for non-hero videos
+                            if (!isHeroVideo) {
+                                showPlayButton(video);
+                            }
+                        });
+                    }
+                });
+                
+                // Handle user interaction to start video
+                video.addEventListener('click', function() {
+                    console.log('📱 Video clicked, attempting play...');
+                    if (video.paused) {
+                        video.play().then(function() {
+                            console.log('📱 Video play successful on click!');
+                            hidePlayButton(video);
+                        }).catch(function(error) {
+                            console.log('📱 Video play failed on click:', error);
+                        });
+                    }
+                });
+                
+                // Try autoplay immediately
+                setTimeout(function() {
+                    if (video.paused) {
+                        console.log('📱 Attempting immediate autoplay...');
+                        video.play().then(function() {
+                            console.log('📱 Immediate autoplay successful!');
+                            hidePlayButton(video);
+                        }).catch(function(error) {
+                            console.log('📱 Immediate autoplay failed:', error);
+                            // Only show play button for non-hero videos
+                            if (!isHeroVideo) {
+                                showPlayButton(video);
+                            } else {
+                                // For hero videos, add a subtle overlay to trigger autoplay
+                                addHeroVideoTrigger(video);
+                            }
+                        });
+                    }
+                }, 500);
+            });
+        }
+    }
+    
+    function showPlayButton(video) {
+        console.log('📱 Showing play button for video');
+        // Create play button overlay if it doesn't exist
+        if (!video.parentElement.querySelector('.mobile-play-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-play-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 cursor-pointer z-10';
+            overlay.innerHTML = '<div class="bg-white rounded-full p-6 shadow-lg"><svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>';
+            
+            video.parentElement.style.position = 'relative';
+            video.parentElement.appendChild(overlay);
+            
+            overlay.addEventListener('click', function() {
+                console.log('📱 Play button clicked');
+                video.play().then(function() {
+                    console.log('📱 Video play successful from button!');
+                    hidePlayButton(video);
+                }).catch(function(error) {
+                    console.log('📱 Video play failed from button:', error);
+                });
+            });
+        }
+    }
+    
+    function hidePlayButton(video) {
+        console.log('📱 Hiding play button for video');
+        const overlay = video.parentElement.querySelector('.mobile-play-overlay');
+        if (overlay) {
+            overlay.remove();
+            console.log('📱 Play button removed');
+        }
+    }
+    
+    function addHeroVideoTrigger(video) {
+        console.log('📱 Adding hero video trigger overlay');
+        // Create a subtle overlay that triggers autoplay when touched
+        if (!video.parentElement.querySelector('.hero-video-trigger')) {
+            const trigger = document.createElement('div');
+            trigger.className = 'hero-video-trigger absolute inset-0 bg-transparent cursor-pointer z-20';
+            trigger.style.background = 'linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.1) 50%, transparent 51%)';
+            trigger.innerHTML = '<div class="absolute inset-0 flex items-center justify-center"><div class="bg-white bg-opacity-20 rounded-full p-2"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>';
+            
+            video.parentElement.style.position = 'relative';
+            video.parentElement.appendChild(trigger);
+            
+            trigger.addEventListener('touchstart', function() {
+                console.log('📱 Hero video trigger touched');
+                video.play().then(function() {
+                    console.log('📱 Hero video started after touch');
+                    trigger.remove();
+                }).catch(function(error) {
+                    console.log('📱 Hero video still failed to play:', error);
+                });
+            });
+            
+            trigger.addEventListener('click', function() {
+                console.log('📱 Hero video trigger clicked');
+                video.play().then(function() {
+                    console.log('📱 Hero video started after click');
+                    trigger.remove();
+                }).catch(function(error) {
+                    console.log('📱 Hero video still failed to play:', error);
+                });
+            });
+        }
+    }
+    
+    // Run enhancement
+    enhanceMobileVideos();
+    
+    // Re-run when new content is loaded (for dynamic content)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+                enhanceMobileVideos();
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
 </script> 
