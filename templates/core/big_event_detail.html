@@ -905,7 +905,7 @@
                 videos.forEach(function(video) {
                     console.log('📱 Processing video element');
                     
-                    // Check if this is a hero background video - be very aggressive
+                    // Check if this is a hero background video - be ULTRA aggressive
                     const isHeroVideo = video.classList.contains('absolute') || 
                                       video.classList.contains('inset-0') ||
                                       video.classList.contains('w-full') ||
@@ -936,15 +936,61 @@
                                       video.closest('section[class*="relative"]') ||
                                       // Check if video is in a swiper container
                                       video.closest('.swiper-wrapper') ||
-                                      video.closest('.swiper-slide');
+                                      video.closest('.swiper-slide') ||
+                                      // ULTRA aggressive checks for big events
+                                      video.closest('section') ||
+                                      video.closest('.swiper-slide') ||
+                                      video.parentElement.classList.contains('swiper-slide') ||
+                                      video.closest('.hero-swiper') ||
+                                      video.closest('.swiper') ||
+                                      video.closest('#hero-media-container') ||
+                                      // Check if video is in any hero-like container
+                                      video.closest('[class*="hero"]') ||
+                                      video.closest('[class*="swiper"]') ||
+                                      video.closest('[id*="hero"]') ||
+                                      // Check if video has any hero-like attributes
+                                      video.hasAttribute('autoplay') ||
+                                      video.hasAttribute('muted') ||
+                                      video.hasAttribute('loop') ||
+                                      // Check if video is in a full-screen container
+                                      video.closest('[class*="h-screen"]') ||
+                                      video.closest('[class*="w-full"]') ||
+                                      video.closest('[class*="h-full"]') ||
+                                      // Check if video is in a relative positioned container
+                                      video.closest('[style*="position: relative"]') ||
+                                      video.closest('[style*="position:absolute"]') ||
+                                      // Check if video is in any container with hero-like classes
+                                      video.closest('[class*="absolute"]') ||
+                                      video.closest('[class*="inset"]') ||
+                                      video.closest('[class*="object-cover"]');
                     
                     console.log('📱 Is hero video:', isHeroVideo);
+                    
+                    // For big events, be EXTRA aggressive about hero video detection
+                    const isBigEventsHero = video.closest('.hero-swiper') || 
+                                          video.closest('.swiper') || 
+                                          video.closest('#hero-media-container') ||
+                                          video.parentElement.classList.contains('swiper-slide') ||
+                                          video.closest('.swiper-slide') ||
+                                          video.closest('.swiper-wrapper') ||
+                                          (video.classList.contains('w-full') && video.classList.contains('h-full') && video.classList.contains('object-cover')) ||
+                                          video.closest('section[class*="relative"]') ||
+                                          video.closest('section[class*="hero"]') ||
+                                          video.closest('[class*="hero"]') ||
+                                          video.closest('[class*="swiper"]') ||
+                                          video.closest('[id*="hero"]');
+                    
+                    // Force hero video detection for big events
+                    if (isBigEventsHero) {
+                        console.log('📱 Big events hero video FORCED detection');
+                        video._isHeroVideo = true;
+                    }
                     
                     // Remove any existing play button overlays first
                     hidePlayButton(video);
                     
                     // For hero videos, be extra aggressive about removing play buttons
-                    if (isHeroVideo) {
+                    if (isHeroVideo || isBigEventsHero) {
                         console.log('📱 Hero video - aggressively removing play buttons');
                         // Remove any existing play button overlays
                         const existingOverlay = video.parentElement.querySelector('.mobile-play-overlay');
@@ -963,6 +1009,24 @@
                                 console.log('📱 Removed additional play button from hero video');
                             }
                         });
+                        
+                        // For big events hero videos, be ULTRA aggressive about removing play buttons
+                        if (isBigEventsHero) {
+                            console.log('📱 Big events hero video - ULTRA aggressive play button removal');
+                            // Remove ALL possible play button overlays
+                            const allOverlays = video.parentElement.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                            allOverlays.forEach(function(overlay) {
+                                overlay.remove();
+                                console.log('📱 Removed big events play button overlay');
+                            });
+                            
+                            // Also check the video element itself for any overlays
+                            const videoOverlays = video.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                            videoOverlays.forEach(function(overlay) {
+                                overlay.remove();
+                                console.log('📱 Removed big events video play button overlay');
+                            });
+                        }
                     }
                     
                     // Add mobile-specific attributes
@@ -1095,7 +1159,7 @@
                             subtree: true
                         });
                         
-                        // Also add a periodic check to remove play buttons
+                        // Also add a periodic check to remove play buttons - ULTRA aggressive for big events
                         setInterval(function() {
                             const playButtons = video.parentElement.querySelectorAll('.mobile-play-overlay, [class*="play"], [class*="Play"], [class*="overlay"]');
                             playButtons.forEach(function(button) {
@@ -1106,6 +1170,24 @@
                                     console.log('📱 Periodic removal: Removed play button from hero video');
                                 }
                             });
+                            
+                            // For big events hero videos, be ULTRA aggressive about removing play buttons
+                            if (isBigEventsHero) {
+                                console.log('📱 Big events hero video - periodic ULTRA aggressive play button removal');
+                                // Remove ALL possible play button overlays
+                                const allOverlays = video.parentElement.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                                allOverlays.forEach(function(overlay) {
+                                    overlay.remove();
+                                    console.log('📱 Periodic removal: Removed big events play button overlay');
+                                });
+                                
+                                // Also check the video element itself for any overlays
+                                const videoOverlays = video.querySelectorAll('div[class*="play"], div[class*="Play"], div[class*="overlay"], div[class*="Overlay"]');
+                                videoOverlays.forEach(function(overlay) {
+                                    overlay.remove();
+                                    console.log('📱 Periodic removal: Removed big events video play button overlay');
+                                });
+                            }
                         }, 1000); // Check every second
                         
                         // Add user interaction listener specifically for hero videos
@@ -1460,7 +1542,7 @@
         }
         
             function showPlayButton(video) {
-                // Check if this is a hero video before showing play button
+                // Check if this is a hero video before showing play button - ULTRA aggressive
                 const isHeroVideo = video._isHeroVideo || 
                                   video.classList.contains('absolute') || 
                                   video.classList.contains('inset-0') ||
@@ -1489,7 +1571,33 @@
                                   video.closest('section[class*="relative"]') ||
                                   // Check if video is in a swiper container
                                   video.closest('.swiper-wrapper') ||
-                                  video.closest('.swiper-slide');
+                                  video.closest('.swiper-slide') ||
+                                  // ULTRA aggressive checks for big events
+                                  video.closest('section') ||
+                                  video.closest('.swiper-slide') ||
+                                  video.parentElement.classList.contains('swiper-slide') ||
+                                  video.closest('.hero-swiper') ||
+                                  video.closest('.swiper') ||
+                                  video.closest('#hero-media-container') ||
+                                  // Check if video is in any hero-like container
+                                  video.closest('[class*="hero"]') ||
+                                  video.closest('[class*="swiper"]') ||
+                                  video.closest('[id*="hero"]') ||
+                                  // Check if video has any hero-like attributes
+                                  video.hasAttribute('autoplay') ||
+                                  video.hasAttribute('muted') ||
+                                  video.hasAttribute('loop') ||
+                                  // Check if video is in a full-screen container
+                                  video.closest('[class*="h-screen"]') ||
+                                  video.closest('[class*="w-full"]') ||
+                                  video.closest('[class*="h-full"]') ||
+                                  // Check if video is in a relative positioned container
+                                  video.closest('[style*="position: relative"]') ||
+                                  video.closest('[style*="position:absolute"]') ||
+                                  // Check if video is in any container with hero-like classes
+                                  video.closest('[class*="absolute"]') ||
+                                  video.closest('[class*="inset"]') ||
+                                  video.closest('[class*="object-cover"]');
                 
                 if (isHeroVideo) {
                     console.log('📱 Hero video detected - NOT showing play button');
