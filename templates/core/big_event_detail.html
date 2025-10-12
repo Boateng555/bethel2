@@ -1136,24 +1136,257 @@
                             }
                         }, { once: false });
                         
-                        // For big events hero videos, add even more aggressive user interaction listeners
-                        if (video.closest('.hero-swiper') || video.closest('.swiper') || video.closest('#hero-media-container')) {
-                            console.log('📱 Big events hero video - adding ultra aggressive user interaction listeners');
-                            
-                            // Add multiple event listeners for big events hero videos
-                            const events = ['touchstart', 'touchend', 'touchmove', 'click', 'mousedown', 'mouseup', 'mousemove', 'scroll', 'keydown', 'keyup', 'focus', 'blur', 'resize', 'load', 'DOMContentLoaded'];
-                            
-                            events.forEach(function(eventType) {
-                                document.addEventListener(eventType, function() {
-                                    if (video.paused && video._isHeroVideo) {
-                                        console.log('📱 Big events hero video - ' + eventType + ' detected - trying to play');
-                                        video.play().catch(function(error) {
-                                            console.log('📱 Big events hero video still failed after ' + eventType + ', but not showing play button');
-                                        });
-                                    }
-                                }, { once: false });
-                            });
-                        }
+                        document.addEventListener('keydown', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User keydown detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user keydown, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        document.addEventListener('mousemove', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User mousemove detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user mousemove, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        document.addEventListener('focus', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User focus detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user focus, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        document.addEventListener('visibilitychange', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User visibilitychange detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user visibilitychange, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('resize', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User resize detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user resize, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('load', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User load detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user load, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User DOMContentLoaded detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user DOMContentLoaded, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        document.addEventListener('readystatechange', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User readystatechange detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user readystatechange, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('pageshow', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User pageshow detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user pageshow, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('pagehide', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User pagehide detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user pagehide, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('beforeunload', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User beforeunload detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user beforeunload, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('unload', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User unload detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user unload, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('error', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User error detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user error, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('online', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User online detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user online, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('offline', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User offline detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user offline, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('storage', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User storage detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user storage, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('message', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User message detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user message, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('popstate', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User popstate detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user popstate, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('hashchange', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User hashchange detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user hashchange, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('pushstate', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User pushstate detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user pushstate, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('replacestate', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User replacestate detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user replacestate, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('backstate', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User backstate detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user backstate, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('forwardstate', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User forwardstate detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user forwardstate, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('goback', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User goback detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user goback, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('goforward', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User goforward detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user goforward, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('go', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User go detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user go, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('goback', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User goback detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user goback, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
+                        
+                        window.addEventListener('goforward', function() {
+                            if (video.paused && video._isHeroVideo) {
+                                console.log('📱 User goforward detected - trying to play hero video');
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video still failed after user goforward, but not showing play button');
+                                });
+                            }
+                        }, { once: false });
                     }
                     
                     // Force autoplay on mobile
