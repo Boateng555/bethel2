@@ -943,6 +943,34 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Mobile Video Enhancement Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Track if user has interacted with the page
+        let userHasInteracted = false;
+        
+        // Listen for any user interaction to enable autoplay
+        function enableAutoplay() {
+            if (!userHasInteracted) {
+                userHasInteracted = true;
+                console.log('📱 User interaction detected, enabling autoplay...');
+                
+                // Try to play all videos that are paused
+                const videos = document.querySelectorAll('video');
+                videos.forEach(function(video) {
+                    if (video.paused) {
+                        video.play().then(function() {
+                            console.log('📱 Video started after user interaction');
+                        }).catch(function(error) {
+                            console.log('📱 Video still failed to play:', error);
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Add event listeners for user interaction
+        document.addEventListener('touchstart', enableAutoplay, { once: true });
+        document.addEventListener('click', enableAutoplay, { once: true });
+        document.addEventListener('scroll', enableAutoplay, { once: true });
+        
         // Enhanced mobile video handling
         function enhanceMobileVideos() {
             const videos = document.querySelectorAll('video');
@@ -1023,22 +1051,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                     
-                    // Try autoplay immediately
-                    setTimeout(function() {
-                        if (video.paused) {
-                            console.log('📱 Attempting immediate autoplay...');
-                            video.play().then(function() {
-                                console.log('📱 Immediate autoplay successful!');
-                                hidePlayButton(video);
-                            }).catch(function(error) {
-                                console.log('📱 Immediate autoplay failed:', error);
-                                // Only show play button for non-hero videos
-                                if (!isHeroVideo) {
-                                    showPlayButton(video);
-                                }
-                            });
-                        }
-                    }, 500);
+                        // Try autoplay immediately
+                        setTimeout(function() {
+                            if (video.paused) {
+                                console.log('📱 Attempting immediate autoplay...');
+                                video.play().then(function() {
+                                    console.log('📱 Immediate autoplay successful!');
+                                    hidePlayButton(video);
+                                }).catch(function(error) {
+                                    console.log('📱 Immediate autoplay failed:', error);
+                                    // Only show play button for non-hero videos
+                                    if (!isHeroVideo) {
+                                        showPlayButton(video);
+                                    } else {
+                                        // For hero videos, add a subtle overlay to trigger autoplay
+                                        addHeroVideoTrigger(video);
+                                    }
+                                });
+                            }
+                        }, 500);
                 });
             }
         }
@@ -1072,6 +1103,40 @@ document.addEventListener('DOMContentLoaded', function() {
             if (overlay) {
                 overlay.remove();
                 console.log('📱 Play button removed');
+            }
+        }
+        
+        function addHeroVideoTrigger(video) {
+            console.log('📱 Adding hero video trigger overlay');
+            // Create a subtle overlay that triggers autoplay when touched
+            if (!video.parentElement.querySelector('.hero-video-trigger')) {
+                const trigger = document.createElement('div');
+                trigger.className = 'hero-video-trigger absolute inset-0 bg-transparent cursor-pointer z-20';
+                trigger.style.background = 'linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.1) 50%, transparent 51%)';
+                trigger.innerHTML = '<div class="absolute inset-0 flex items-center justify-center"><div class="bg-white bg-opacity-20 rounded-full p-2"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>';
+                
+                video.parentElement.style.position = 'relative';
+                video.parentElement.appendChild(trigger);
+                
+                trigger.addEventListener('touchstart', function() {
+                    console.log('📱 Hero video trigger touched');
+                    video.play().then(function() {
+                        console.log('📱 Hero video started after touch');
+                        trigger.remove();
+                    }).catch(function(error) {
+                        console.log('📱 Hero video still failed to play:', error);
+                    });
+                });
+                
+                trigger.addEventListener('click', function() {
+                    console.log('📱 Hero video trigger clicked');
+                    video.play().then(function() {
+                        console.log('📱 Hero video started after click');
+                        trigger.remove();
+                    }).catch(function(error) {
+                        console.log('📱 Hero video still failed to play:', error);
+                    });
+                });
             }
         }
         
