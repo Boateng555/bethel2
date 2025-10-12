@@ -153,7 +153,7 @@
                 <p class="text-xl text-gray-600 mb-8">
                     Our leadership information is being prepared. Please check back soon!
                 </p>
-                <a href="{% url 'church_detail' church.id %}" class="inline-block bg-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] transition-colors">
+                <a href="{% url 'church_detail' church.id %}" class="inline-block bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] hover:text-white transition-colors">
                     Return to {{ church.name }}
                 </a>
             </div>
@@ -169,7 +169,7 @@
             Be part of our mission to spread the gospel in {{ church.city }}
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{% url 'church_ministries' church.id %}" class="bg-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] transition-colors">
+            <a href="{% url 'church_ministries' church.id %}" class="bg-white text-deep-blue px-8 py-3 rounded-lg font-semibold hover:bg-[#1e3a8a] hover:text-white transition-colors">
                 Get Involved
             </a>
             <a href="{% url 'church_donation' church.id %}" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-deep-blue transition-colors">

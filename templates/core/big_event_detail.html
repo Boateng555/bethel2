@@ -285,7 +285,7 @@
                         {% endif %}
                         {% if media.video %}
                         <div class="swiper-slide h-full">
-                            <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                            <video autoplay muted loop playsinline webkit-playsinline class="w-full h-full object-cover">
                                 <source src="{{ media.get_video_url }}" type="video/mp4" />
                             </video>
                         </div>

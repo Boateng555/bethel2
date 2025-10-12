@@ -458,7 +458,7 @@
                         {% endif %}
                         {% if media.video %}
                         <div class="swiper-slide h-full">
-                            <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                            <video autoplay muted loop playsinline webkit-playsinline class="w-full h-full object-cover">
                                 <source src="{{ media.get_video_url }}" type="video/mp4" />
                             </video>
                         </div>
@@ -469,7 +469,7 @@
                 <div class="swiper-pagination"></div>
             </div>
             {% elif hero.background_type == 'video' and hero.background_video %}
-                <video autoPlay muted loop playsInline class="absolute inset-0 w-full h-full object-cover">
+                <video autoplay muted loop playsinline webkit-playsinline class="absolute inset-0 w-full h-full object-cover">
                     <source src="{{ hero.background_video }}" type="video/mp4" />
                 </video>
             {% elif hero.background_type == 'image' and hero.background_image %}
@@ -939,5 +939,87 @@ document.addEventListener('DOMContentLoaded', function() {
     
     <!-- Cookie Consent Popup -->
     {% include 'core/cookie_consent.html' %}
+
+    <!-- Mobile Video Enhancement Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced mobile video handling
+        function enhanceMobileVideos() {
+            const videos = document.querySelectorAll('video');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                console.log('📱 Mobile device detected, enhancing videos...');
+                
+                videos.forEach(function(video) {
+                    // Add mobile-specific attributes
+                    video.setAttribute('playsinline', '');
+                    video.setAttribute('webkit-playsinline', '');
+                    video.setAttribute('muted', '');
+                    video.setAttribute('autoplay', '');
+                    
+                    // Force autoplay on mobile
+                    video.addEventListener('loadeddata', function() {
+                        console.log('📱 Video loaded, attempting autoplay...');
+                        video.play().catch(function(error) {
+                            console.log('📱 Autoplay failed:', error);
+                            // If autoplay fails, show a play button overlay
+                            showPlayButton(video);
+                        });
+                    });
+                    
+                    // Handle user interaction to start video
+                    video.addEventListener('click', function() {
+                        if (video.paused) {
+                            video.play();
+                            hidePlayButton(video);
+                        }
+                    });
+                });
+            }
+        }
+        
+        function showPlayButton(video) {
+            // Create play button overlay if it doesn't exist
+            if (!video.parentElement.querySelector('.mobile-play-overlay')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'mobile-play-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer z-10';
+                overlay.innerHTML = '<div class="bg-white bg-opacity-90 rounded-full p-4"><svg class="w-12 h-12 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>';
+                
+                video.parentElement.style.position = 'relative';
+                video.parentElement.appendChild(overlay);
+                
+                overlay.addEventListener('click', function() {
+                    video.play();
+                    hidePlayButton(video);
+                });
+            }
+        }
+        
+        function hidePlayButton(video) {
+            const overlay = video.parentElement.querySelector('.mobile-play-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+        
+        // Run enhancement
+        enhanceMobileVideos();
+        
+        // Re-run when new content is loaded (for dynamic content)
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    enhanceMobileVideos();
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+    </script>
 </body>
 </html>
