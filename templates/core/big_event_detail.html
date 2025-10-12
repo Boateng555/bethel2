@@ -926,7 +926,17 @@
                                       // Check if video is a background video
                                       video.getAttribute('class')?.includes('absolute') ||
                                       video.getAttribute('class')?.includes('inset-0') ||
-                                      video.getAttribute('class')?.includes('object-cover');
+                                      video.getAttribute('class')?.includes('object-cover') ||
+                                      // Specific check for big events hero videos
+                                      (video.classList.contains('w-full') && video.classList.contains('h-full') && video.classList.contains('object-cover')) ||
+                                      video.closest('.hero-swiper') ||
+                                      video.closest('.swiper') ||
+                                      video.parentElement.classList.contains('swiper-slide') ||
+                                      video.closest('#hero-media-container') ||
+                                      video.closest('section[class*="relative"]') ||
+                                      // Check if video is in a swiper container
+                                      video.closest('.swiper-wrapper') ||
+                                      video.closest('.swiper-slide');
                     
                     console.log('📱 Is hero video:', isHeroVideo);
                     
@@ -967,44 +977,104 @@
                     video.loop = true;
                     video.autoplay = true;
                     
-                    // For hero videos, be extra aggressive about autoplay
-                    if (isHeroVideo) {
-                        console.log('📱 Hero video - forcing autoplay attributes');
-                        video.setAttribute('autoplay', 'true');
-                        video.setAttribute('muted', 'true');
-                        video.setAttribute('playsinline', 'true');
-                        video.setAttribute('webkit-playsinline', 'true');
-                        video.setAttribute('loop', 'true');
-                        video.setAttribute('preload', 'auto');
+                        // For hero videos, be extra aggressive about autoplay
+                        if (isHeroVideo) {
+                            console.log('📱 Hero video - forcing autoplay attributes');
+                            video.setAttribute('autoplay', 'true');
+                            video.setAttribute('muted', 'true');
+                            video.setAttribute('playsinline', 'true');
+                            video.setAttribute('webkit-playsinline', 'true');
+                            video.setAttribute('loop', 'true');
+                            video.setAttribute('preload', 'auto');
+                            
+                            // Force video properties
+                            video.autoplay = true;
+                            video.muted = true;
+                            video.loop = true;
+                            video.playsInline = true;
+                            video.webkitPlaysInline = true;
+                            
+                            // Override the showPlayButton function for this video
+                            video._isHeroVideo = true;
+                            
+                            // For big events hero videos, be even more aggressive
+                            if (video.closest('.hero-swiper') || video.closest('.swiper') || video.closest('#hero-media-container')) {
+                                console.log('📱 Big events hero video detected - ultra aggressive autoplay');
+                                video.setAttribute('autoplay', 'true');
+                                video.setAttribute('muted', 'true');
+                                video.setAttribute('playsinline', 'true');
+                                video.setAttribute('webkit-playsinline', 'true');
+                                video.setAttribute('loop', 'true');
+                                video.setAttribute('preload', 'auto');
+                                video.setAttribute('controls', 'false');
+                                video.setAttribute('disablepictureinpicture', 'true');
+                                
+                                // Force video properties
+                                video.autoplay = true;
+                                video.muted = true;
+                                video.loop = true;
+                                video.playsInline = true;
+                                video.webkitPlaysInline = true;
+                                video.controls = false;
+                                video.disablePictureInPicture = true;
+                            }
                         
-                        // Force video properties
-                        video.autoplay = true;
-                        video.muted = true;
-                        video.loop = true;
-                        video.playsInline = true;
-                        video.webkitPlaysInline = true;
-                        
-                        // Override the showPlayButton function for this video
-                        video._isHeroVideo = true;
-                        
-                        // Try to play immediately multiple times
-                        setTimeout(function() {
-                            video.play().catch(function(error) {
-                                console.log('📱 Hero video autoplay failed, but not showing play button');
-                            });
-                        }, 100);
-                        
-                        setTimeout(function() {
-                            video.play().catch(function(error) {
-                                console.log('📱 Hero video autoplay retry failed, but not showing play button');
-                            });
-                        }, 500);
-                        
-                        setTimeout(function() {
-                            video.play().catch(function(error) {
-                                console.log('📱 Hero video autoplay final retry failed, but not showing play button');
-                            });
-                        }, 1000);
+                            // Try to play immediately multiple times
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay failed, but not showing play button');
+                                });
+                            }, 100);
+                            
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay retry failed, but not showing play button');
+                                });
+                            }, 500);
+                            
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay final retry failed, but not showing play button');
+                                });
+                            }, 1000);
+                            
+                            // For big events hero videos, try even more aggressively
+                            if (video.closest('.hero-swiper') || video.closest('.swiper') || video.closest('#hero-media-container')) {
+                                console.log('📱 Big events hero video - ultra aggressive autoplay attempts');
+                                
+                                // Try immediately
+                                video.play().catch(function(error) {
+                                    console.log('📱 Big events hero video immediate autoplay failed');
+                                });
+                                
+                                // Try after 50ms
+                                setTimeout(function() {
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Big events hero video 50ms autoplay failed');
+                                    });
+                                }, 50);
+                                
+                                // Try after 200ms
+                                setTimeout(function() {
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Big events hero video 200ms autoplay failed');
+                                    });
+                                }, 200);
+                                
+                                // Try after 1000ms
+                                setTimeout(function() {
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Big events hero video 1000ms autoplay failed');
+                                    });
+                                }, 1000);
+                                
+                                // Try after 2000ms
+                                setTimeout(function() {
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Big events hero video 2000ms autoplay failed');
+                                    });
+                                }, 2000);
+                            }
                         
                         // Add a mutation observer to prevent play buttons from being added
                         const observer = new MutationObserver(function(mutations) {
@@ -1065,6 +1135,25 @@
                                 });
                             }
                         }, { once: false });
+                        
+                        // For big events hero videos, add even more aggressive user interaction listeners
+                        if (video.closest('.hero-swiper') || video.closest('.swiper') || video.closest('#hero-media-container')) {
+                            console.log('📱 Big events hero video - adding ultra aggressive user interaction listeners');
+                            
+                            // Add multiple event listeners for big events hero videos
+                            const events = ['touchstart', 'touchend', 'touchmove', 'click', 'mousedown', 'mouseup', 'mousemove', 'scroll', 'keydown', 'keyup', 'focus', 'blur', 'resize', 'load', 'DOMContentLoaded'];
+                            
+                            events.forEach(function(eventType) {
+                                document.addEventListener(eventType, function() {
+                                    if (video.paused && video._isHeroVideo) {
+                                        console.log('📱 Big events hero video - ' + eventType + ' detected - trying to play');
+                                        video.play().catch(function(error) {
+                                            console.log('📱 Big events hero video still failed after ' + eventType + ', but not showing play button');
+                                        });
+                                    }
+                                }, { once: false });
+                            });
+                        }
                     }
                     
                     // Force autoplay on mobile
@@ -1157,7 +1246,17 @@
                                   video.closest('section[class*="hero"]') ||
                                   video.getAttribute('class')?.includes('absolute') ||
                                   video.getAttribute('class')?.includes('inset-0') ||
-                                  video.getAttribute('class')?.includes('object-cover');
+                                  video.getAttribute('class')?.includes('object-cover') ||
+                                  // Specific check for big events hero videos
+                                  (video.classList.contains('w-full') && video.classList.contains('h-full') && video.classList.contains('object-cover')) ||
+                                  video.closest('.hero-swiper') ||
+                                  video.closest('.swiper') ||
+                                  video.parentElement.classList.contains('swiper-slide') ||
+                                  video.closest('#hero-media-container') ||
+                                  video.closest('section[class*="relative"]') ||
+                                  // Check if video is in a swiper container
+                                  video.closest('.swiper-wrapper') ||
+                                  video.closest('.swiper-slide');
                 
                 if (isHeroVideo) {
                     console.log('📱 Hero video detected - NOT showing play button');
