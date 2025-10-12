@@ -735,54 +735,107 @@
                 console.log('📱 Mobile device detected, enhancing videos...');
                 
                 videos.forEach(function(video) {
+                    console.log('📱 Processing video element');
+                    
+                    // Remove any existing play button overlays first
+                    hidePlayButton(video);
+                    
                     // Add mobile-specific attributes
                     video.setAttribute('playsinline', '');
                     video.setAttribute('webkit-playsinline', '');
                     video.setAttribute('muted', '');
                     video.setAttribute('autoplay', '');
+                    video.setAttribute('loop', '');
+                    
+                    // Set video properties directly
+                    video.muted = true;
+                    video.loop = true;
+                    video.autoplay = true;
                     
                     // Force autoplay on mobile
                     video.addEventListener('loadeddata', function() {
                         console.log('📱 Video loaded, attempting autoplay...');
-                        video.play().catch(function(error) {
+                        video.play().then(function() {
+                            console.log('📱 Video autoplay successful!');
+                            hidePlayButton(video);
+                        }).catch(function(error) {
                             console.log('📱 Autoplay failed:', error);
                             // If autoplay fails, show a play button overlay
                             showPlayButton(video);
                         });
                     });
                     
-                    // Handle user interaction to start video
-                    video.addEventListener('click', function() {
+                    // Also try autoplay on other events
+                    video.addEventListener('canplay', function() {
                         if (video.paused) {
-                            video.play();
-                            hidePlayButton(video);
+                            console.log('📱 Video can play, attempting autoplay...');
+                            video.play().then(function() {
+                                console.log('📱 Video autoplay successful on canplay!');
+                                hidePlayButton(video);
+                            }).catch(function(error) {
+                                console.log('📱 Autoplay failed on canplay:', error);
+                            });
                         }
                     });
+                    
+                    // Handle user interaction to start video
+                    video.addEventListener('click', function() {
+                        console.log('📱 Video clicked, attempting play...');
+                        if (video.paused) {
+                            video.play().then(function() {
+                                console.log('📱 Video play successful on click!');
+                                hidePlayButton(video);
+                            }).catch(function(error) {
+                                console.log('📱 Video play failed on click:', error);
+                            });
+                        }
+                    });
+                    
+                    // Try autoplay immediately
+                    setTimeout(function() {
+                        if (video.paused) {
+                            console.log('📱 Attempting immediate autoplay...');
+                            video.play().then(function() {
+                                console.log('📱 Immediate autoplay successful!');
+                                hidePlayButton(video);
+                            }).catch(function(error) {
+                                console.log('📱 Immediate autoplay failed:', error);
+                            });
+                        }
+                    }, 500);
                 });
             }
         }
         
         function showPlayButton(video) {
+            console.log('📱 Showing play button for video');
             // Create play button overlay if it doesn't exist
             if (!video.parentElement.querySelector('.mobile-play-overlay')) {
                 const overlay = document.createElement('div');
-                overlay.className = 'mobile-play-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer z-10';
-                overlay.innerHTML = '<div class="bg-white bg-opacity-90 rounded-full p-4"><svg class="w-12 h-12 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>';
+                overlay.className = 'mobile-play-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 cursor-pointer z-10';
+                overlay.innerHTML = '<div class="bg-white rounded-full p-6 shadow-lg"><svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>';
                 
                 video.parentElement.style.position = 'relative';
                 video.parentElement.appendChild(overlay);
                 
                 overlay.addEventListener('click', function() {
-                    video.play();
-                    hidePlayButton(video);
+                    console.log('📱 Play button clicked');
+                    video.play().then(function() {
+                        console.log('📱 Video play successful from button!');
+                        hidePlayButton(video);
+                    }).catch(function(error) {
+                        console.log('📱 Video play failed from button:', error);
+                    });
                 });
             }
         }
         
         function hidePlayButton(video) {
+            console.log('📱 Hiding play button for video');
             const overlay = video.parentElement.querySelector('.mobile-play-overlay');
             if (overlay) {
                 overlay.remove();
+                console.log('📱 Play button removed');
             }
         }
         
