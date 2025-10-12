@@ -697,5 +697,356 @@
     
     <!-- Cookie Consent Popup -->
     {% include 'core/cookie_consent.html' %}
+    <!-- Mobile Video Enhancement Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 Mobile video enhancement starting...');
+            
+            // Track if user has interacted with the page
+            let userHasInteracted = false;
+            
+            // Listen for any user interaction to enable autoplay
+            function enableAutoplay() {
+                if (!userHasInteracted) {
+                    userHasInteracted = true;
+                    console.log('📱 User interaction detected, enabling autoplay...');
+                    
+                    // Try to play all videos that are paused
+                    const videos = document.querySelectorAll('video');
+                    videos.forEach(function(video) {
+                        if (video.paused) {
+                            video.play().then(function() {
+                                console.log('📱 Video started after user interaction');
+                            }).catch(function(error) {
+                                console.log('📱 Video still failed to play:', error);
+                            });
+                        }
+                    });
+                }
+            }
+            
+            // Add event listeners for user interaction
+            document.addEventListener('touchstart', enableAutoplay, { once: true });
+            document.addEventListener('click', enableAutoplay, { once: true });
+            document.addEventListener('scroll', enableAutoplay, { once: true });
+            
+            // Enhanced mobile video handling
+            function enhanceMobileVideos() {
+                const videos = document.querySelectorAll('video');
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    console.log('📱 Mobile device detected, enhancing videos...');
+                    
+                    videos.forEach(function(video) {
+                        console.log('📱 Processing video element');
+                        
+                        // Check if this is a hero background video - be very aggressive
+                        const isHeroVideo = video.classList.contains('absolute') || 
+                                          video.classList.contains('inset-0') ||
+                                          video.classList.contains('w-full') ||
+                                          video.classList.contains('h-full') ||
+                                          video.classList.contains('object-cover') ||
+                                          video.parentElement.classList.contains('hero-section-outer') ||
+                                          video.closest('.hero-section-outer') ||
+                                          video.closest('section')?.classList.contains('relative') ||
+                                          video.closest('section')?.classList.contains('w-full') ||
+                                          video.closest('section')?.classList.contains('h-screen') ||
+                                          // Check if video has hero-like classes
+                                          (video.classList.contains('absolute') && video.classList.contains('inset-0')) ||
+                                          (video.classList.contains('absolute') && video.classList.contains('w-full')) ||
+                                          (video.classList.contains('absolute') && video.classList.contains('h-full')) ||
+                                          // Check if video is in a hero container
+                                          video.closest('.hero-section-outer') ||
+                                          video.closest('section[class*="hero"]') ||
+                                          // Check if video is a background video
+                                          video.getAttribute('class')?.includes('absolute') ||
+                                          video.getAttribute('class')?.includes('inset-0') ||
+                                          video.getAttribute('class')?.includes('object-cover');
+                        
+                        console.log('📱 Is hero video:', isHeroVideo);
+                        
+                        // Remove any existing play button overlays first
+                        hidePlayButton(video);
+                        
+                        // For hero videos, be extra aggressive about removing play buttons
+                        if (isHeroVideo) {
+                            console.log('📱 Hero video - aggressively removing play buttons');
+                            // Remove any existing play button overlays
+                            const existingOverlay = video.parentElement.querySelector('.mobile-play-overlay');
+                            if (existingOverlay) {
+                                existingOverlay.remove();
+                                console.log('📱 Removed existing play button from hero video');
+                            }
+                            
+                            // Also check for any other play button classes
+                            const playButtons = video.parentElement.querySelectorAll('[class*="play"], [class*="Play"], [class*="overlay"]');
+                            playButtons.forEach(function(button) {
+                                if (button.classList.contains('mobile-play-overlay') || 
+                                    button.classList.contains('play-button') ||
+                                    button.classList.contains('video-overlay')) {
+                                    button.remove();
+                                    console.log('📱 Removed additional play button from hero video');
+                                }
+                            });
+                        }
+                        
+                        // Add mobile-specific attributes
+                        video.setAttribute('playsinline', '');
+                        video.setAttribute('webkit-playsinline', '');
+                        video.setAttribute('muted', '');
+                        video.setAttribute('autoplay', '');
+                        video.setAttribute('loop', '');
+                        
+                        // Set video properties directly
+                        video.muted = true;
+                        video.loop = true;
+                        video.autoplay = true;
+                        
+                        // For hero videos, be extra aggressive about autoplay
+                        if (isHeroVideo) {
+                            console.log('📱 Hero video - forcing autoplay attributes');
+                            video.setAttribute('autoplay', 'true');
+                            video.setAttribute('muted', 'true');
+                            video.setAttribute('playsinline', 'true');
+                            video.setAttribute('webkit-playsinline', 'true');
+                            video.setAttribute('loop', 'true');
+                            video.setAttribute('preload', 'auto');
+                            
+                            // Force video properties
+                            video.autoplay = true;
+                            video.muted = true;
+                            video.loop = true;
+                            video.playsInline = true;
+                            video.webkitPlaysInline = true;
+                            
+                            // Override the showPlayButton function for this video
+                            video._isHeroVideo = true;
+                            
+                            // Try to play immediately multiple times
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay failed, but not showing play button');
+                                });
+                            }, 100);
+                            
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay retry failed, but not showing play button');
+                                });
+                            }, 500);
+                            
+                            setTimeout(function() {
+                                video.play().catch(function(error) {
+                                    console.log('📱 Hero video autoplay final retry failed, but not showing play button');
+                                });
+                            }, 1000);
+                            
+                            // Add a mutation observer to prevent play buttons from being added
+                            const observer = new MutationObserver(function(mutations) {
+                                mutations.forEach(function(mutation) {
+                                    if (mutation.addedNodes.length > 0) {
+                                        mutation.addedNodes.forEach(function(node) {
+                                            if (node.nodeType === 1 && node.classList && node.classList.contains('mobile-play-overlay')) {
+                                                console.log('📱 Preventing play button from being added to hero video');
+                                                node.remove();
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+                            
+                            observer.observe(video.parentElement, {
+                                childList: true,
+                                subtree: true
+                            });
+                            
+                            // Also add a periodic check to remove play buttons
+                            setInterval(function() {
+                                const playButtons = video.parentElement.querySelectorAll('.mobile-play-overlay, [class*="play"], [class*="Play"], [class*="overlay"]');
+                                playButtons.forEach(function(button) {
+                                    if (button.classList.contains('mobile-play-overlay') || 
+                                        button.classList.contains('play-button') ||
+                                        button.classList.contains('video-overlay')) {
+                                        button.remove();
+                                        console.log('📱 Periodic removal: Removed play button from hero video');
+                                    }
+                                });
+                            }, 1000); // Check every second
+                            
+                            // Add user interaction listener specifically for hero videos
+                            document.addEventListener('touchstart', function() {
+                                if (video.paused && video._isHeroVideo) {
+                                    console.log('📱 User interaction detected - trying to play hero video');
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Hero video still failed after user interaction, but not showing play button');
+                                    });
+                                }
+                            }, { once: false });
+                            
+                            document.addEventListener('click', function() {
+                                if (video.paused && video._isHeroVideo) {
+                                    console.log('📱 User click detected - trying to play hero video');
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Hero video still failed after user click, but not showing play button');
+                                    });
+                                }
+                            }, { once: false });
+                            
+                            document.addEventListener('scroll', function() {
+                                if (video.paused && video._isHeroVideo) {
+                                    console.log('📱 User scroll detected - trying to play hero video');
+                                    video.play().catch(function(error) {
+                                        console.log('📱 Hero video still failed after user scroll, but not showing play button');
+                                    });
+                                }
+                            }, { once: false });
+                        }
+                        
+                        // Force autoplay on mobile
+                        video.addEventListener('loadeddata', function() {
+                            console.log('📱 Video loaded, attempting autoplay...');
+                            video.play().then(function() {
+                                console.log('📱 Video autoplay successful!');
+                                hidePlayButton(video);
+                            }).catch(function(error) {
+                                console.log('📱 Autoplay failed:', error);
+                                // Only show play button for non-hero videos
+                                if (!isHeroVideo) {
+                                    showPlayButton(video);
+                                } else {
+                                    console.log('📱 Hero video autoplay failed, but not showing play button');
+                                    // For hero videos, just try again silently
+                                    setTimeout(function() {
+                                        video.play().catch(function(error) {
+                                            console.log('📱 Hero video still failed, but not showing play button');
+                                        });
+                                    }, 1000);
+                                }
+                            });
+                        });
+                        
+                        // Also try autoplay on other events
+                        video.addEventListener('canplay', function() {
+                            if (video.paused) {
+                                console.log('📱 Video can play, attempting autoplay...');
+                                video.play().then(function() {
+                                    console.log('📱 Video autoplay successful on canplay!');
+                                    hidePlayButton(video);
+                                }).catch(function(error) {
+                                    console.log('📱 Autoplay failed on canplay:', error);
+                                    // Only show play button for non-hero videos
+                                    if (!isHeroVideo) {
+                                        showPlayButton(video);
+                                    } else {
+                                        console.log('📱 Hero video autoplay failed on canplay, but not showing play button');
+                                    }
+                                });
+                            }
+                        });
+                        
+                        // Handle user interaction to start video
+                        video.addEventListener('click', function() {
+                            console.log('📱 Video clicked, attempting play...');
+                            if (video.paused) {
+                                video.play().then(function() {
+                                    console.log('📱 Video play successful on click!');
+                                    hidePlayButton(video);
+                                }).catch(function(error) {
+                                    console.log('📱 Video play failed on click:', error);
+                                });
+                            }
+                        });
+                        
+                        // Try autoplay immediately
+                        setTimeout(function() {
+                            if (video.paused) {
+                                console.log('📱 Attempting immediate autoplay...');
+                                video.play().then(function() {
+                                    console.log('📱 Immediate autoplay successful!');
+                                    hidePlayButton(video);
+                                }).catch(function(error) {
+                                    console.log('📱 Immediate autoplay failed:', error);
+                                    // Only show play button for non-hero videos
+                                    if (!isHeroVideo) {
+                                        showPlayButton(video);
+                                    } else {
+                                        console.log('📱 Hero video immediate autoplay failed, but not showing play button');
+                                        // For hero videos, just try again silently
+                                        setTimeout(function() {
+                                            video.play().catch(function(error) {
+                                                console.log('📱 Hero video still failed, but not showing play button');
+                                            });
+                                        }, 2000);
+                                    }
+                                });
+                            }
+                        }, 500);
+                    });
+                }
+            }
+            
+            function showPlayButton(video) {
+                // Check if this is a hero video before showing play button
+                const isHeroVideo = video._isHeroVideo || 
+                                  video.classList.contains('absolute') || 
+                                  video.classList.contains('inset-0') ||
+                                  video.classList.contains('w-full') ||
+                                  video.classList.contains('h-full') ||
+                                  video.classList.contains('object-cover') ||
+                                  video.parentElement.classList.contains('hero-section-outer') ||
+                                  video.closest('.hero-section-outer') ||
+                                  video.closest('section')?.classList.contains('relative') ||
+                                  video.closest('section')?.classList.contains('w-full') ||
+                                  video.closest('section')?.classList.contains('h-screen') ||
+                                  (video.classList.contains('absolute') && video.classList.contains('inset-0')) ||
+                                  (video.classList.contains('absolute') && video.classList.contains('w-full')) ||
+                                  (video.classList.contains('absolute') && video.classList.contains('h-full')) ||
+                                  video.closest('.hero-section-outer') ||
+                                  video.closest('section[class*="hero"]') ||
+                                  video.getAttribute('class')?.includes('absolute') ||
+                                  video.getAttribute('class')?.includes('inset-0') ||
+                                  video.getAttribute('class')?.includes('object-cover');
+                
+                if (isHeroVideo) {
+                    console.log('📱 Hero video detected - NOT showing play button');
+                    return; // Don't show play button for hero videos
+                }
+                
+                console.log('📱 Showing play button for video');
+                // Create play button overlay if it doesn't exist
+                if (!video.parentElement.querySelector('.mobile-play-overlay')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'mobile-play-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 cursor-pointer z-10';
+                    overlay.innerHTML = '<div class="bg-white rounded-full p-6 shadow-lg"><svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>';
+                    
+                    video.parentElement.style.position = 'relative';
+                    video.parentElement.appendChild(overlay);
+                    
+                    overlay.addEventListener('click', function() {
+                        console.log('📱 Play button clicked');
+                        video.play().then(function() {
+                            console.log('📱 Video play successful from button!');
+                            hidePlayButton(video);
+                        }).catch(function(error) {
+                            console.log('📱 Video play failed from button:', error);
+                        });
+                    });
+                }
+            }
+            
+            function hidePlayButton(video) {
+                console.log('📱 Hiding play button for video');
+                const overlay = video.parentElement.querySelector('.mobile-play-overlay');
+                if (overlay) {
+                    overlay.remove();
+                    console.log('📱 Play button removed');
+                }
+            }
+            
+            // Run enhancement
+            enhanceMobileVideos();
+        });
+    </script>
 </body>
 </html> 
