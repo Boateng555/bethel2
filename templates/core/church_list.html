@@ -5,6 +5,30 @@
 {% block title %}Find a Bethel Church - Church Directory{% endblock %}
 
 {% block content %}
+{% if show_logout_success %}
+<div id="logout-success-banner" class="bg-green-50 border-l-4 border-green-500 p-4 text-green-800 text-center mb-4 transition-opacity duration-500" role="alert">
+    <p class="font-medium">You have been logged out successfully.</p>
+</div>
+<script>
+(function() {
+    var banner = document.getElementById('logout-success-banner');
+    if (!banner) return;
+    var dismiss = function() {
+        banner.style.opacity = '0';
+        banner.style.transition = 'opacity 0.5s ease';
+        setTimeout(function() {
+            banner.remove();
+                if (window.history && window.history.replaceState) {
+                    var u = new URL(window.location.href);
+                    u.searchParams.delete('logged_out');
+                    window.history.replaceState({}, '', u.toString());
+                }
+        }, 500);
+    };
+    setTimeout(dismiss, 4000);
+})();
+</script>
+{% endif %}
 <style>
 /* Mobile-first responsive design */
 @media (max-width: 640px) {
@@ -143,9 +167,9 @@
             {% for church in churches %}
             <div class="church-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
                 <!-- Image Section -->
-                {% if church.logo %}
+                {% if church.logo and church.logo_url_absolute %}
                 <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.get_logo_url }}" 
+                    <img src="{{ church.logo_url_absolute }}" 
                          alt="{{ church.name }} logo" 
                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -154,9 +178,9 @@
                     </div>
                     <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
-                {% elif church.banner_image %}
+                {% elif church.banner_image and church.banner_url_absolute %}
                 <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.get_banner_url }}" 
+                    <img src="{{ church.banner_url_absolute }}" 
                          alt="{{ church.name }} banner" 
                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

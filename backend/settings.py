@@ -93,6 +93,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
     'core',
 ]
 
@@ -104,6 +106,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
+    'core.middleware.RedirectLocalAdminToDashboardMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.DatabaseIndependentMiddleware',
@@ -261,6 +265,9 @@ REST_FRAMEWORK = {
         'user': '1000/hour'
     }
 }
+
+# OTP / MFA (TOTP) for local admin
+OTP_TOTP_ISSUER = os.environ.get('OTP_TOTP_ISSUER', 'Bethel Church Admin')
 
 # Local storage initialization completed
 print("Local Django file storage configured")

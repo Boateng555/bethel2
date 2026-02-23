@@ -1,0 +1,103 @@
+{% extends "core/base.html" %}
+
+{% block title %}Members – {{ church.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Members</h1>
+                <p class="text-gray-600 mt-1">Manage who can access and edit {{ church.name }}. Each church has one default account (the first Local Admin); you can add more members and assign roles and access here—same control as in the main admin, with a simpler interface.</p>
+            </div>
+            <div class="flex gap-3 items-center">
+                <a href="{% url 'local_admin_dashboard' %}" class="text-[#1e3a8a] hover:underline">← Dashboard</a>
+                <a href="{% url 'local_admin_member_add' %}" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">+ Add member</a>
+                <form id="bulk-remove-form-members" method="post" action="{% url 'local_admin_member_bulk_remove' %}" class="inline" onsubmit="return confirm('Remove access for selected members? They will no longer be able to log in to this church dashboard.');">
+                    {% csrf_token %}
+                    <button type="submit" id="remove-selected-btn-members" disabled class="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed" title="Remove selected">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                        Remove selected
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">
+                            <label class="sr-only">Select all</label>
+                            <input type="checkbox" id="select-all-members" class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]" title="Select all">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for m in members %}
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            {% if m.user.id != user.id and m.is_active %}
+                            <input type="checkbox" name="member_user_ids" form="bulk-remove-form-members" value="{{ m.user.id }}" class="row-member-cb rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]">
+                            {% else %}
+                            <span class="text-gray-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-medium text-gray-900">{{ m.user.username }}</span>
+                            {% if m.user.email %}<br><span class="text-sm text-gray-500">{{ m.user.email }}</span>{% endif %}
+                            {% if m.user.id == user.id %}<span class="ml-2 text-xs text-gray-400">(you)</span>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm">{{ m.get_role_display }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if m.is_active %}<span class="text-green-600">Active</span>{% else %}<span class="text-red-600">Inactive</span>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'local_admin_member_edit' m.user.id %}" class="text-[#1e3a8a] hover:underline mr-4">Edit rights</a>
+                            <a href="{% url 'local_admin_member_set_password' m.user.id %}" class="text-[#1e3a8a] hover:underline mr-4">Set password</a>
+                            {% if m.user.id != user.id and m.is_active %}
+                            <form method="post" action="{% url 'local_admin_member_remove' m.user.id %}" class="inline" onsubmit="return confirm('Remove access for this member? They will no longer be able to log in to this church dashboard.');">
+                                {% csrf_token %}
+                                <button type="submit" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded inline-flex" title="Remove access">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">No members yet. Add someone so they can help manage this church.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script>
+        (function() {
+            var selectAll = document.getElementById('select-all-members');
+            var checkboxes = document.querySelectorAll('.row-member-cb');
+            var removeBtn = document.getElementById('remove-selected-btn-members');
+            function update() {
+                var any = Array.prototype.some.call(checkboxes, function(cb) { return cb.checked; });
+                if (removeBtn) removeBtn.disabled = !any;
+                if (selectAll) selectAll.checked = checkboxes.length && Array.prototype.every.call(checkboxes, function(c) { return c.checked; });
+            }
+            if (selectAll) selectAll.addEventListener('change', function() {
+                checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+                update();
+            });
+            checkboxes.forEach(function(cb) { cb.addEventListener('change', update); });
+        })();
+        </script>
+
+        <p class="mt-4 text-sm text-gray-500"><strong>Local Admin</strong> – full access for this church: events, ministries, news, sermons, donations, settings, and adding/removing members. Only this role can use the church dashboard. (Platform-wide “Superadmin” is separate and only for managing the whole site and all users.)</p>
+    </div>
+</div>
+{% endblock %}

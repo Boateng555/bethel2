@@ -8,15 +8,20 @@
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-deep-blue mb-2">
-                    Hero Content Management
+                    Church Hero – {{ church.name }}
                 </h1>
                 <p class="text-gray-700">
-                    Manage the main banner/video content for {{ church.name }}
+                    Manage the main banner and video on <strong>this church’s</strong> public page. What you set here is what visitors see at the top of your church site.
                 </p>
             </div>
-            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
-                Back to Dashboard
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'church_home' church.id %}" target="_blank" class="bg-[#1e3a8a] text-white px-4 py-2 rounded hover:bg-[#1e3a8a] transition">
+                    View church page
+                </a>
+                <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                    Back to Dashboard
+                </a>
+            </div>
         </div>
 
         {% if heroes %}
@@ -88,10 +93,16 @@
                         <div class="text-sm text-gray-500">
                             Order: {{ hero.order }} | Created: {{ hero.created_at|date:"M d, Y" }}
                         </div>
-                        <div class="flex space-x-2">
-                            <a href="/admin/core/hero/{{ hero.id }}/change/" class="bg-[#1e3a8a] text-white px-4 py-2 rounded hover:bg-[#1e3a8a] transition">
-                                Edit in Admin
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{% url 'local_admin_hero_edit' hero.id %}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded hover:bg-[#1e3a8a] transition">
+                                Edit
                             </a>
+                            <form method="post" action="{% url 'local_admin_hero_delete' hero.id %}" class="inline" onsubmit="return confirm('Delete this hero \u201C{{ hero.title|escapejs }}\u201D? This cannot be undone.');">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition" title="Delete hero">
+                                    Delete
+                                </button>
+                            </form>
                             {% if hero.global_feature_status == 'none' or hero.global_feature_status == 'rejected' %}
                                 <form method="post" action="{% url 'request_global_hero_feature' hero.id %}" style="display:inline;">
                                     {% csrf_token %}
@@ -118,7 +129,7 @@
                 <p class="text-gray-500 mb-6">
                     You haven't created any hero content for your church yet.
                 </p>
-                <a href="/admin/core/hero/add/" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
+                <a href="{% url 'local_admin_hero_add' %}" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
                     Create Hero Content
                 </a>
             </div>
@@ -126,7 +137,7 @@
         
         {% if heroes %}
         <div class="mt-8 text-center">
-            <a href="/admin/core/hero/add/" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
+            <a href="{% url 'local_admin_hero_add' %}" class="bg-[#1e3a8a] text-white px-6 py-3 rounded-lg hover:bg-deep-blue transition">
                 Add New Hero Content
             </a>
         </div>

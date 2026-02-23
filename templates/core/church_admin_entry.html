@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Church Admin – Bethel{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4">
+    <div class="max-w-md mx-auto w-full">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">
+            <h1 class="text-2xl font-bold text-[#1e3a8a] mb-2">Church Admin</h1>
+            <p class="text-gray-600 mb-6">Manage your church: events, members, sermons, and more.</p>
+            {% if messages %}
+            <div class="mb-6 text-left">
+                {% for message in messages %}
+                <div class="p-4 rounded-lg text-sm {% if message.tags == 'warning' %}bg-amber-50 border border-amber-200 text-amber-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <form method="get" action="{% url 'local_admin_dashboard' %}" class="mb-4">
+                <button type="submit" class="w-full bg-[#1e3a8a] hover:bg-[#1e5abb] text-white font-semibold py-3 px-6 rounded-lg">
+                    Go to Church Admin Dashboard
+                </button>
+            </form>
+            <p class="text-sm text-gray-500">
+                Don’t have access? Ask a superadmin to add you as a member with <strong>Local Admin</strong> role for your church.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

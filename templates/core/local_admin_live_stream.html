@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Live Stream Settings</h1>
+            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                Back to Dashboard
+            </a>
+        </div>
+
+        <p class="text-gray-600 mb-6">Configure your church's live stream for the <strong>Watch Online</strong> page. Visitors will see the stream and service times here.</p>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Platform</h3>
+                <div>
+                    <label for="platform" class="block text-sm font-medium text-gray-700 mb-2">Streaming platform</label>
+                    <select id="platform" name="platform" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900">
+                        <option value="youtube" {% if settings.platform == 'youtube' %}selected{% endif %}>YouTube Live</option>
+                        <option value="facebook" {% if settings.platform == 'facebook' %}selected{% endif %}>Facebook Live</option>
+                        <option value="red5" {% if settings.platform == 'red5' %}selected{% endif %}>Red5</option>
+                        <option value="other" {% if settings.platform == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">YouTube</h3>
+                <div>
+                    <label for="youtube_channel_id" class="block text-sm font-medium text-gray-700 mb-2">YouTube channel ID</label>
+                    <input type="text" id="youtube_channel_id" name="youtube_channel_id" value="{{ settings.youtube_channel_id|default:'' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900"
+                           placeholder="e.g. UCxxxxxxxxxxxxxxxxxx">
+                    <p class="text-xs text-gray-500 mt-1">Find this in your YouTube channel URL or in YouTube Studio → Settings.</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Facebook Live</h3>
+                <div>
+                    <label for="facebook_live_url" class="block text-sm font-medium text-gray-700 mb-2">Facebook live embed URL</label>
+                    <input type="url" id="facebook_live_url" name="facebook_live_url" value="{{ settings.facebook_live_url|default:'' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900"
+                           placeholder="https://www.facebook.com/plugins/video.php?href=...">
+                    <p class="text-xs text-gray-500 mt-1">Use the embed URL from your Facebook live video.</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Red5</h3>
+                <div>
+                    <label for="red5_stream_url" class="block text-sm font-medium text-gray-700 mb-2">Red5 stream or player URL</label>
+                    <input type="url" id="red5_stream_url" name="red5_stream_url" value="{{ settings.red5_stream_url|default:'' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900"
+                           placeholder="https://your-server.com/truetime-multiview/?host=...">
+                    <div class="mt-2 p-3 bg-white border border-gray-200 rounded text-sm text-gray-700">
+                        <p class="font-medium text-gray-900 mb-1">How to get this URL:</p>
+                        <ul class="list-disc list-inside space-y-0.5 text-xs">
+                            <li><strong>Red5 Pro (your server):</strong> Open your Red5 embeddable player in a browser (e.g. <code class="bg-gray-100 px-1">https://your-red5-server.com/truetime-multiview/?host=your-red5-server.com&StreamName=yourstream</code>). Copy the full address from the browser bar and paste it here.</li>
+                            <li><strong>Red5 Cloud:</strong> In your Red5 Cloud dashboard, open your deployment → <strong>Pub/Sub Details</strong>. Copy the <strong>Embedded Player</strong> iframe code, then copy only the <code class="bg-gray-100 px-1">src="..."</code> URL from inside the iframe and paste that URL here.</li>
+                            <li>Any page URL that shows your Red5 stream in a browser can be used, as long as it works inside an iframe.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Status &amp; playback</h3>
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_live" {% if settings.is_live %}checked{% endif %} class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]">
+                        <span class="ml-2 text-sm font-medium text-gray-700">We are live now (show “LIVE” on Watch Online page)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="autoplay" {% if settings.autoplay %}checked{% endif %} class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]">
+                        <span class="ml-2 text-sm font-medium text-gray-700">Autoplay stream when the page loads</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Request global live</h3>
+                <p class="text-sm text-gray-600 mb-3">Request that this church's live stream be shown on the <strong>global</strong> Watch Online page (<code>/watch/</code>). Global admins can approve or reject the request.</p>
+                {% if settings.global_feature_status == 'pending' %}
+                <p class="text-sm text-amber-800 font-medium mb-2">Status: <strong>Pending</strong> – waiting for global admin approval.</p>
+                <p class="text-xs text-gray-500">Global admins can approve in the dashboard: <strong>Global live requests</strong> (no Django admin).</p>
+                {% elif settings.global_feature_status == 'approved' %}
+                <p class="text-sm text-green-800 font-medium mb-2">Status: <strong>Approved</strong> – your stream can be shown on the global Watch Online page.</p>
+                {% elif settings.global_feature_status == 'rejected' %}
+                <p class="text-sm text-gray-600 mb-2">Status: <strong>Rejected</strong>. You can submit a new request after updating your stream details.</p>
+                <form method="post" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="request_global">
+                    <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg text-sm font-medium">Request global live again</button>
+                </form>
+                {% else %}
+                <form method="post" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="request_global">
+                    <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg text-sm font-medium">Request to feature on global Watch Online page</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-6 py-2 rounded-lg font-medium">Save settings</button>
+                <a href="{% url 'church_watch' church.id %}" target="_blank" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-medium">Preview Watch Online page</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

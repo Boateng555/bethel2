@@ -547,6 +547,7 @@ class Event(models.Model):
     
     # Registration
     requires_registration = models.BooleanField(default=False)
+    registration_url = models.URLField(blank=True, null=True, help_text='Optional: external registration form (e.g. Google Form). When set, Register Now opens this URL instead of the on-page form.')
     max_attendees = models.IntegerField(null=True, blank=True)
     registration_deadline = models.DateTimeField(null=True, blank=True)
     registration_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -6817,6 +6818,7 @@ class LiveStreamSettings(models.Model):
     platform = models.CharField(max_length=20, choices=[
         ('youtube', 'YouTube Live'),
         ('facebook', 'Facebook Live'),
+        ('red5', 'Red5'),
         ('instagram', 'Instagram Live'),
         ('zoom', 'Zoom'),
         ('other', 'Other'),
@@ -6830,6 +6832,9 @@ class LiveStreamSettings(models.Model):
     # Facebook settings
     facebook_page_id = models.CharField(max_length=100, blank=True, help_text="Your Facebook page ID")
     facebook_live_url = models.URLField(blank=True, help_text="Your Facebook live stream URL")
+    
+    # Red5 settings
+    red5_stream_url = models.URLField(blank=True, help_text="Red5 stream or player embed URL")
     
     # General settings
     is_live = models.BooleanField(default=False, help_text="Check when you're currently live streaming")
@@ -6854,6 +6859,15 @@ class LiveStreamSettings(models.Model):
     embed_width = models.IntegerField(default=100, help_text="Embed width percentage")
     embed_height = models.IntegerField(default=400, help_text="Embed height in pixels")
     autoplay = models.BooleanField(default=True, help_text="Autoplay live stream when page loads")
+    
+    # Global feature (show this stream on the global /watch/ page when approved)
+    is_global_featured = models.BooleanField(default=False, help_text="Request to show this live stream on the global Watch Online page")
+    global_feature_status = models.CharField(
+        max_length=20,
+        choices=[('none', 'None'), ('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='none',
+        help_text="Status of request to feature on global site"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -6884,6 +6898,16 @@ class LiveStreamSettings(models.Model):
     width="{self.embed_width}%" 
     height="{self.embed_height}" 
     src="{self.facebook_live_url}"
+    frameborder="0" 
+    allowfullscreen>
+</iframe>
+            """.strip()
+        elif self.platform == 'red5' and self.red5_stream_url:
+            return f"""
+<iframe 
+    width="{self.embed_width}%" 
+    height="{self.embed_height}" 
+    src="{self.red5_stream_url}"
     frameborder="0" 
     allowfullscreen>
 </iframe>

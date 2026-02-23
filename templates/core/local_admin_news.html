@@ -4,56 +4,121 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4">
-        <h1 class="text-3xl font-bold text-gray-900">Manage News</h1>
-        <p class="mt-2 text-gray-600">{{ church.name }} - {{ church.city }}, {{ church.country }}</p>
-        
-        <div class="mt-4 space-x-4">
-            <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                ← Back to Dashboard
-            </a>
-            <a href="/admin/core/news/add/" target="_blank" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">
-                + Add News Article
-            </a>
-        </div>
-
-        {% if news %}
-        <div class="mt-8">
-            <h2 class="text-lg font-medium text-gray-900">All News Articles ({{ news.count }})</h2>
-            {% for article in news %}
-            <div class="bg-white rounded-lg shadow p-4 mb-4">
-                <h3 class="text-lg font-semibold">{{ article.title }}</h3>
-                <p class="text-sm text-gray-500">{{ article.published_date|date:"M d, Y" }}</p>
-                {% if article.is_public %}
-                <span class="bg-[#1e3a8a] text-[#1e3a8a] px-2 py-1 rounded text-xs">Public</span>
-                {% else %}
-                <span class="bg-[#1e3a8a] text-[#1e3a8a] px-2 py-1 rounded text-xs">Private</span>
-                {% endif %}
-                <div class="mt-2">
-                    <a href="/admin/core/news/{{ article.id }}/change/" target="_blank" class="text-[#1e3a8a] hover:text-[#1e3a8a] mr-4">Edit</a>
-                    {% if article.global_feature_status == 'none' or article.global_feature_status == 'rejected' %}
-                        <form method="post" action="{% url 'request_global_news_feature' article.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="text-[#1e3a8a] hover:text-[#1e3a8a]">Request Global Feature</button>
-                        </form>
-                    {% elif article.global_feature_status == 'pending' %}
-                        <span class="text-[#1e3a8a] font-semibold">Pending Global Approval</span>
-                    {% elif article.global_feature_status == 'approved' %}
-                        <span class="text-[#1e3a8a] font-semibold">Globally Featured</span>
-                    {% elif article.global_feature_status == 'rejected' %}
-                        <span class="text-[#1e3a8a] font-semibold">Rejected</span>
-                    {% endif %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Manage News</h1>
+                    <p class="mt-2 text-gray-600">{{ church.name }} - {{ church.city }}, {{ church.country }}</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">← Back to Dashboard</a>
+                    <a href="{% url 'local_admin_news_add' %}" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">+ Add News Article</a>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="mt-8 text-center">
-            <h3 class="text-lg font-medium text-gray-900">No news articles</h3>
-            <p class="text-sm text-gray-500">Get started by creating your first news article.</p>
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                <h2 class="text-lg font-medium text-gray-900">All News Articles</h2>
+                <form id="bulk-delete-form-news" method="post" action="{% url 'local_admin_news_bulk_delete' %}" class="inline" onsubmit="return confirm('Delete selected articles? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" id="delete-selected-btn-news" disabled class="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete selected">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete selected
+                    </button>
+                </form>
+            </div>
+
+            {% if news %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">
+                                <label class="sr-only">Select all</label>
+                                <input type="checkbox" id="select-all-news" class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]" title="Select all">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Article</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for article in news %}
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="news_ids" form="bulk-delete-form-news" value="{{ article.id }}" class="row-news-cb rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ article.title }}</div>
+                                {% if article.content %}<div class="text-sm text-gray-500">{{ article.content|truncatechars:60 }}</div>{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ article.date|date:"M d, Y" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if article.is_public %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#d1fae5] text-[#047857]">Public</span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Private</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2 flex-wrap">
+                                    <a href="{% url 'local_admin_news_edit' article.id %}" class="text-[#1e3a8a] hover:underline">Edit</a>
+                                    <form method="post" action="{% url 'local_admin_news_delete' article.id %}" class="inline" onsubmit="return confirm('Delete \u201C{{ article.title|escapejs }}\u201D? This cannot be undone.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded" title="Delete article">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                    {% if article.global_feature_status == 'none' or article.global_feature_status == 'rejected' %}
+                                        <form method="post" action="{% url 'request_global_news_feature' article.id %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-[#1e3a8a] hover:underline">Request Global Feature</button>
+                                        </form>
+                                    {% elif article.global_feature_status == 'pending' %}
+                                        <span class="text-[#1e3a8a] font-semibold">Pending</span>
+                                    {% elif article.global_feature_status == 'approved' %}
+                                        <span class="text-[#1e3a8a] font-semibold">Globally Featured</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <h3 class="text-lg font-medium text-gray-900">No news articles</h3>
+                <p class="text-sm text-gray-500 mt-1">Get started by creating your first news article.</p>
+                <a href="{% url 'local_admin_news_add' %}" class="inline-flex items-center mt-4 px-4 py-2 rounded-md text-white bg-[#1e3a8a] hover:bg-[#1e3a8a]">+ Add News Article</a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
+<script>
+(function() {
+    var selectAll = document.getElementById('select-all-news');
+    var checkboxes = document.querySelectorAll('.row-news-cb');
+    var deleteBtn = document.getElementById('delete-selected-btn-news');
+    function update() {
+        var any = Array.prototype.some.call(checkboxes, function(cb) { return cb.checked; });
+        if (deleteBtn) deleteBtn.disabled = !any;
+    }
+    if (selectAll) selectAll.addEventListener('change', function() {
+        checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+        update();
+    });
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            update();
+            if (selectAll) selectAll.checked = Array.prototype.every.call(checkboxes, function(c) { return c.checked; });
+        });
+    });
+})();
+</script>
 {% endblock %}
  

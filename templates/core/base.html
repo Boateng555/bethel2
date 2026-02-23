@@ -151,6 +151,9 @@
                 <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
                 <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
                 <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Logout</a>
+                {% endif %}
             {% else %}
                 <!-- Global navigation -->
                 <a href="/churches/" class="text-white hover:text-gray-200 transition-colors font-semibold">Find a Bethel Church</a>
@@ -182,6 +185,9 @@
                 <a href="/leadership" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Leadership</a>
                 <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
                 <a href="/donation" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white font-semibold">Donation</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Logout</a>
+                {% endif %}
             {% endif %}
         </nav>
         <!-- Mobile Hamburger Button -->
@@ -216,7 +222,10 @@
                     <a href="{% url 'church_donation' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Donate</a>
                     <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Find Other Churches</a>
                     <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Global Site</a>
-                    <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin Login</a>
+                    <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin</a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Logout</a>
+                    {% endif %}
                 {% else %}
                     <!-- Global mobile navigation -->
                     <a href="/" class="block w-full text-center py-3 bg-white bg-opacity-20 rounded-lg mb-2">Home</a>
@@ -229,6 +238,9 @@
                     <a href="/leadership" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Leadership</a>
                     <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
                     <a href="/donation" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Donation</a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Logout</a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

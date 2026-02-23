@@ -1,0 +1,156 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Watch Online - {{ church.name }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Watch Online</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Watch our latest sermons, live streams, and spiritual content from anywhere in the world.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#live-stream" class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Live Stream
+            </a>
+            <a href="{% url 'church_sermons' church.id %}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-[#1e3a8a] transition-colors">
+                Browse Sermons
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Live Stream Section -->
+<section id="live-stream" class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Live Stream</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Join us live for our Sunday services and special events. Experience the power of worship and the Word of God in real-time.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 {% if is_live %}bg-red-500 animate-pulse{% else %}bg-gray-400{% endif %} rounded-full"></div>
+                    <span class="text-lg font-semibold text-gray-900">{% if is_live %}LIVE NOW{% else %}OFFLINE{% endif %}</span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    {{ next_service }}
+                </div>
+            </div>
+
+            {% if live_stream_settings and live_stream_settings.platform == 'youtube' and live_stream_settings.youtube_channel_id %}
+                <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe 
+                        id="youtube-live"
+                        class="w-full h-full"
+                        src="https://www.youtube.com/embed/live_stream?channel={{ live_stream_settings.youtube_channel_id }}&autoplay={% if live_stream_settings.autoplay %}1{% else %}0{% endif %}&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            {% elif live_stream_settings and live_stream_settings.platform == 'facebook' and live_stream_settings.facebook_live_url %}
+                <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe 
+                        class="w-full h-full"
+                        src="{{ live_stream_settings.facebook_live_url }}"
+                        frameborder="0"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            {% elif live_stream_settings and live_stream_settings.platform == 'red5' and live_stream_settings.red5_stream_url %}
+                <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe 
+                        class="w-full h-full"
+                        src="{{ live_stream_settings.red5_stream_url }}"
+                        frameborder="0"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            {% else %}
+                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <div class="text-6xl mb-4">📺</div>
+                        <h3 class="text-2xl font-bold mb-2">Live Stream Coming Soon</h3>
+                        <p class="text-lg mb-4">Join us every Sunday at 9:00 AM and 6:00 PM</p>
+                        <p class="text-sm">Set up live streaming in your church admin under <strong>Live Stream Settings</strong>.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mt-6 grid md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Next Service</div>
+                    <div class="text-lg text-gray-600">{{ next_service }}</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Status</div>
+                    <div class="text-lg text-gray-600">{% if is_live %}🟢 Live{% else %}🔴 Offline{% endif %}</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">Platform</div>
+                    <div class="text-lg text-gray-600">
+                        {% if live_stream_settings %}
+                            {% if live_stream_settings.platform == 'youtube' %}📺 YouTube{% elif live_stream_settings.platform == 'facebook' %}📘 Facebook{% elif live_stream_settings.platform == 'red5' %}Red5{% else %}{{ live_stream_settings.platform|title }}{% endif %}
+                        {% else %}
+                            Not Configured
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sermons CTA Section -->
+<section id="sermons" class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Sermon Library</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Browse our collection of sermons and spiritual teachings.
+        </p>
+        <a href="{% url 'church_sermons' church.id %}" class="inline-block bg-[#1e3a8a] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#1e40af] transition-colors">
+            Browse Sermons
+        </a>
+    </div>
+</section>
+
+{% if featured_sermons %}
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Sermons</h2>
+            <p class="text-lg text-gray-600">Don't miss these powerful messages</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for sermon in featured_sermons %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if sermon.thumbnail %}
+                <div class="aspect-video bg-gray-200">
+                    <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="w-full h-full object-cover">
+                </div>
+                {% else %}
+                <div class="aspect-video bg-gray-200 flex items-center justify-center">
+                    <div class="text-4xl text-gray-400">📖</div>
+                </div>
+                {% endif %}
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
+                    <p class="text-gray-600 mb-2">by {{ sermon.preacher }}</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ sermon.date|date:"F j, Y" }}</p>
+                    <a href="{% url 'church_sermons' church.id %}" class="inline-block bg-[#1e3a8a] text-white px-4 py-2 rounded-lg hover:bg-[#1e40af] transition-colors text-sm font-medium">
+                        Watch / Browse
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

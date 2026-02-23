@@ -38,7 +38,12 @@
   .hero-swiper .swiper-wrapper,
   .hero-swiper .swiper-slide,
   .hero-swiper img,
-  .hero-swiper video {
+  .hero-swiper video,
+  .hero-main-swiper,
+  .hero-main-swiper .swiper-wrapper,
+  .hero-main-swiper .swiper-slide,
+  .hero-main-swiper img,
+  .hero-main-swiper video {
     height: 100% !important;
     min-height: 100vh !important;
     max-height: none !important;
@@ -265,7 +270,13 @@
 }
 
 /* Ensure hero images are properly displayed */
-.hero-swiper {
+.hero-swiper,
+.hero-main-swiper {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.hero-main-swiper .swiper-slide {
     width: 100% !important;
     height: 100% !important;
 }
@@ -277,6 +288,31 @@
 </style>
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
+    <!-- Logout success message (auto-dismisses after a few seconds) -->
+    {% if show_logout_success %}
+    <div id="logout-success-banner" class="bg-green-50 border-l-4 border-green-500 p-4 text-green-800 text-center transition-opacity duration-500" role="alert">
+        <p class="font-medium">You have been logged out successfully.</p>
+    </div>
+    <script>
+    (function() {
+        var banner = document.getElementById('logout-success-banner');
+        if (!banner) return;
+        var dismiss = function() {
+            banner.style.opacity = '0';
+            banner.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                banner.remove();
+                if (window.history && window.history.replaceState) {
+                    var u = new URL(window.location.href);
+                    u.searchParams.delete('logged_out');
+                    window.history.replaceState({}, '', u.toString());
+                }
+            }, 500);
+        };
+        setTimeout(dismiss, 4000);
+    })();
+    </script>
+    {% endif %}
     <!-- Local Church Redirect Notification -->
     {% if request.session.local_church_redirect %}
     <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
@@ -443,64 +479,63 @@
 
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
-    {% if hero %}
-        
-        <div id="hero-media-container" class="absolute inset-0 w-full h-full">
-            {% if hero.hero_media.all %}
-            <!-- Swiper Carousel -->
-            <div class="swiper hero-swiper h-full">
-                <div class="swiper-wrapper h-full">
-                    {% for media in hero.hero_media.all|dictsort:'order' %}
-                        {% if media.image %}
-                        <div class="swiper-slide h-full">
-                            <img src="{{ media.get_image_url }}" alt="Hero Media" class="w-full h-full object-cover" />
-                        </div>
-                        {% endif %}
-                        {% if media.video %}
-                        <div class="swiper-slide h-full">
+    {% if heroes %}
+        <!-- Carousel of all active heroes (so every hero you add appears here) -->
+        <div class="swiper hero-main-swiper h-full w-full">
+            <div class="swiper-wrapper h-full">
+                {% for hero in heroes %}
+                <div class="swiper-slide h-full relative">
+                    <div class="absolute inset-0 w-full h-full">
+                        {% comment %}Prefer hero's direct background image/video (what you set in Church Hero form){% endcomment %}
+                        {% if hero.background_type == 'image' and hero.background_image %}
+                            <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="w-full h-full object-cover" loading="eager" />
+                        {% elif hero.background_type == 'video' and hero.background_video %}
                             <video autoplay muted loop playsinline webkit-playsinline class="w-full h-full object-cover">
-                                <source src="{{ media.get_video_url }}" type="video/mp4" />
+                                <source src="{{ hero.get_background_video_url }}" type="video/mp4" />
                             </video>
-                        </div>
+                        {% elif hero.hero_media.all %}
+                            {% for media in hero.hero_media.all|dictsort:'order'|slice:":1" %}
+                                {% if media.image %}
+                                    <img src="{{ media.get_image_url }}" alt="{{ hero.title }}" class="w-full h-full object-cover" loading="eager" />
+                                {% elif media.video %}
+                                    <video autoplay muted loop playsinline webkit-playsinline class="w-full h-full object-cover">
+                                        <source src="{{ media.get_video_url }}" type="video/mp4" />
+                                    </video>
+                                {% else %}
+                                    <div class="w-full h-full bg-[#1e3a8a]"></div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="w-full h-full bg-[#1e3a8a]"></div>
                         {% endif %}
-                    {% endfor %}
+                    </div>
+                    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+                    <div class="absolute inset-0 flex flex-col justify-center items-center z-10 px-6 text-center max-w-5xl mx-auto">
+                        <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg church-hero-title">{{ hero.title }}</h1>
+                        <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl church-hero-subtitle">{{ hero.subtitle }}</p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                                {{ hero.primary_button_text }}
+                            </a>
+                            <a href="{% if hero.secondary_button_text == 'Watch Online' %}{% url 'church_watch' church.id %}{% else %}{{ hero.secondary_button_link }}{% endif %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
+                                {{ hero.secondary_button_text }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <!-- Add Pagination -->
-                <div class="swiper-pagination"></div>
+                {% endfor %}
             </div>
-            {% elif hero.background_type == 'video' and hero.background_video %}
-                <video autoplay muted loop playsinline webkit-playsinline class="absolute inset-0 w-full h-full object-cover">
-                    <source src="{{ hero.background_video }}" type="video/mp4" />
-                </video>
-            {% elif hero.background_type == 'image' and hero.background_image %}
-                <img src="{{ hero.get_background_image_url }}" alt="{{ hero.title }}" class="absolute inset-0 w-full h-full object-cover" />
-            {% endif %}
+            <div class="swiper-pagination hero-main-pagination"></div>
         </div>
-        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div class="absolute inset-0 flex flex-col justify-center items-center z-10 px-6 text-center max-w-5xl mx-auto">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg church-hero-title">{{ hero.title }}</h1>
-            <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl church-hero-subtitle">{{ hero.subtitle }}</p>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
-                    {{ hero.primary_button_text }}
-                </a>
-                <a href="{{ hero.secondary_button_link }}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
-                    {{ hero.secondary_button_text }}
-                </a>
-            </div>
-        </div>
-        
         <!-- Scroll Down Indicator -->
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
             <div class="flex flex-col items-center text-white">
                 <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
                 <div class="relative">
-                    <!-- Main double chevron -->
                     <div class="flex flex-col items-center animate-bounce">
                         <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
                         <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
                     </div>
-                    <!-- Reflection effect -->
                     <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
                         <i class="fas fa-chevron-down text-xl mb-1"></i>
                         <i class="fas fa-chevron-down text-xl"></i>
@@ -509,20 +544,16 @@
             </div>
         </div>
     {% else %}
-        <!-- Fallback hero -->
+        <!-- Fallback hero (only when no hero content is set in Church Hero for this local church) -->
         <div class="absolute inset-0 bg-deep-blue"></div>
         <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center church-hero-section">
             <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white church-hero-title">Welcome to {{ church.name }}</h1>
             <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl church-hero-subtitle">Join us in worship and community as we grow together in faith.</p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="{% url 'church_about' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Plan Your Visit</a>
-                <a href="{% url 'church_sermons' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
+                <a href="{% url 'church_watch' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
             </div>
-            <div class="mt-6">
-                <a href="{% url 'home' %}?global=1" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-6 py-2 rounded-lg font-semibold transition duration-300 text-sm">
-                    Go to Global Site
-                </a>
-            </div>
+            <p class="mt-6 text-white text-sm opacity-90">Edit this banner in the admin dashboard under <strong>Church Hero</strong>.</p>
         </div>
         
         <!-- Scroll Down Indicator -->
@@ -777,77 +808,32 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing Swiper...');
+    // Main hero carousel (one slide per hero) – used when there are multiple heroes
+    const heroMainSwiperEl = document.querySelector('.hero-main-swiper');
+    if (heroMainSwiperEl) {
+        new Swiper('.hero-main-swiper', {
+            loop: true,
+            autoplay: { delay: 6000, disableOnInteraction: false },
+            pagination: { el: '.hero-main-pagination', clickable: true },
+            effect: 'fade',
+            fadeEffect: { crossFade: true },
+            allowTouchMove: true,
+            grabCursor: true,
+        });
+    }
     
-    // Check if Swiper element exists
+    // Legacy single-hero inner media carousel (only present when template uses single hero + hero_media)
     const swiperElement = document.querySelector('.hero-swiper');
     if (swiperElement) {
-        console.log('Swiper element found, initializing...');
-        console.log('Swiper slides found:', swiperElement.querySelectorAll('.swiper-slide').length);
-        
-        // Initialize Swiper for hero carousel with swipe navigation
-        const swiper = new Swiper('.hero-swiper', {
+        new Swiper('.hero-swiper', {
             loop: true,
             autoplay: { delay: 5000, disableOnInteraction: false },
             pagination: { el: '.swiper-pagination', clickable: true },
             effect: 'fade',
-            fadeEffect: {
-                crossFade: true
-            },
-            // Enhanced touch/swipe navigation
+            fadeEffect: { crossFade: true },
             allowTouchMove: true,
             grabCursor: true,
-            touchRatio: 1,
-            touchAngle: 45,
-            touchMoveStopPropagation: false,
-            touchStartPreventDefault: false,
-            touchStartForcePreventDefault: false,
-            touchMoveForcePreventDefault: false,
-            // Enable swipe gestures
-            shortSwipes: true,
-            longSwipes: true,
-            longSwipesRatio: 0.5,
-            longSwipesMs: 300,
-            followFinger: true,
-            threshold: 5,
-            // Prevent conflicts with page scrolling
-            preventInteractionOnTransition: false,
         });
-        
-        console.log('Swiper initialized successfully:', swiper);
-        
-        // Test touch events
-        swiper.on('touchStart', function() {
-            console.log('Touch start detected');
-        });
-        
-        swiper.on('touchMove', function() {
-            console.log('Touch move detected');
-        });
-        
-        swiper.on('slideChange', function() {
-            console.log('Slide changed to:', swiper.activeIndex);
-        });
-        
-        // Test if touch is enabled
-        console.log('Touch enabled:', swiper.allowTouchMove);
-        console.log('Touch ratio:', swiper.touchRatio);
-        
-    } else {
-        console.log('Swiper element not found');
-    }
-    
-    // Debug hero media container
-    const heroContainer = document.getElementById('hero-media-container');
-    if (heroContainer) {
-        console.log('Hero media container found');
-        const images = heroContainer.querySelectorAll('img');
-        console.log('Images found in hero container:', images.length);
-        images.forEach((img, index) => {
-            console.log(`Image ${index}:`, img.src, img.complete ? 'loaded' : 'loading');
-        });
-    } else {
-        console.log('Hero media container not found');
     }
 });
 </script>

@@ -160,6 +160,12 @@
 
 {% block content %}
 <div class="dashboard-container">
+    <p style="margin-bottom: 16px;">
+        <form method="get" action="/local-admin/" style="display: inline;" target="_top">
+            <button type="submit" style="display: inline-block; padding: 10px 16px; background: #1e3a8a; color: #fff; font-weight: 600; font-size: 1rem; border-radius: 8px; margin-right: 12px; border: none; cursor: pointer;">← Church Admin Dashboard</button>
+        </form>
+        <span style="color: #6b7280; font-size: 0.9rem;">(events, members, sermons — use this to manage your church)</span>
+    </p>
     <div class="welcome-card">
         Welcome to Bethel Admin
         <small>Manage your church platform, content, and global features</small>

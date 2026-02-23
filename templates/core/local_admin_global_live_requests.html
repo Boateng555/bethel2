@@ -1,0 +1,47 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Global live requests</h1>
+        <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <p class="text-gray-600 mb-6">Churches that requested their live stream to be shown on the <strong>global Watch Online page</strong> (<code>/watch/</code>). Approve or reject here — no Django admin.</p>
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        {% if pending_global_live %}
+        <ul class="divide-y divide-gray-200">
+            {% for item in pending_global_live %}
+            <li class="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <p class="font-medium text-gray-900">{{ item.church.name|default:"(No church)" }}</p>
+                    <p class="text-sm text-gray-600">Platform: {{ item.platform }}{% if item.youtube_channel_id %} · {{ item.youtube_channel_id }}{% endif %}</p>
+                    <p class="text-xs text-gray-400 mt-1">Status: Pending – waiting for your approval</p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <form method="post" action="{% url 'local_admin_global_live_respond' item.id %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg text-sm font-medium">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'local_admin_global_live_respond' item.id %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium">Reject</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="px-6 py-12 text-center text-gray-500">
+            <p>No pending global live requests.</p>
+            <p class="text-sm mt-2">When a church uses &ldquo;Request global live&rdquo; on their Live Stream settings, it will appear here for you to approve or reject.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

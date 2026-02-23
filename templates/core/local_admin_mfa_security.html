@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+            <a href="{% url 'local_admin_dashboard' %}" class="text-[#1e3a8a] hover:underline">← Dashboard</a>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-6">
+            {% if has_mfa %}
+            <p class="text-gray-700">Two-factor authentication is <strong class="text-green-600">on</strong>. You’ll be asked for a code from your authenticator app when you sign in.</p>
+            <form method="post" class="border-t border-gray-200 pt-6">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="disable">
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Your password (to disable 2FA)</label>
+                    <input type="password" name="password" id="password" required autocomplete="current-password" placeholder="••••••••"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a]">
+                </div>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">Disable two-factor authentication</button>
+            </form>
+            {% elif unconfirmed_device and qr_data_url %}
+            <p class="text-gray-700">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code below to finish setup.</p>
+            <div class="flex justify-center my-4">
+                <img src="{{ qr_data_url }}" alt="QR code for authenticator" class="w-48 h-48 border border-gray-200 rounded-lg">
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                <div class="mb-4">
+                    <label for="token" class="block text-sm font-medium text-gray-700 mb-1">Verification code</label>
+                    <input type="text" name="token" id="token" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="000000"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-center tracking-widest">
+                </div>
+                <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e5abb] text-white px-4 py-2 rounded-lg font-medium">Confirm and enable 2FA</button>
+            </form>
+            <p class="text-sm text-gray-500">Don’t have an authenticator app? Install Google Authenticator or Authy on your phone first.</p>
+            {% else %}
+            <p class="text-gray-700">Add an extra layer of security by requiring a code from your phone when you sign in.</p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="enable">
+                <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e5abb] text-white px-4 py-2 rounded-lg font-medium">Enable two-factor authentication</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

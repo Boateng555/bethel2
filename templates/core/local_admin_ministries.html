@@ -16,7 +16,7 @@
                     <a href="{% url 'local_admin_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
                         ← Back to Dashboard
                     </a>
-                    <a href="/admin/core/ministry/add/" target="_blank" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">
+                    <a href="{% url 'local_admin_ministry_add' %}" class="bg-[#1e3a8a] hover:bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">
                         + Add New Ministry
                     </a>
                 </div>
@@ -68,10 +68,19 @@
 
         <!-- Ministries List -->
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                <h2 class="text-lg font-medium text-gray-900">All Ministries</h2>
-                <p class="text-sm text-gray-500 ml-4">Manage your church's ministries and control their visibility</p>
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-[#1e3a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <h2 class="text-lg font-medium text-gray-900">All Ministries</h2>
+                    <p class="text-sm text-gray-500 ml-4">Manage your church's ministries and control their visibility</p>
+                </div>
+                <form id="bulk-delete-form" method="post" action="{% url 'local_admin_ministry_bulk_delete' %}" class="inline" onsubmit="return confirm('Delete selected ministries? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" id="delete-selected-btn" disabled class="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete selected">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete selected
+                    </button>
+                </form>
             </div>
 
             {% if ministries %}
@@ -79,6 +88,10 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-4 py-3 text-left">
+                                <label class="sr-only">Select all</label>
+                                <input type="checkbox" id="select-all-ministries" class="rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]" title="Select all">
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ministry</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -89,6 +102,9 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for ministry in ministries %}
                         <tr>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="ministry_ids" form="bulk-delete-form" value="{{ ministry.id }}" class="row-ministry-cb rounded border-gray-300 text-[#1e3a8a] focus:ring-[#1e3a8a]">
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     {% if ministry.image %}
@@ -134,9 +150,15 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
-                                    <a href="/admin/core/ministry/{{ ministry.id }}/change/" target="_blank" class="text-[#1e3a8a] hover:text-[#1e3a8a]">Edit</a>
-                                    <a href="{% url 'ministry_detail' ministry.id %}" target="_blank" class="text-[#1e3a8a] hover:text-[#1e3a8a]">View</a>
+                                <div class="flex items-center space-x-2">
+                                    <a href="{% url 'local_admin_ministry_edit' ministry.id %}" class="text-[#1e3a8a] hover:underline">Edit</a>
+                                    <a href="{% url 'ministry_detail' ministry.id %}" target="_blank" class="text-[#1e3a8a] hover:underline">View</a>
+                                    <form method="post" action="{% url 'local_admin_ministry_delete' ministry.id %}" class="inline" onsubmit="return confirm('Delete ministry \u201C{{ ministry.name|escapejs }}\u201D? This cannot be undone.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded" title="Delete ministry">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -152,7 +174,7 @@
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No ministries</h3>
                 <p class="mt-1 text-sm text-gray-500">Get started by creating your first ministry.</p>
                 <div class="mt-6">
-                    <a href="/admin/core/ministry/add/" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#1e3a8a] hover:bg-[#1e3a8a]">
+                    <a href="{% url 'local_admin_ministry_add' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#1e3a8a] hover:bg-[#1e3a8a]">
                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -170,9 +192,35 @@
                 <p><span class="font-bold text-[#6366f1]">Public Ministries:</span> These ministries will appear on the global website for all visitors to see.</p>
                 <p><span class="font-bold text-[#6366f1]">Private Ministries:</span> These ministries are only visible on your church's mini-site.</p>
                 <p><span class="font-bold text-[#6366f1]">Active Ministries:</span> These ministries are currently running and accepting members.</p>
-                <p><span class="font-bold text-[#6366f1]">Adding Ministries:</span> Click "Add New Ministry" to create ministries in the admin panel.</p>
+                <p><span class="font-bold text-[#6366f1]">Adding Ministries:</span> Click "Add New Ministry" to create ministries here.</p>
             </div>
         </div>
     </div>
 </div>
+<script>
+(function() {
+    var selectAll = document.getElementById('select-all-ministries');
+    var checkboxes = document.querySelectorAll('.row-ministry-cb');
+    var deleteBtn = document.getElementById('delete-selected-btn');
+    var bulkForm = document.getElementById('bulk-delete-form');
+
+    function updateDeleteButton() {
+        var any = Array.prototype.some.call(checkboxes, function(cb) { return cb.checked; });
+        deleteBtn.disabled = !any;
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+            updateDeleteButton();
+        });
+    }
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            updateDeleteButton();
+            if (selectAll) selectAll.checked = Array.prototype.every.call(checkboxes, function(c) { return c.checked; });
+        });
+    });
+})();
+</script>
 {% endblock %} 

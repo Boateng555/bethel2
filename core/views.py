@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
+from django.contrib.auth import logout, authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from rest_framework import generics
-from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings, PrayerRequest, ContactMessage, LiveStreamSettings
+from django.contrib.auth.models import User
+from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings, PrayerRequest, ContactMessage, LiveStreamSettings, EventSpeaker, EventScheduleItem, EventHeroMedia, MinistryJoinRequest
 from .serializers import EventSerializer, MinistrySerializer, NewsSerializer, NewsletterSignupSerializer
 from datetime import datetime, timedelta, time
 from django.utils import timezone
@@ -15,13 +20,25 @@ import requests
 import json
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import admin
+from django import forms as django_forms
+from django.forms import modelform_factory
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, HttpResponseForbidden
 from django.core.management import call_command
-from .forms import TestimonyForm, MinistryJoinRequestForm, EventRegistrationForm, PrayerRequestForm, ContactMessageForm
+from .forms import (
+    TestimonyForm, MinistryJoinRequestForm, EventRegistrationForm, PrayerRequestForm, ContactMessageForm,
+    LocalAdminEventForm, LocalAdminMinistryForm, LocalAdminNewsForm, LocalAdminSermonForm,
+    LocalAdminDonationMethodForm, LocalAdminHeroForm,
+    LocalAdminEventHeroMediaForm, LocalAdminEventSpeakerForm, LocalAdminEventScheduleItemForm,
+    UserAddForm, UserEditForm, SetPasswordFormCustom, MyPasswordChangeForm,
+    ChurchMemberAddForm, ChurchMemberEditForm,
+)
 from django.utils.http import urlencode
 import qrcode
 import io
 import base64
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.core.mail import send_mail
 import math
 
@@ -657,22 +674,30 @@ def watch(request):
     # Get all preachers for filter dropdown
     preachers = Sermon.objects.filter(is_public=True).values_list('preacher', flat=True).distinct()
     
-    # Get live stream settings
+    # Global Watch Online: show only the church whose "Request global live" was approved (everyone gets that same stream)
+    live_stream_settings = None
+    featured_church = None
     try:
-        live_stream_settings = LiveStreamSettings.objects.first()
+        approved = LiveStreamSettings.objects.filter(
+            church__isnull=False,
+            global_feature_status='approved'
+        ).select_related('church').order_by('-id').first()
+        if approved:
+            live_stream_settings = approved
+            featured_church = approved.church
         is_live = live_stream_settings.get_live_status() if live_stream_settings else False
         next_service = live_stream_settings.get_next_service_time() if live_stream_settings else "No upcoming services"
-    except:
-        live_stream_settings = None
+    except Exception:
         is_live = False
         next_service = "No upcoming services"
-    
+
     context = {
         'sermons': sermons,
         'featured_sermons': featured_sermons,
         'recent_sermons': recent_sermons,
         'preachers': preachers,
         'live_stream_settings': live_stream_settings,
+        'featured_church': featured_church,
         'is_live': is_live,
         'next_service': next_service,
         'keyword': keyword,
@@ -680,6 +705,64 @@ def watch(request):
         'date_filter': date_filter,
     }
     return render(request, 'core/watch.html', context)
+
+
+def church_watch(request, church_id):
+    """Church-specific Watch Online page: sermons, live streams, and spiritual content."""
+    church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
+    keyword = request.GET.get('keyword', '').strip()
+    preacher = request.GET.get('preacher', '').strip()
+    date_filter = request.GET.get('date', '').strip()
+
+    sermons = Sermon.objects.filter(church=church, is_public=True)
+    if keyword:
+        sermons = sermons.filter(
+            models.Q(title__icontains=keyword) |
+            models.Q(description__icontains=keyword) |
+            models.Q(scripture_reference__icontains=keyword)
+        )
+    if preacher:
+        sermons = sermons.filter(preacher__icontains=preacher)
+    if date_filter:
+        try:
+            from datetime import datetime
+            filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            sermons = sermons.filter(date=filter_date)
+        except ValueError:
+            pass
+    sermons = sermons.order_by('-date')
+    featured_sermons = sermons.filter(is_featured=True)[:3]
+    preachers = Sermon.objects.filter(church=church, is_public=True).values_list('preacher', flat=True).distinct()
+
+    try:
+        live_stream_settings = LiveStreamSettings.objects.filter(church=church).first()
+        is_live = live_stream_settings.get_live_status() if live_stream_settings else False
+        next_service = live_stream_settings.get_next_service_time() if live_stream_settings else "No upcoming services"
+    except Exception:
+        live_stream_settings = None
+        is_live = False
+        next_service = "No upcoming services"
+
+    all_events = Event.objects.filter(church=church, is_public=True)
+    all_ministries = Ministry.objects.filter(church=church, is_active=True)
+
+    context = {
+        'church': church,
+        'sermons': sermons,
+        'featured_sermons': featured_sermons,
+        'preachers': preachers,
+        'live_stream_settings': live_stream_settings,
+        'is_live': is_live,
+        'next_service': next_service,
+        'keyword': keyword,
+        'preacher': preacher,
+        'date_filter': date_filter,
+        'all_events': all_events,
+        'all_ministries': all_ministries,
+        'is_church_site': True,
+    }
+    return render(request, 'core/church_watch.html', context)
+
 
 def visit(request):
     all_events = Event.objects.filter(is_public=True)
@@ -925,6 +1008,15 @@ def church_list(request):
     countries = Church.objects.filter(is_approved=True, is_active=True).values_list('country', flat=True).distinct().order_by('country')
     cities = Church.objects.filter(is_approved=True, is_active=True).values_list('city', flat=True).distinct().order_by('city')
     
+    # Attach absolute image URLs so card images load reliably (relative /media/ can fail depending on host/proxy)
+    if not isinstance(churches, list):
+        churches = list(churches)
+    for church in churches:
+        logo_url = church.get_logo_url()
+        church.logo_url_absolute = request.build_absolute_uri(logo_url) if logo_url else ''
+        banner_url = church.get_banner_url()
+        church.banner_url_absolute = request.build_absolute_uri(banner_url) if banner_url else ''
+    
     # Navigation data
     all_events = Event.objects.filter(is_public=True)
     all_ministries = Ministry.objects.filter(is_public=True)
@@ -939,6 +1031,7 @@ def church_list(request):
         'all_events': all_events,
         'all_ministries': all_ministries,
         'church_distances': church_distances_dict,
+        'show_logout_success': request.GET.get('logged_out') == '1',
     }
     return render(request, 'core/church_list.html', context)
 
@@ -995,8 +1088,9 @@ def church_home(request, church_id):
     """Church-specific home page with all functionality"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
     
-    # Get church-specific hero (if any) with prefetched hero media
-    hero = Hero.objects.filter(church=church, is_active=True).prefetch_related('hero_media').order_by('order', '-created_at').first()
+    # Get all active church heroes (for carousel) with prefetched hero media
+    heroes = list(Hero.objects.filter(church=church, is_active=True).prefetch_related('hero_media').order_by('order', '-created_at'))
+    hero = heroes[0] if heroes else None  # first hero for backward compatibility in template
     
     # Show all future public events (not just featured)
     events = Event.objects.filter(
@@ -1031,6 +1125,7 @@ def church_home(request, church_id):
     context = {
         'church': church,
         'hero': hero,
+        'heroes': heroes,
         'events': events,
         'all_events': all_events,
         'ministries': ministries,
@@ -1041,6 +1136,7 @@ def church_home(request, church_id):
         'user_country': country,
         'user_city': city,
         'nearest_church': nearest_church,
+        'show_logout_success': request.GET.get('logged_out') == '1',
     }
     return render(request, 'core/church_home.html', context)
 
@@ -1172,12 +1268,13 @@ def church_ministries(request, church_id):
     """Church-specific ministries page"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
     
-    all_ministries = Ministry.objects.filter(church=church, is_active=True)
+    ministries = Ministry.objects.filter(church=church, is_active=True)
     all_events = Event.objects.filter(church=church, is_public=True)
     
     context = {
         'church': church,
-        'all_ministries': all_ministries,
+        'ministries': ministries,
+        'all_ministries': ministries,
         'all_events': all_events,
         'is_church_site': True,
     }
@@ -1367,44 +1464,408 @@ def church_calendar(request, church_id):
     }
     return render(request, 'core/church_calendar.html', context)
 
-def local_admin_dashboard(request):
-    """Custom admin dashboard for local church admins"""
+
+def logout_view(request):
+    """Log out the user, then redirect to their church page (or home) with a success message."""
+    church_id = request.session.get('logout_redirect_church_id')
+    logout(request)
+    if church_id:
+        try:
+            return redirect(reverse('church_home', kwargs={'church_id': church_id}) + '?logged_out=1')
+        except Exception:
+            pass
+    return redirect(reverse('church_list') + '?logged_out=1')
+
+
+def local_admin_login(request):
+    """Custom login for local admin: password then optional TOTP verify."""
+    next_url = request.GET.get('next') or request.POST.get('next') or reverse('local_admin_dashboard')
+    if request.user.is_authenticated:
+        return redirect(next_url)
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+            if device:
+                request.session['pending_mfa_user_id'] = user.pk
+                request.session['pending_mfa_backend'] = user.backend
+                request.session['pending_mfa_next'] = next_url
+                return redirect(reverse('local_admin_login_verify'))
+            login(request, user)
+            return redirect(next_url)
+    else:
+        form = AuthenticationForm(request)
+    return render(request, 'core/local_admin_login.html', {'form': form, 'next': next_url or reverse('local_admin_dashboard')})
+
+
+def local_admin_login_verify(request):
+    """Verify TOTP code after password for users who have MFA enabled."""
+    user_id = request.session.get('pending_mfa_user_id')
+    backend = request.session.get('pending_mfa_backend')
+    next_url = request.session.get('pending_mfa_next', reverse('local_admin_dashboard'))
+    if not user_id or not backend:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': next_url}))
+    user = get_object_or_404(User, pk=user_id)
+    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+    if not device:
+        for k in ('pending_mfa_user_id', 'pending_mfa_backend', 'pending_mfa_next'):
+            request.session.pop(k, None)
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': next_url}))
+    if request.method == 'POST':
+        token = (request.POST.get('token') or '').strip().replace(' ', '')
+        if token and device.verify_token(token):
+            user.backend = backend
+            login(request, user)
+            for k in ('pending_mfa_user_id', 'pending_mfa_backend', 'pending_mfa_next'):
+                request.session.pop(k, None)
+            return redirect(next_url)
+        messages.error(request, 'Invalid or expired code. Please try again.')
+    return render(request, 'core/local_admin_login_verify.html', {'next': next_url})
+
+
+def church_admin_entry(request):
+    """
+    Simple page for church staff: only "Go to Church Admin Dashboard".
+    Keeps them away from the Django/admin database interface. Used when they hit /admin/
+    or when they don't have Local Admin role yet.
+    """
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_dashboard')}))
+    # If they are a Local Admin, send them straight to the dashboard
+    try:
+        ca = ChurchAdmin.objects.get(user=request.user, is_active=True)
+        if ca.role == 'local_admin' and ca.church_id:
+            return redirect('local_admin_dashboard')
+    except ChurchAdmin.DoesNotExist:
+        pass
+    return render(request, 'core/church_admin_entry.html')
+
+
+def local_admin_dashboard(request):
+    """Custom admin dashboard for local church admins (or minimal dashboard for superusers)"""
+    if not request.user.is_authenticated:
+        login_url = reverse('local_admin_login')
+        next_url = reverse('local_admin_dashboard')
+        return redirect(login_url + '?' + urlencode({'next': next_url}))
     
+    church_admin = None
+    church = None
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
+        if church_admin.role == 'local_admin' and church_admin.church:
+            church = church_admin.church
     except ChurchAdmin.DoesNotExist:
-        # If user is not a church admin, redirect to regular admin
-        return redirect('admin:index')
+        pass
     
-    # Only local admins should access this
-    if church_admin.role != 'local_admin' or not church_admin.church:
-        return redirect('admin:index')
+    # Allow superusers even without a church (minimal dashboard for user management)
+    if not church and not request.user.is_superuser:
+        messages.warning(
+            request,
+            'You need Local Admin role for a church to use the Church Admin Dashboard. '
+            'Ask a superadmin to add you as a member with Local Admin role.'
+        )
+        return redirect('church_admin_entry')
     
-    church = church_admin.church
+    # Remember which church to return to after logout (session is read before logout)
+    if church:
+        request.session['logout_redirect_church_id'] = str(church.id)
     
-    # Get counts for dashboard
+    if church:
+        pending_requests_qs = MinistryJoinRequest.objects.filter(church=church, is_reviewed=False).order_by('-created_at')
+        context = {
+            'church': church,
+            'church_admin': church_admin,
+            'events_count': Event.objects.filter(church=church).count(),
+            'ministries_count': Ministry.objects.filter(church=church).count(),
+            'news_count': News.objects.filter(church=church).count(),
+            'sermons_count': Sermon.objects.filter(church=church).count(),
+            'donation_methods_count': DonationMethod.objects.filter(church=church).count(),
+            'heroes_count': Hero.objects.filter(church=church).count(),
+            'pending_requests_count': pending_requests_qs.count(),
+            'pending_requests': pending_requests_qs[:15],
+            'recent_events': Event.objects.filter(church=church).order_by('-created_at')[:5],
+            'recent_news': News.objects.filter(church=church).order_by('-created_at')[:5],
+            'recent_sermons': Sermon.objects.filter(church=church).order_by('-created_at')[:5],
+        }
+    else:
+        context = {
+            'church': None,
+            'church_admin': None,
+            'events_count': 0,
+            'ministries_count': 0,
+            'news_count': 0,
+            'sermons_count': 0,
+            'donation_methods_count': 0,
+            'heroes_count': 0,
+            'pending_requests_count': 0,
+            'pending_requests': [],
+            'recent_events': [],
+            'recent_news': [],
+            'recent_sermons': [],
+        }
+    if request.user.is_superuser:
+        context['pending_global_live_count'] = LiveStreamSettings.objects.filter(
+            church__isnull=False, global_feature_status='pending'
+        ).count()
+    else:
+        context['pending_global_live_count'] = 0
+
+    return render(request, 'core/local_admin_dashboard.html', context)
+
+
+def local_admin_requests(request):
+    """List ministry join requests: per church for local admins, or all for superusers. Stays in Bethel Admin."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    church = None
+    church_admin = None
+    show_all_churches = False
+    try:
+        church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
+        if church_admin.role == 'local_admin' and church_admin.church:
+            church = church_admin.church
+    except ChurchAdmin.DoesNotExist:
+        pass
+    if not church and request.user.is_superuser:
+        show_all_churches = True
+
+    if not church and not show_all_churches:
+        messages.info(request, 'Requests are managed per church. Add yourself as a Local Admin for a church, or use a superadmin account to see all requests.')
+        return redirect('local_admin_dashboard')
+
+    status_filter = request.GET.get('status', 'all')  # all | pending | reviewed
+    if church:
+        qs = MinistryJoinRequest.objects.filter(church=church).order_by('-created_at')
+        pending_count = MinistryJoinRequest.objects.filter(church=church, is_reviewed=False).count()
+    else:
+        qs = MinistryJoinRequest.objects.select_related('church', 'ministry').order_by('-created_at')
+        pending_count = MinistryJoinRequest.objects.filter(is_reviewed=False).count()
+    if status_filter == 'pending':
+        qs = qs.filter(is_reviewed=False)
+    elif status_filter == 'reviewed':
+        qs = qs.filter(is_reviewed=True)
+
     context = {
         'church': church,
         'church_admin': church_admin,
-        'events_count': Event.objects.filter(church=church).count(),
-        'ministries_count': Ministry.objects.filter(church=church).count(),
-        'news_count': News.objects.filter(church=church).count(),
-        'sermons_count': Sermon.objects.filter(church=church).count(),
-        'donation_methods_count': DonationMethod.objects.filter(church=church).count(),
-        'heroes_count': Hero.objects.filter(church=church).count(),
-        'recent_events': Event.objects.filter(church=church).order_by('-created_at')[:5],
-        'recent_news': News.objects.filter(church=church).order_by('-created_at')[:5],
-        'recent_sermons': Sermon.objects.filter(church=church).order_by('-created_at')[:5],
+        'requests': qs,
+        'status_filter': status_filter,
+        'pending_requests_count': pending_count,
+        'show_all_churches': show_all_churches,
     }
-    
-    return render(request, 'core/local_admin_dashboard.html', context)
+    return render(request, 'core/local_admin_requests.html', context)
+
+
+def local_admin_ministry_request_respond(request, request_id):
+    """Accept or decline a ministry join request. Local admins only their church; superusers any request. Stays in Bethel Admin."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    church = None
+    try:
+        church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
+        if church_admin.role == 'local_admin' and church_admin.church:
+            church = church_admin.church
+    except ChurchAdmin.DoesNotExist:
+        pass
+    if church:
+        join_request = get_object_or_404(MinistryJoinRequest, id=request_id, church=church)
+    elif request.user.is_superuser:
+        join_request = get_object_or_404(MinistryJoinRequest, id=request_id)
+    else:
+        messages.info(request, 'You need Local Admin role for a church or superadmin to respond to requests.')
+        return redirect('local_admin_dashboard')
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action in ('accept', 'decline'):
+            join_request.is_reviewed = True
+            join_request.save()
+            if action == 'accept':
+                messages.success(request, f'Accepted request from {join_request.name} to join {join_request.ministry.name}.')
+            else:
+                messages.success(request, f'Declined request from {join_request.name}.')
+    return redirect('local_admin_requests')
+
+
+# --- Full in-dashboard admin (no Django admin redirect) - superuser only ---
+def _get_full_admin_models():
+    """Return list of (model, model_admin, app_label, model_name, verbose_name_plural) for models registered in admin."""
+    result = []
+    for model, model_admin in admin.site._registry.items():
+        if model._meta.app_label != 'core':
+            continue
+        result.append({
+            'model': model,
+            'model_admin': model_admin,
+            'app_label': model._meta.app_label,
+            'model_name': model._meta.model_name,
+            'verbose_name_plural': model._meta.verbose_name_plural or model._meta.model_name,
+        })
+    return sorted(result, key=lambda x: x['verbose_name_plural'].lower())
+
+
+def _get_full_admin_model(app_label, model_name):
+    """Get model and admin class; return (model, model_admin) or (None, None)."""
+    if app_label != 'core':
+        return None, None
+    try:
+        model = apps.get_model(app_label, model_name)
+    except LookupError:
+        return None, None
+    if model not in admin.site._registry:
+        return None, None
+    return model, admin.site._registry[model]
+
+
+def _build_model_form(model, request=None, instance=None):
+    """Build a ModelForm for the model with file fields optional and basic styling."""
+    pk_name = model._meta.pk.name
+    field_names = [
+        f.name for f in list(model._meta.fields) + list(model._meta.many_to_many)
+        if f.name != pk_name
+        and not getattr(f, 'auto_created', False)
+        and getattr(f, 'editable', True)
+    ]
+    if not field_names:
+        field_names = [f.name for f in model._meta.fields if f.name != pk_name and getattr(f, 'editable', True)]
+    if not field_names:
+        form_class = modelform_factory(model, fields='__all__', exclude=[pk_name])
+    else:
+        form_class = modelform_factory(model, fields=field_names)
+    input_class = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] text-gray-900'
+    for name, field in form_class.base_fields.items():
+        if hasattr(field, 'required') and isinstance(field, (django_forms.FileField, django_forms.ImageField)):
+            field.required = False
+        if hasattr(field, 'widget') and field.widget and hasattr(field.widget, 'attrs'):
+            field.widget.attrs.setdefault('class', input_class)
+    return form_class
+
+
+def full_admin_home(request):
+    """Full admin home: list all models to manage (in-dashboard, no Django admin)."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    models_list = _get_full_admin_models()
+    context = {
+        'models_list': models_list,
+        'church': None,
+        'church_admin': None,
+    }
+    return render(request, 'core/full_admin_home.html', context)
+
+
+def full_admin_list(request, app_label, model_name):
+    """List objects for a model."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    model, _ = _get_full_admin_model(app_label, model_name)
+    if not model:
+        raise Http404
+    qs = model.objects.all()
+    try:
+        qs = qs.order_by('-pk')
+    except Exception:
+        qs = qs.order_by('pk')
+    paginator = Paginator(qs, 50)
+    page = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.page(int(page))
+    except (ValueError, PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+    context = {
+        'model': model,
+        'model_name': model_name,
+        'app_label': app_label,
+        'verbose_name': model._meta.verbose_name or model_name,
+        'verbose_name_plural': model._meta.verbose_name_plural or model_name,
+        'object_list': page_obj,
+        'page_obj': page_obj,
+        'church': None,
+        'church_admin': None,
+    }
+    return render(request, 'core/full_admin_list.html', context)
+
+
+def full_admin_add(request, app_label, model_name):
+    """Add new object."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    model, _ = _get_full_admin_model(app_label, model_name)
+    if not model:
+        raise Http404
+    FormClass = _build_model_form(model)
+    if request.method == 'POST':
+        form = FormClass(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Added {model._meta.verbose_name}.')
+            return redirect('full_admin_list', app_label=app_label, model_name=model_name)
+    else:
+        form = FormClass()
+    context = {
+        'model': model,
+        'model_name': model_name,
+        'app_label': app_label,
+        'form': form,
+        'verbose_name': model._meta.verbose_name or model_name,
+        'verbose_name_plural': model._meta.verbose_name_plural or model_name,
+        'is_edit': False,
+        'church': None,
+        'church_admin': None,
+    }
+    return render(request, 'core/full_admin_form.html', context)
+
+
+def full_admin_edit(request, app_label, model_name, pk):
+    """Edit object."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    model, _ = _get_full_admin_model(app_label, model_name)
+    if not model:
+        raise Http404
+    obj = get_object_or_404(model, pk=pk)
+    FormClass = _build_model_form(model)
+    if request.method == 'POST':
+        form = FormClass(request.POST, request.FILES, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Updated {model._meta.verbose_name}.')
+            return redirect('full_admin_list', app_label=app_label, model_name=model_name)
+    else:
+        form = FormClass(instance=obj)
+    context = {
+        'model': model,
+        'model_name': model_name,
+        'app_label': app_label,
+        'form': form,
+        'obj': obj,
+        'verbose_name': model._meta.verbose_name or model_name,
+        'verbose_name_plural': model._meta.verbose_name_plural or model_name,
+        'is_edit': True,
+        'church': None,
+        'church_admin': None,
+    }
+    return render(request, 'core/full_admin_form.html', context)
+
+
+@require_POST
+def full_admin_delete(request, app_label, model_name, pk):
+    """Delete object."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_dashboard')}))
+    model, _ = _get_full_admin_model(app_label, model_name)
+    if not model:
+        raise Http404
+    obj = get_object_or_404(model, pk=pk)
+    obj.delete()
+    messages.success(request, f'Deleted {model._meta.verbose_name}.')
+    return redirect('full_admin_list', app_label=app_label, model_name=model_name)
+
 
 def local_admin_events(request):
     """Local admin events management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1417,12 +1878,16 @@ def local_admin_events(request):
     church = church_admin.church
     events = Event.objects.filter(church=church).prefetch_related('hero_media').order_by('-start_date')
     past_highlights = EventHighlight.objects.filter(church=church).order_by('-year')[:6]
+    now = timezone.now()
     
     context = {
         'church': church,
         'events': events,
         'church_admin': church_admin,
         'past_highlights': past_highlights,
+        'public_events_count': events.filter(is_public=True).count(),
+        'upcoming_events_count': events.filter(start_date__gte=now).count(),
+        'featured_events_count': events.filter(is_featured=True).count(),
     }
     
     return render(request, 'core/local_admin_events.html', context)
@@ -1430,7 +1895,7 @@ def local_admin_events(request):
 def local_admin_ministries(request):
     """Local admin ministries management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1447,6 +1912,8 @@ def local_admin_ministries(request):
         'church': church,
         'ministries': ministries,
         'church_admin': church_admin,
+        'public_ministries_count': ministries.filter(is_public=True).count(),
+        'active_ministries_count': ministries.filter(is_active=True).count(),
     }
     
     return render(request, 'core/local_admin_ministries.html', context)
@@ -1454,7 +1921,7 @@ def local_admin_ministries(request):
 def local_admin_news(request):
     """Local admin news management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1469,6 +1936,7 @@ def local_admin_news(request):
     
     context = {
         'church': church,
+        'news': news_list,
         'news_list': news_list,
         'church_admin': church_admin,
     }
@@ -1478,7 +1946,7 @@ def local_admin_news(request):
 def local_admin_sermons(request):
     """Local admin sermons management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1502,7 +1970,7 @@ def local_admin_sermons(request):
 def local_admin_donations(request):
     """Local admin donation methods management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1549,19 +2017,7 @@ def local_admin_donations(request):
                 messages.success(request, f'Donation method "{name}" added successfully!')
             else:
                 messages.error(request, 'Please fill in all required fields.')
-                
-        elif action == 'delete':
-            # Delete donation method
-            method_id = request.POST.get('method_id')
-            try:
-                method = DonationMethod.objects.get(id=method_id, church=church)
-                method_name = method.name
-                method.delete()
-                messages.success(request, f'Donation method "{method_name}" deleted successfully!')
-            except DonationMethod.DoesNotExist:
-                messages.error(request, 'Donation method not found.')
         
-        # Redirect to refresh the page
         return redirect('local_admin_donations')
     
     context = {
@@ -1572,10 +2028,42 @@ def local_admin_donations(request):
     
     return render(request, 'core/local_admin_donations.html', context)
 
+
+@require_POST
+def local_admin_donation_delete(request, method_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_donations')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    method = get_object_or_404(DonationMethod, id=method_id, church=church)
+    name = method.name
+    method.delete()
+    messages.success(request, f'Donation method "{name}" was deleted.')
+    return redirect('local_admin_donations')
+
+
+@require_POST
+def local_admin_donation_bulk_delete(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_donations')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ids = request.POST.getlist('donation_method_ids')
+    if ids:
+        deleted = DonationMethod.objects.filter(id__in=ids, church=church).delete()
+        count = deleted[0] if isinstance(deleted, tuple) else len(ids)
+        messages.success(request, f'{count} donation method{"s" if count != 1 else ""} deleted.')
+    return redirect('local_admin_donations')
+
+
 def local_admin_heroes(request):
     """Local admin hero content management"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1599,7 +2087,7 @@ def local_admin_heroes(request):
 def local_admin_church_settings(request):
     """Local admin church settings"""
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
@@ -1639,6 +2127,962 @@ def local_admin_church_settings(request):
     
     return render(request, 'core/local_admin_church_settings.html', context)
 
+
+def local_admin_live_stream(request):
+    """Local admin: configure live stream for the church's Watch Online page. Stays in Bethel Admin."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    try:
+        church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
+    except ChurchAdmin.DoesNotExist:
+        messages.info(request, 'Live stream is configured per church. Add yourself as a Local Admin for a church to use this page.')
+        return redirect('local_admin_dashboard')
+    if church_admin.role != 'local_admin' or not church_admin.church:
+        messages.info(request, 'Live stream is configured per church. You need Local Admin role for a church to edit it here.')
+        return redirect('local_admin_dashboard')
+    church = church_admin.church
+
+    settings_obj, _ = LiveStreamSettings.objects.get_or_create(
+        church=church,
+        defaults={'platform': 'youtube'}
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'request_global':
+            settings_obj.is_global_featured = True
+            settings_obj.global_feature_status = 'pending'
+            settings_obj.save()
+            messages.success(request, 'Request sent to feature this live stream on the global Watch Online page. A global admin will review it.')
+            return redirect('local_admin_live_stream')
+        settings_obj.platform = request.POST.get('platform', 'youtube')
+        settings_obj.youtube_channel_id = (request.POST.get('youtube_channel_id') or '').strip()
+        settings_obj.facebook_live_url = (request.POST.get('facebook_live_url') or '').strip()
+        settings_obj.red5_stream_url = (request.POST.get('red5_stream_url') or '').strip()
+        settings_obj.is_live = request.POST.get('is_live') == 'on'
+        settings_obj.autoplay = request.POST.get('autoplay') == 'on'
+        settings_obj.save()
+        messages.success(request, 'Live stream settings saved.')
+        return redirect('local_admin_live_stream')
+
+    context = {
+        'church': church,
+        'church_admin': church_admin,
+        'settings': settings_obj,
+    }
+    return render(request, 'core/local_admin_live_stream.html', context)
+
+
+def local_admin_global_live_requests(request):
+    """List churches that requested their live stream on the global Watch Online page. Superuser only. Approve/reject here — no Django admin."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    if not request.user.is_superuser:
+        messages.info(request, 'Only superadmins can approve global live requests.')
+        return redirect('local_admin_dashboard')
+    pending = LiveStreamSettings.objects.filter(
+        church__isnull=False,
+        global_feature_status='pending'
+    ).select_related('church').order_by('-id')
+    context = {
+        'church': None,
+        'church_admin': None,
+        'pending_global_live': pending,
+        'pending_global_live_count': pending.count(),
+    }
+    return render(request, 'core/local_admin_global_live_requests.html', context)
+
+
+@require_POST
+def local_admin_global_live_respond(request, settings_id):
+    """Approve or reject a church's request to feature their live stream on the global Watch Online page. Superuser only."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect('local_admin_dashboard')
+    settings_obj = get_object_or_404(LiveStreamSettings, id=settings_id)
+    action = request.POST.get('action')
+    if action == 'approve':
+        settings_obj.global_feature_status = 'approved'
+        settings_obj.is_global_featured = True
+        settings_obj.save()
+        church_name = settings_obj.church.name if settings_obj.church else 'Church'
+        messages.success(request, f'Approved global live request for {church_name}. Their stream can now appear on the global Watch Online page.')
+    elif action == 'reject':
+        settings_obj.global_feature_status = 'rejected'
+        settings_obj.is_global_featured = False
+        settings_obj.save()
+        church_name = settings_obj.church.name if settings_obj.church else 'Church'
+        messages.success(request, f'Rejected global live request for {church_name}.')
+    return redirect('local_admin_global_live_requests')
+
+
+def _get_local_admin_church(request):
+    """Return (church_admin, church) for local admin or None (caller should redirect)."""
+    if not request.user.is_authenticated:
+        return None
+    try:
+        church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
+    except ChurchAdmin.DoesNotExist:
+        return None
+    if church_admin.role != 'local_admin' or not church_admin.church:
+        return None
+    return (church_admin, church_admin.church)
+
+
+def local_admin_event_add(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_event_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = LocalAdminEventForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.church = church
+            obj.save()
+            messages.success(request, f'Event "{obj.title}" created.')
+            return redirect('local_admin_events')
+    else:
+        form = LocalAdminEventForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add Event', 'obj': None, 'list_url': reverse('local_admin_events')}
+    return render(request, 'core/local_admin_event_form.html', context)
+
+
+def local_admin_event_edit(request, event_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    event = get_object_or_404(Event, id=event_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminEventForm(request.POST, instance=event)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Event "{event.title}" updated.')
+            return redirect('local_admin_events')
+    else:
+        form = LocalAdminEventForm(instance=event)
+        dt_format = '%Y-%m-%dT%H:%M'
+        for field_name, dt in [('start_date', event.start_date), ('end_date', event.end_date), ('registration_deadline', getattr(event, 'registration_deadline', None))]:
+            if dt and field_name in form.fields:
+                if timezone.is_aware(dt):
+                    dt = timezone.localtime(dt)
+                form.fields[field_name].initial = dt.strftime(dt_format)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit Event', 'obj': event, 'list_url': reverse('local_admin_events')}
+    return render(request, 'core/local_admin_event_form.html', context)
+
+
+@require_POST
+def local_admin_event_delete(request, event_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_events')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    event = get_object_or_404(Event, id=event_id, church=church)
+    name = event.title
+    event.delete()
+    messages.success(request, f'Event "{name}" was deleted.')
+    return redirect('local_admin_events')
+
+
+@require_POST
+def local_admin_event_bulk_delete(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_events')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ids = request.POST.getlist('event_ids')
+    if ids:
+        deleted = Event.objects.filter(id__in=ids, church=church).delete()
+        count = deleted[0] if isinstance(deleted, tuple) else len(ids)
+        messages.success(request, f'{count} event{"s" if count != 1 else ""} deleted.')
+    return redirect('local_admin_events')
+
+
+def _get_event_for_local_admin(request, event_id):
+    """Return (church_admin, church, event) or None if not allowed."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        return None
+    church_admin, church = church_data
+    event = get_object_or_404(Event, id=event_id, church=church)
+    return (church_admin, church, event)
+
+
+def local_admin_event_hero_media(request, event_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    if request.method == 'POST':
+        if request.POST.get('delete_id'):
+            media = get_object_or_404(EventHeroMedia, id=request.POST['delete_id'], event=event)
+            media.delete()
+            messages.success(request, 'Hero media removed.')
+            return redirect('local_admin_event_hero_media', event_id=event_id)
+        form = LocalAdminEventHeroMediaForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.event = event
+            obj.save()
+            messages.success(request, 'Hero image/video added.')
+            return redirect('local_admin_event_hero_media', event_id=event_id)
+    else:
+        form = LocalAdminEventHeroMediaForm()
+    media_list = event.hero_media.all().order_by('order', 'id')
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'form': form, 'media_list': media_list, 'list_url': reverse('local_admin_event_edit', args=[event_id])}
+    return render(request, 'core/local_admin_event_hero_media.html', context)
+
+
+def local_admin_event_speakers(request, event_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    speakers = event.speakers.all().order_by('name')
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'speakers': speakers, 'list_url': reverse('local_admin_event_edit', args=[event_id])}
+    return render(request, 'core/local_admin_event_speakers.html', context)
+
+
+def local_admin_event_speaker_add(request, event_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    if request.method == 'POST':
+        form = LocalAdminEventSpeakerForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.event = event
+            obj.save()
+            messages.success(request, f'Speaker "{obj.name}" added.')
+            return redirect('local_admin_event_speakers', event_id=event_id)
+    else:
+        form = LocalAdminEventSpeakerForm()
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'form': form, 'list_url': reverse('local_admin_event_speakers', args=[event_id])}
+    return render(request, 'core/local_admin_event_speaker_form.html', context)
+
+
+def local_admin_event_speaker_edit(request, event_id, speaker_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    speaker = get_object_or_404(EventSpeaker, id=speaker_id, event=event)
+    if request.method == 'POST':
+        form = LocalAdminEventSpeakerForm(request.POST, request.FILES, instance=speaker)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Speaker "{speaker.name}" updated.')
+            return redirect('local_admin_event_speakers', event_id=event_id)
+    else:
+        form = LocalAdminEventSpeakerForm(instance=speaker)
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'form': form, 'obj': speaker, 'list_url': reverse('local_admin_event_speakers', args=[event_id])}
+    return render(request, 'core/local_admin_event_speaker_form.html', context)
+
+
+@require_POST
+def local_admin_event_speaker_delete(request, event_id, speaker_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_event_speakers', args=[event_id])}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    speaker = get_object_or_404(EventSpeaker, id=speaker_id, event=event)
+    name = speaker.name
+    speaker.delete()
+    messages.success(request, f'Speaker "{name}" removed.')
+    return redirect('local_admin_event_speakers', event_id=event_id)
+
+
+def local_admin_event_schedule(request, event_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    items = event.schedule_items.all().order_by('day', 'start_time')
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'items': items, 'list_url': reverse('local_admin_event_edit', args=[event_id])}
+    return render(request, 'core/local_admin_event_schedule.html', context)
+
+
+def local_admin_event_schedule_add(request, event_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    if request.method == 'POST':
+        form = LocalAdminEventScheduleItemForm(request.POST, event=event)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.event = event
+            obj.save()
+            messages.success(request, f'Schedule item "{obj.title}" added.')
+            return redirect('local_admin_event_schedule', event_id=event_id)
+    else:
+        form = LocalAdminEventScheduleItemForm(event=event)
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'form': form, 'list_url': reverse('local_admin_event_schedule', args=[event_id])}
+    return render(request, 'core/local_admin_event_schedule_form.html', context)
+
+
+def local_admin_event_schedule_edit(request, event_id, item_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    item = get_object_or_404(EventScheduleItem, id=item_id, event=event)
+    if request.method == 'POST':
+        form = LocalAdminEventScheduleItemForm(request.POST, event=event, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Schedule item updated.')
+            return redirect('local_admin_event_schedule', event_id=event_id)
+    else:
+        form = LocalAdminEventScheduleItemForm(event=event, instance=item)
+    context = {'event': event, 'church': church, 'church_admin': church_admin, 'form': form, 'obj': item, 'list_url': reverse('local_admin_event_schedule', args=[event_id])}
+    return render(request, 'core/local_admin_event_schedule_form.html', context)
+
+
+@require_POST
+def local_admin_event_schedule_delete(request, event_id, item_id):
+    data = _get_event_for_local_admin(request, event_id)
+    if not data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_event_schedule', args=[event_id])}))
+        return redirect('admin:index')
+    church_admin, church, event = data
+    item = get_object_or_404(EventScheduleItem, id=item_id, event=event)
+    item.delete()
+    messages.success(request, 'Schedule item removed.')
+    return redirect('local_admin_event_schedule', event_id=event_id)
+
+
+def local_admin_ministry_add(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_ministry_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = LocalAdminMinistryForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.church = church
+            obj.save()
+            messages.success(request, f'Ministry "{obj.name}" created.')
+            return redirect('local_admin_ministries')
+    else:
+        form = LocalAdminMinistryForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add Ministry', 'list_url': reverse('local_admin_ministries')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+def local_admin_ministry_edit(request, ministry_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ministry = get_object_or_404(Ministry, id=ministry_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminMinistryForm(request.POST, request.FILES, instance=ministry)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Ministry "{ministry.name}" updated.')
+            return redirect('local_admin_ministries')
+    else:
+        form = LocalAdminMinistryForm(instance=ministry)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit Ministry', 'obj': ministry, 'list_url': reverse('local_admin_ministries')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+@require_POST
+def local_admin_ministry_delete(request, ministry_id):
+    """Delete a single ministry (church must match)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_ministries')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ministry = get_object_or_404(Ministry, id=ministry_id, church=church)
+    name = ministry.name
+    ministry.delete()
+    messages.success(request, f'Ministry "{name}" was deleted.')
+    return redirect('local_admin_ministries')
+
+
+@require_POST
+def local_admin_ministry_bulk_delete(request):
+    """Delete selected ministries (by checkbox)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_ministries')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ids = request.POST.getlist('ministry_ids')
+    if ids:
+        deleted = Ministry.objects.filter(id__in=ids, church=church).delete()
+        count = deleted[0] if isinstance(deleted, tuple) else len(ids)
+        messages.success(request, f'{count} ministr{"y" if count == 1 else "ies"} deleted.')
+    return redirect('local_admin_ministries')
+
+
+def local_admin_news_add(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_news_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = LocalAdminNewsForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.church = church
+            obj.save()
+            messages.success(request, f'News "{obj.title}" created.')
+            return redirect('local_admin_news')
+    else:
+        form = LocalAdminNewsForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add News', 'list_url': reverse('local_admin_news')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+def local_admin_news_edit(request, news_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    news_item = get_object_or_404(News, id=news_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminNewsForm(request.POST, request.FILES, instance=news_item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'News "{news_item.title}" updated.')
+            return redirect('local_admin_news')
+    else:
+        form = LocalAdminNewsForm(instance=news_item)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit News', 'obj': news_item, 'list_url': reverse('local_admin_news')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+@require_POST
+def local_admin_news_delete(request, news_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_news')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    news_item = get_object_or_404(News, id=news_id, church=church)
+    name = news_item.title
+    news_item.delete()
+    messages.success(request, f'News "{name}" was deleted.')
+    return redirect('local_admin_news')
+
+
+@require_POST
+def local_admin_news_bulk_delete(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_news')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ids = request.POST.getlist('news_ids')
+    if ids:
+        deleted = News.objects.filter(id__in=ids, church=church).delete()
+        count = deleted[0] if isinstance(deleted, tuple) else len(ids)
+        messages.success(request, f'{count} article{"s" if count != 1 else ""} deleted.')
+    return redirect('local_admin_news')
+
+
+def local_admin_sermon_add(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_sermon_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = LocalAdminSermonForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.church = church
+            obj.save()
+            messages.success(request, f'Sermon "{obj.title}" created.')
+            return redirect('local_admin_sermons')
+    else:
+        form = LocalAdminSermonForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add Sermon', 'list_url': reverse('local_admin_sermons')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+def local_admin_sermon_edit(request, sermon_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    sermon_obj = get_object_or_404(Sermon, id=sermon_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminSermonForm(request.POST, request.FILES, instance=sermon_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Sermon "{sermon_obj.title}" updated.')
+            return redirect('local_admin_sermons')
+    else:
+        form = LocalAdminSermonForm(instance=sermon_obj)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit Sermon', 'obj': sermon_obj, 'list_url': reverse('local_admin_sermons')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+@require_POST
+def local_admin_sermon_delete(request, sermon_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_sermons')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    sermon_obj = get_object_or_404(Sermon, id=sermon_id, church=church)
+    name = sermon_obj.title
+    sermon_obj.delete()
+    messages.success(request, f'Sermon "{name}" was deleted.')
+    return redirect('local_admin_sermons')
+
+
+@require_POST
+def local_admin_sermon_bulk_delete(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_sermons')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    ids = request.POST.getlist('sermon_ids')
+    if ids:
+        deleted = Sermon.objects.filter(id__in=ids, church=church).delete()
+        count = deleted[0] if isinstance(deleted, tuple) else len(ids)
+        messages.success(request, f'{count} sermon{"s" if count != 1 else ""} deleted.')
+    return redirect('local_admin_sermons')
+
+
+def local_admin_donation_edit(request, method_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    method = get_object_or_404(DonationMethod, id=method_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminDonationMethodForm(request.POST, instance=method)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Donation method "{method.name}" updated.')
+            return redirect('local_admin_donations')
+    else:
+        form = LocalAdminDonationMethodForm(instance=method)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit Donation Method', 'obj': method, 'list_url': reverse('local_admin_donations')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+def local_admin_hero_add(request):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_hero_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = LocalAdminHeroForm(request.POST, request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.church = church
+            obj.save()
+            messages.success(request, f'Hero "{obj.title}" created.')
+            return redirect('local_admin_heroes')
+    else:
+        form = LocalAdminHeroForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add Hero', 'list_url': reverse('local_admin_heroes')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+def local_admin_hero_edit(request, hero_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    hero = get_object_or_404(Hero, id=hero_id, church=church)
+    if request.method == 'POST':
+        form = LocalAdminHeroForm(request.POST, request.FILES, instance=hero)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Hero "{hero.title}" updated. Your changes are saved.')
+            return redirect('local_admin_heroes')
+        else:
+            messages.error(request, 'Please fix the errors below. If you changed the image or video, select the file again and save.')
+    else:
+        form = LocalAdminHeroForm(instance=hero)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit Hero', 'obj': hero, 'list_url': reverse('local_admin_heroes')}
+    return render(request, 'core/local_admin_form.html', context)
+
+
+@require_POST
+def local_admin_hero_delete(request, hero_id):
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_heroes')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    hero = get_object_or_404(Hero, id=hero_id, church=church)
+    name = hero.title
+    hero.delete()
+    messages.success(request, f'Hero "{name}" was deleted.')
+    return redirect('local_admin_heroes')
+
+
+# --- Church members: add/remove members and assign rights (for local admins of this church) ---
+def local_admin_members(request):
+    """List members (ChurchAdmin) for the current church. Local admin only."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_members')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    members = ChurchAdmin.objects.filter(church=church).select_related('user').order_by('user__username')
+    context = {'members': members, 'church': church, 'church_admin': church_admin}
+    return render(request, 'core/local_admin_members.html', context)
+
+
+def local_admin_member_add(request):
+    """Add a new member to this church (create User + ChurchAdmin)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_member_add')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    if request.method == 'POST':
+        form = ChurchMemberAddForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=True)
+            user.is_staff = True
+            user.email = form.cleaned_data.get('email', '') or ''
+            user.first_name = form.cleaned_data.get('first_name', '') or ''
+            user.last_name = form.cleaned_data.get('last_name', '') or ''
+            user.save()
+            role = form.cleaned_data.get('role', 'local_admin')
+            ChurchAdmin.objects.create(user=user, church=church, role=role, is_active=True)
+            messages.success(request, f'Member "{user.username}" added. They can now log in and manage this church.')
+            return redirect('local_admin_members')
+    else:
+        form = ChurchMemberAddForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add member'}
+    return render(request, 'core/local_admin_member_form.html', context)
+
+
+def local_admin_member_edit(request, user_id):
+    """Edit a member's role and active status."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    target_user = get_object_or_404(User, id=user_id)
+    ca = get_object_or_404(ChurchAdmin, user=target_user, church=church)
+    if request.method == 'POST':
+        form = ChurchMemberEditForm(request.POST)
+        if form.is_valid():
+            ca.role = form.cleaned_data['role']
+            ca.is_active = form.cleaned_data['is_active']
+            ca.save()
+            messages.success(request, f'Member "{target_user.username}" updated.')
+            return redirect('local_admin_members')
+    else:
+        form = ChurchMemberEditForm(initial={'role': ca.role, 'is_active': ca.is_active})
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit member', 'obj': target_user, 'member': ca}
+    return render(request, 'core/local_admin_member_form.html', context)
+
+
+@require_POST
+def local_admin_member_remove(request, user_id):
+    """Remove member's access (set is_active=False)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        return redirect('admin:index')
+    church_admin, church = church_data
+    target_user = get_object_or_404(User, id=user_id)
+    ca = ChurchAdmin.objects.filter(user=target_user, church=church).first()
+    if ca:
+        ca.is_active = False
+        ca.save()
+        messages.success(request, f'Access removed for "{target_user.username}". They can no longer log in to this church dashboard.')
+    return redirect('local_admin_members')
+
+
+@require_POST
+def local_admin_member_bulk_remove(request):
+    """Remove selected members' access (set is_active=False)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': reverse('local_admin_members')}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    user_ids = request.POST.getlist('member_user_ids')
+    if user_ids:
+        count = ChurchAdmin.objects.filter(church=church, user_id__in=user_ids).update(is_active=False)
+        messages.success(request, f'Access removed for {count} member{"s" if count != 1 else ""}.')
+    return redirect('local_admin_members')
+
+
+def local_admin_member_set_password(request, user_id):
+    """Set password for a church member (local admin only)."""
+    church_data = _get_local_admin_church(request)
+    if not church_data:
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        return redirect('admin:index')
+    church_admin, church = church_data
+    target_user = get_object_or_404(User, id=user_id)
+    get_object_or_404(ChurchAdmin, user=target_user, church=church)
+    if request.method == 'POST':
+        form = SetPasswordFormCustom(target_user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Password set for "{target_user.username}".')
+            return redirect('local_admin_members')
+    else:
+        form = SetPasswordFormCustom(target_user)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Set password', 'obj': target_user}
+    return render(request, 'core/local_admin_user_password.html', context)
+
+
+def _superuser_required(view_func):
+    """Decorator: redirect to dashboard if not superuser."""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+        if not request.user.is_superuser:
+            messages.error(request, 'Only superadmins can manage users.')
+            return redirect('local_admin_dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@_superuser_required
+def local_admin_users(request):
+    """List users (superuser only)."""
+    users = User.objects.all().order_by('username')
+    church_admins_map = {ca.user_id: ca for ca in ChurchAdmin.objects.select_related('church').all()}
+    users_with_roles = [{'user': u, 'church_admin': church_admins_map.get(u.id)} for u in users]
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    context = {
+        'users_with_roles': users_with_roles,
+        'church': church,
+        'church_admin': church_admin,
+    }
+    return render(request, 'core/local_admin_users.html', context)
+
+
+@_superuser_required
+def local_admin_user_add(request):
+    """Add user (superuser only)."""
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    if request.method == 'POST':
+        form = UserAddForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=True)
+            role = form.cleaned_data.get('role')
+            church_obj = form.cleaned_data.get('church')
+            if role and church_obj:
+                ChurchAdmin.objects.create(user=user, church=church_obj, role=role, is_active=True)
+            elif role and role.strip():
+                ChurchAdmin.objects.create(user=user, church=None, role=role, is_active=True)
+            messages.success(request, f'User "{user.username}" created.')
+            return redirect('local_admin_users')
+    else:
+        form = UserAddForm()
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Add User'}
+    return render(request, 'core/local_admin_user_form.html', context)
+
+
+@_superuser_required
+def local_admin_user_edit(request, user_id):
+    """Edit user permissions and church role (superuser only)."""
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    target_user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, user=target_user)
+        if form.is_valid():
+            target_user.is_staff = form.cleaned_data['is_staff']
+            target_user.is_superuser = form.cleaned_data['is_superuser']
+            target_user.is_active = form.cleaned_data['is_active']
+            target_user.save()
+            role = form.cleaned_data.get('role')
+            church_obj = form.cleaned_data.get('church')
+            ca = ChurchAdmin.objects.filter(user=target_user).first()
+            if role and role.strip():
+                if ca:
+                    ca.role = role
+                    ca.church = church_obj
+                    ca.is_active = form.cleaned_data['is_active']
+                    ca.save()
+                else:
+                    ChurchAdmin.objects.create(user=target_user, church=church_obj, role=role, is_active=True)
+            else:
+                if ca:
+                    ca.delete()
+            messages.success(request, f'User "{target_user.username}" updated.')
+            return redirect('local_admin_users')
+    else:
+        form = UserEditForm(user=target_user)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Edit User', 'obj': target_user}
+    return render(request, 'core/local_admin_user_form.html', context)
+
+
+@_superuser_required
+def local_admin_user_change_password(request, user_id):
+    """Set password for a user (superuser only)."""
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    target_user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        form = SetPasswordFormCustom(target_user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Password updated for "{target_user.username}".')
+            return redirect('local_admin_users')
+    else:
+        form = SetPasswordFormCustom(target_user)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Set password', 'obj': target_user}
+    return render(request, 'core/local_admin_user_password.html', context)
+
+
+def local_admin_my_password_change(request):
+    """Change own password (any logged-in admin)."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    if request.method == 'POST':
+        form = MyPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            form.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, form.user)
+            messages.success(request, 'Your password was changed.')
+            return redirect('local_admin_dashboard')
+    else:
+        form = MyPasswordChangeForm(request.user)
+    context = {'form': form, 'church': church, 'church_admin': church_admin, 'title': 'Change my password'}
+    return render(request, 'core/local_admin_my_password.html', context)
+
+
+def local_admin_mfa_security(request):
+    """Enable or disable two-factor authentication (TOTP) for the current user."""
+    if not request.user.is_authenticated:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    church_data = _get_local_admin_church(request)
+    church = church_data[1] if church_data else None
+    church_admin = church_data[0] if church_data else None
+    confirmed_device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
+    unconfirmed_device = TOTPDevice.objects.filter(user=request.user, confirmed=False).first()
+
+    # Disable: require password and delete device
+    if request.method == 'POST' and request.POST.get('action') == 'disable':
+        from django.contrib.auth import authenticate
+        password = request.POST.get('password', '')
+        if authenticate(username=request.user.username, password=password):
+            TOTPDevice.objects.filter(user=request.user).delete()
+            messages.success(request, 'Two-factor authentication has been disabled.')
+            return redirect('local_admin_dashboard')
+        messages.error(request, 'Incorrect password.')
+        return redirect('local_admin_mfa_security')
+
+    # Confirm setup: user entered code to verify
+    if request.method == 'POST' and request.POST.get('action') == 'confirm' and unconfirmed_device:
+        token = (request.POST.get('token') or '').strip().replace(' ', '')
+        if token and unconfirmed_device.verify_token(token):
+            unconfirmed_device.confirmed = True
+            unconfirmed_device.save()
+            messages.success(request, 'Two-factor authentication is now enabled.')
+            return redirect('local_admin_dashboard')
+        messages.error(request, 'Invalid or expired code. Please try again.')
+
+    # Start setup: create unconfirmed device
+    if request.method == 'POST' and request.POST.get('action') == 'enable' and not confirmed_device:
+        if unconfirmed_device:
+            unconfirmed_device.delete()
+        TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
+        return redirect('local_admin_mfa_security')
+
+    # Build QR for unconfirmed device (base64 data URL for img src)
+    qr_data_url = None
+    if unconfirmed_device:
+        try:
+            url = unconfirmed_device.config_url
+            img = qrcode.make(url, version=1, box_size=4, border=2)
+            buf = io.BytesIO()
+            img.save(buf, format='PNG')
+            qr_data_url = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+        except Exception:
+            pass
+
+    context = {
+        'church': church,
+        'church_admin': church_admin,
+        'title': 'Security & two-factor authentication',
+        'has_mfa': bool(confirmed_device),
+        'unconfirmed_device': unconfirmed_device,
+        'qr_data_url': qr_data_url,
+    }
+    return render(request, 'core/local_admin_mfa_security.html', context)
+
+
 def global_admin_dashboard(request):
     """Global admin dashboard for managing global content"""
     if not request.user.is_authenticated:
@@ -1673,7 +3117,7 @@ def global_admin_dashboard(request):
 @require_POST
 def request_global_event_feature(request, event_id):
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
     except ChurchAdmin.DoesNotExist:
@@ -1718,7 +3162,7 @@ def global_event_feature_requests(request):
 @require_POST
 def request_global_hero_feature(request, hero_id):
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
     except ChurchAdmin.DoesNotExist:
@@ -1738,7 +3182,7 @@ def request_global_hero_feature(request, hero_id):
 @require_POST
 def request_global_news_feature(request, news_id):
     if not request.user.is_authenticated:
-        return redirect('admin:login')
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
     try:
         church_admin = ChurchAdmin.objects.get(user=request.user, is_active=True)
     except ChurchAdmin.DoesNotExist:
@@ -2712,3 +4156,13 @@ def analytics_dashboard(request):
     }
     
     return render(request, 'core/analytics_dashboard.html', context)
+
+@login_required
+def user_profile(request):
+    """User profile page"""
+    user = request.user
+    context = {
+        'user': user,
+        'title': 'User Profile',
+    }
+    return render(request, 'core/user_profile.html', context)

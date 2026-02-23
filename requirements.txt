@@ -13,4 +13,6 @@ pytz==2024.1
 qrcode==7.4.2
 user-agents==2.2.0
 geoip2==4.7.0
+django-otp==1.7.0
+pyotp==2.9.0
  
