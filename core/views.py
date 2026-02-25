@@ -1057,19 +1057,56 @@ def church_list(request):
 
 def church_detail_by_location(request, country_slug, city_slug):
     """
-    Resolve /churches/<country_slug>/<city_slug>/ (e.g. /churches/ghana/accra/)
-    to the canonical church detail URL. Redirects to church_detail or 404.
+    Resolve /churches/<country_slug>/<city_slug>/ (e.g. /churches/ghana/accra/,
+    /churches/germany/hamburg/) to the canonical church detail URL.
+    Tries country+city, then country alternatives (e.g. Germany/Deutschland), then city only.
     """
     # Convert slug to display name (e.g. "ghana" -> "Ghana", "new-york" -> "New York")
     country_name = country_slug.replace('-', ' ').title()
     city_name = city_slug.replace('-', ' ').title()
 
-    churches = Church.objects.filter(
-        is_active=True,
-        is_approved=True,
-        country__iexact=country_name,
-        city__iexact=city_name,
-    ).order_by('name')
+    # Common country name alternatives (slug -> possible DB values)
+    country_alternatives = {
+        'germany': ('Germany', 'Deutschland', 'DE'),
+        'deutschland': ('Germany', 'Deutschland', 'DE'),
+        'uk': ('United Kingdom', 'UK', 'England', 'Scotland', 'Wales'),
+        'united-kingdom': ('United Kingdom', 'UK', 'England'),
+        'usa': ('United States', 'USA', 'US', 'United States of America'),
+        'united-states': ('United States', 'USA', 'US'),
+        'netherlands': ('Netherlands', 'The Netherlands', 'Holland'),
+    }
+
+    def query_churches(country_filter, city_filter):
+        return Church.objects.filter(
+            is_active=True,
+            is_approved=True,
+            **country_filter,
+            **city_filter,
+        ).order_by('name')
+
+    # 1) Try exact country + city
+    churches = query_churches(
+        {'country__iexact': country_name},
+        {'city__iexact': city_name},
+    )
+
+    # 2) If no match, try country alternatives (e.g. germany -> Deutschland)
+    if not churches.exists() and country_slug.lower() in country_alternatives:
+        for alt in country_alternatives[country_slug.lower()]:
+            churches = query_churches(
+                {'country__iexact': alt},
+                {'city__iexact': city_name},
+            )
+            if churches.exists():
+                break
+
+    # 3) Fallback: match by city only (so e.g. Hamburg works even if country differs)
+    if not churches.exists():
+        churches = Church.objects.filter(
+            is_active=True,
+            is_approved=True,
+            city__iexact=city_name,
+        ).order_by('name')
 
     if not churches.exists():
         raise Http404("No church found for this location.")
@@ -1078,7 +1115,7 @@ def church_detail_by_location(request, country_slug, city_slug):
     if churches.count() == 1:
         return redirect('church_detail', church_id=churches.first().id)
 
-    # Multiple churches in same city: redirect to first (or could show a list)
+    # Multiple churches in same city: redirect to first
     return redirect('church_detail', church_id=churches.first().id)
 
 
