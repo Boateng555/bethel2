@@ -10,8 +10,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 
-# Load .env variables
+# Load .env variables (then .env.production if present, so production can use it without renaming)
 load_dotenv()
+_env_production = Path(__file__).resolve().parent.parent / '.env.production'
+if _env_production.exists():
+    load_dotenv(_env_production)
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,8 +24,17 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dt1#i48=k*oc^@
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 # Comma-separated: SERVER_IP, SITE_DOMAIN, www.SITE_DOMAIN, etc.
-_allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost')
+_allowed = os.environ.get(
+    'DJANGO_ALLOWED_HOSTS',
+    '127.0.0.1,localhost,bethelprayerministryinternational.com,www.bethelprayerministryinternational.com'
+)
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
+# When SITE_DOMAIN is set, ensure it (and www) are in ALLOWED_HOSTS
+_site_domain = os.environ.get('SITE_DOMAIN', '').strip()
+if _site_domain:
+    for host in (_site_domain, 'www.' + _site_domain.lstrip('www.')):
+        if host and host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 # Detect if running in production
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
@@ -102,6 +114,7 @@ INSTALLED_APPS = [
 
 # Middleware - Optimized for production
 MIDDLEWARE = [
+    'core.middleware.AllowProductionHostMiddleware',  # Allow production host before Django's host check
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -250,9 +263,11 @@ LOGGING = {
 print("Using local Django file storage")
 DEFAULT_FILE_STORAGE = 'core.storage.LocalFileStorage'
 
-# CSRF Trusted Origins
+# CSRF Trusted Origins (add your production domain for HTTPS forms)
 CSRF_TRUSTED_ORIGINS = [
     "https://your-domain.com",
+    "https://bethelprayerministryinternational.com",
+    "https://www.bethelprayerministryinternational.com",
     "https://91.99.232.214",
     "http://91.99.232.214:8000",
     "http://localhost:8000",

@@ -1,5 +1,28 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
+from django.conf import settings as django_settings
+
+
+# Production domain(s) to always allow (fixes DisallowedHost when server has old ALLOWED_HOSTS)
+_ALLOWED_PRODUCTION_HOSTS = frozenset([
+    'bethelprayerministryinternational.com',
+    'www.bethelprayerministryinternational.com',
+])
+
+
+class AllowProductionHostMiddleware:
+    """
+    Ensure production domain is in ALLOWED_HOSTS even if server env/settings are old.
+    Add the request host to ALLOWED_HOSTS for this process when it matches a known production host.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        host = (request.META.get('HTTP_HOST') or '').split(':')[0].lower()
+        if host in _ALLOWED_PRODUCTION_HOSTS and host not in django_settings.ALLOWED_HOSTS:
+            django_settings.ALLOWED_HOSTS = list(django_settings.ALLOWED_HOSTS) + [host]
+        return self.get_response(request)
 
 
 class RedirectLocalAdminToDashboardMiddleware:
