@@ -20,11 +20,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dt1#i48=k*oc^@cwtgj7v1ou(_(n%z=&omp$)fhfh3d)hvv^sg')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
-    '91.99.232.214',  # Server IP
-    'bethelprayerministryinternational.com',
-    'www.bethelprayerministryinternational.com',
-]
+# Comma-separated: SERVER_IP, SITE_DOMAIN, www.SITE_DOMAIN, etc.
+_allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 # Detect if running in production
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
 
