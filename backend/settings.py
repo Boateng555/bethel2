@@ -21,7 +21,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dt1#i48=k*oc^@
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') + [
-    '91.99.232.214',  # CyberPanel server IP
+    '91.99.232.214',  # Server IP
+    'bethelprayerministryinternational.com',
+    'www.bethelprayerministryinternational.com',
 ]
 # Detect if running in production
 USE_PROD_DB = os.environ.get('USE_PROD_DB', 'false').lower() == 'true'
