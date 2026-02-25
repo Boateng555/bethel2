@@ -2,6 +2,8 @@
 
 {% block title %}{{ church.name }} - Bethel Church{% endblock %}
 
+{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'church_detail' church.id %}">{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <!-- Church Header -->

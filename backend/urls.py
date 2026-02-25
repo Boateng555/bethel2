@@ -31,6 +31,7 @@ from core.sitemaps import (
     ChurchMinistrySitemap,
     NewsSitemap,
 )
+from core.views import church_detail_by_location
 
 # Sitemaps for SEO (churches/events/ministries/news included; new churches appear automatically)
 sitemaps = {
@@ -68,6 +69,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    # Location-based church URL (e.g. /churches/germany/hamburg/) – before core.urls so it matches
+    path('churches/<str:country_slug>/<str:city_slug>/', church_detail_by_location, name='church_detail_by_location'),
     path('', include('core.urls')),
 ]
 

@@ -1,8 +1,10 @@
 from django.urls import path
+from django.contrib.sitemaps.views import sitemap
+
 from .views import (
-    home, smart_home, events, event_detail, ministries, ministry_detail, newsletter_signup, calendar_view,
+    home, smart_home, robots_txt, events, event_detail, ministries, ministry_detail, newsletter_signup, calendar_view,
     EventListView, MinistryListView, NewsListView, NewsletterSignupCreateView, event_ics,
-    about, donation, shop, watch, visit, sermon, church_list, church_detail, church_donation,
+    about, donation, shop, watch, visit, sermon, church_list, church_detail, church_detail_by_location, church_donation,
     church_home, church_events, church_event_detail, church_ministries, church_ministry_detail,
     church_sermons, church_watch, church_news, church_about, church_calendar,
     logout_view,
@@ -33,8 +35,31 @@ from .views import (
     health_check, startup_health_check, static_fallback, clear_redirect_notification,
     analytics_dashboard,
 )
+from .sitemaps import (
+    StaticViewSitemap,
+    ChurchSitemap,
+    ChurchPagesSitemap,
+    EventSitemap,
+    ChurchEventSitemap,
+    MinistrySitemap,
+    ChurchMinistrySitemap,
+    NewsSitemap,
+)
+
+_sitemaps = {
+    'static': StaticViewSitemap,
+    'churches': ChurchSitemap,
+    'church_pages': ChurchPagesSitemap,
+    'events': EventSitemap,
+    'church_events': ChurchEventSitemap,
+    'ministries': MinistrySitemap,
+    'church_ministries': ChurchMinistrySitemap,
+    'news': NewsSitemap,
+}
 
 urlpatterns = [
+    path('robots.txt', robots_txt),
+    path('sitemap.xml', sitemap, {'sitemaps': _sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('', smart_home, name='smart_home'),  # New smart home that redirects to nearest church
     path('global/', home, name='home'),  # Global site moved to /global/
     path('events/', events, name='events'),
@@ -48,6 +73,7 @@ urlpatterns = [
     path('newsletter-signup/', newsletter_signup, name='newsletter-signup'),
     # Church directory
     path('churches/', church_list, name='church_list'),
+    path('churches/<str:country_slug>/<str:city_slug>/', church_detail_by_location, name='church_detail_by_location'),
     path('churches/<uuid:church_id>/', church_detail, name='church_detail'),
     path('churches/<uuid:church_id>/donate/', church_donation, name='church_donation'),
     # Church-specific website (mirrors main site functionality)

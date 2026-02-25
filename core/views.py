@@ -198,6 +198,25 @@ def find_nearest_church(country, city):
     # If no good match found, return None instead of forcing a redirect
     return None
 
+def robots_txt(request):
+    """Serve robots.txt allowing crawlers and pointing to sitemap (used in core/urls.py for all deployments)."""
+    scheme = 'https' if request.is_secure() else 'http'
+    host = request.get_host()
+    sitemap_url = f"{scheme}://{host}/sitemap.xml"
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /local-admin/",
+        "Disallow: /global-admin/",
+        "Disallow: /accounts/",
+        "Disallow: /api/",
+        "",
+        f"Sitemap: {sitemap_url}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
 def smart_home(request):
     """
     Smart home view that redirects users to their nearest church based on location
@@ -1035,6 +1054,34 @@ def church_list(request):
     }
     return render(request, 'core/church_list.html', context)
 
+
+def church_detail_by_location(request, country_slug, city_slug):
+    """
+    Resolve /churches/<country_slug>/<city_slug>/ (e.g. /churches/ghana/accra/)
+    to the canonical church detail URL. Redirects to church_detail or 404.
+    """
+    # Convert slug to display name (e.g. "ghana" -> "Ghana", "new-york" -> "New York")
+    country_name = country_slug.replace('-', ' ').title()
+    city_name = city_slug.replace('-', ' ').title()
+
+    churches = Church.objects.filter(
+        is_active=True,
+        is_approved=True,
+        country__iexact=country_name,
+        city__iexact=city_name,
+    ).order_by('name')
+
+    if not churches.exists():
+        raise Http404("No church found for this location.")
+
+    # One church: redirect to canonical UUID URL
+    if churches.count() == 1:
+        return redirect('church_detail', church_id=churches.first().id)
+
+    # Multiple churches in same city: redirect to first (or could show a list)
+    return redirect('church_detail', church_id=churches.first().id)
+
+
 def church_detail(request, church_id):
     """Display detailed information about a specific church"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
@@ -1052,6 +1099,19 @@ def church_detail(request, church_id):
     # Navigation data
     all_events = Event.objects.filter(is_public=True)
     all_ministries = Ministry.objects.filter(is_public=True)
+
+    # SEO: meta description and Open Graph (crawlable, indexable)
+    location = f"{church.city}, {church.country}"
+    if church.description and church.description.strip():
+        meta_desc = church.description.strip()[:157] + ("…" if len(church.description) > 160 else "")
+    else:
+        meta_desc = f"{church.name} in {location}. Services, events, ministries. Bethel Prayer Ministry International."
+    meta_desc = meta_desc[:160]
+    og_image = None
+    if church.logo:
+        og_image = request.build_absolute_uri(church.get_logo_url())
+    elif church.banner_image:
+        og_image = request.build_absolute_uri(church.get_banner_url())
     
     context = {
         'church': church,
@@ -1061,6 +1121,10 @@ def church_detail(request, church_id):
         'sermons': sermons,
         'all_events': all_events,
         'all_ministries': all_ministries,
+        'meta_description': meta_desc,
+        'og_title': f"{church.name} - Bethel Church",
+        'og_description': meta_desc,
+        'og_image': og_image,
     }
     return render(request, 'core/church_detail.html', context)
 
