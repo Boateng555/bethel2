@@ -91,6 +91,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
     'rest_framework',
     'corsheaders',
     'django_otp',
@@ -180,6 +182,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Sites framework (for sitemaps; domain is used when generating absolute URLs)
+SITE_ID = 1
+# Set SITE_DOMAIN in .env to your production domain (e.g. www.bethel.org) for sitemap/SEO
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', '').strip()
 
 # Session settings - Extended for better user experience
 if USE_PROD_DB:
