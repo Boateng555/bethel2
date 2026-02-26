@@ -169,41 +169,6 @@
     padding-right: 0 !important;
   }
   
-  /* Global banner fixes */
-  .church-global-banner {
-    padding: 0 !important;
-    background-color: #e0e7ff !important;
-    min-height: 0 !important;
-    height: auto !important;
-  }
-  .church-global-banner > .max-w-7xl,
-  .church-global-banner .flex {
-    min-height: 0 !important;
-    height: auto !important;
-    margin-bottom: 0 !important;
-    padding: 0 !important;
-  }
-  .church-global-banner .mb-2,
-  .church-global-banner .mb-2.sm\:mb-0 {
-    margin-bottom: 0 !important;
-  }
-  .church-global-banner span, .church-global-banner .text-sm, .church-global-banner .font-medium {
-    font-size: 10px !important;
-    font-weight: 400 !important;
-    line-height: 1.1 !important;
-  }
-  .church-global-banner a {
-    font-size: 10px !important;
-    padding: 0.05rem 0.3rem !important;
-    border-radius: 0.15rem !important;
-    height: 1.1rem !important;
-    min-height: 0 !important;
-    line-height: 1 !important;
-  }
-  .church-global-banner .flex {
-    gap: 0.05rem !important;
-    align-items: center !important;
-  }
 }
 
 /* Tablet improvements */
@@ -313,9 +278,9 @@
     })();
     </script>
     {% endif %}
-    <!-- Local Church Redirect Notification -->
+    <!-- Local Church Redirect Notification (auto-hides in 1 second) -->
     {% if request.session.local_church_redirect %}
-    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+    <div id="local-church-redirect-banner" class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 transition-all duration-300 ease-out">
         <div class="flex">
             <div class="flex-shrink-0">
                 <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -331,7 +296,7 @@
             </div>
             <div class="ml-auto pl-3">
                 <div class="-mx-1.5 -my-1.5">
-                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" class="inline-flex bg-blue-50 rounded-md p-1.5 text-blue-500 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-50 focus:ring-blue-600">
+                    <button onclick="document.getElementById('local-church-redirect-banner').remove()" class="inline-flex bg-blue-50 rounded-md p-1.5 text-blue-500 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-50 focus:ring-blue-600">
                         <span class="sr-only">Dismiss</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -341,6 +306,21 @@
             </div>
         </div>
     </div>
+    <script>
+    (function(){
+        var el = document.getElementById('local-church-redirect-banner');
+        if (el) {
+            setTimeout(function(){
+                el.style.opacity = '0';
+                el.style.marginBottom = '0';
+                el.style.paddingTop = '0';
+                el.style.paddingBottom = '0';
+                el.style.overflow = 'hidden';
+                setTimeout(function(){ el.remove(); }, 300);
+            }, 1000);
+        }
+    })();
+    </script>
     {% endif %}
     
     <!-- Global Church Fallback Notification -->
@@ -388,21 +368,21 @@
     {% endif %}
     
     <!-- NAVBAR -->
-    <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if global_settings.global_nav_logo %}
-                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
             {% elif church.nav_logo %}
-                <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
             {% elif church.logo %}
-                <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
             {% else %}
                 <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
             {% endif %}
-            <span class="text-xs md:text-lg font-semibold font-serif leading-tight">{{ church.name }}</span>
+            <span class="text-sm font-semibold">{{ church.name }}</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
-        <nav class="hidden md:flex space-x-6 text-sm">
+        <nav class="hidden md:flex items-center space-x-4 text-sm">
             <a href="{% url 'church_home' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-white">Home</a>
             <a href="{% url 'church_about' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About</a>
             <a href="{% url 'church_events' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Events</a>
@@ -416,7 +396,7 @@
             {% endif %}
             <a href="{% url 'church_donation' church.id %}?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
             <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
-            <a href="/?global=true" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+            <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
             <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
         </nav>
         <!-- Mobile Hamburger Button -->
@@ -453,29 +433,6 @@
             </div>
         </div>
     </div>
-
-<!-- Global Site Navigation Banner -->
-<div class="bg-[#e0e7ff] text-[#1e3a8a] py-3 px-6 church-global-banner">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between">
-        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="text-sm font-medium">You're viewing {{ church.name }}</span>
-        </div>
-        <div class="flex space-x-3">
-            <a href="/churches/" class="bg-white text-[#1e3a8a] hover:bg-gray-100 px-4 py-1 rounded text-sm font-medium transition duration-200">
-                Find Other Churches
-            </a>
-            <a href="{% url 'home' %}?global=1" class="bg-transparent border border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white px-4 py-1 rounded text-sm font-medium transition duration-200">
-                Go to Global Site
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Location Detection Banner - Only show on local church sites -->
-
 
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
@@ -514,8 +471,8 @@
                         <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg church-hero-title">{{ hero.title }}</h1>
                         <p class="text-xl md:text-2xl mb-8 text-white drop-shadow-lg max-w-3xl church-hero-subtitle">{{ hero.subtitle }}</p>
                         <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="{{ hero.primary_button_link }}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
-                                {{ hero.primary_button_text }}
+                            <a href="{% if hero.primary_button_text == 'Plan Your Visit' %}{% url 'church_list' %}{% else %}{{ hero.primary_button_link }}{% endif %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
+                                {% if hero.primary_button_text == 'Plan Your Visit' %}Find Nearest Church{% else %}{{ hero.primary_button_text }}{% endif %}
                             </a>
                             <a href="{% if hero.secondary_button_text == 'Watch Online' %}{% url 'church_watch' church.id %}{% else %}{{ hero.secondary_button_link }}{% endif %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300">
                                 {{ hero.secondary_button_text }}
@@ -550,7 +507,7 @@
             <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white church-hero-title">Welcome to {{ church.name }}</h1>
             <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl church-hero-subtitle">Join us in worship and community as we grow together in faith.</p>
             <div class="flex flex-col sm:flex-row gap-4">
-                <a href="{% url 'church_about' church.id %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Plan Your Visit</a>
+                <a href="{% url 'church_list' %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Find Nearest Church</a>
                 <a href="{% url 'church_watch' church.id %}" class="bg-transparent border-2 border-white text-white hover:bg-white hover:text-deep-blue px-8 py-3 rounded-lg font-semibold transition duration-300">Watch Online</a>
             </div>
             <p class="mt-6 text-white text-sm opacity-90">Edit this banner in the admin dashboard under <strong>Church Hero</strong>.</p>

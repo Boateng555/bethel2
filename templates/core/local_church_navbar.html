@@ -1,7 +1,10 @@
-<header class="bg-[#1e3a8a] text-white shadow-lg sticky top-0 z-50 border-b border-white">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <a href="/" class="text-sm md:text-lg font-semibold font-serif leading-tight">{{ church.name|default:"Bethel Prayer Ministry" }}</a>
-        <nav class="hidden md:flex space-x-6 text-sm">
+<header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center space-x-4">
+        <a href="{% url 'church_home' church.id %}" class="flex items-center space-x-2">
+            <span class="text-sm font-semibold">{{ church.name|default:"Bethel Prayer Ministry International" }}</span>
+        </a>
+    </div>
+    <nav class="hidden md:flex items-center space-x-4 text-sm">
             <a href="{% url 'church_home' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Home</a>
             <a href="{% url 'church_about' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">About</a>
             <a href="{% url 'church_events' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Events</a>
@@ -13,13 +16,12 @@
             {% endif %}
             <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Give</a>
             <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
-        </nav>
-        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
+    </nav>
+    <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
         </button>
-    </div>
     
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">

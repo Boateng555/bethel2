@@ -1743,6 +1743,10 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
             'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
             'description': 'Configure automatic redirect behavior and fallback church'
         }),
+        ('Footer (site-wide)', {
+            'fields': ('footer_copyright', 'footer_links'),
+            'description': 'Footer text and links shown on every page. Copyright: e.g. "© 2025 Bethel". Links: JSON list, e.g. [{"label": "About", "url": "/about/"}, {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"}]'
+        }),
         ('System Information', {
             'fields': ('id', 'created_at', 'updated_at'),
             'classes': ('collapse',)

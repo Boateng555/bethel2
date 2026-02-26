@@ -1703,6 +1703,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1713,6 +1725,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -2450,6 +2481,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -2460,6 +2503,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -3197,6 +3259,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -3207,6 +3281,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -3944,6 +4037,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -3954,6 +4059,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -4691,6 +4815,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -4701,6 +4837,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -5438,6 +5593,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -5448,6 +5615,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""
@@ -6185,6 +6371,18 @@ class GlobalSettings(models.Model):
         help_text="Show fallback hero if selected hero is inactive"
     )
     
+    # Footer (editable from admin)
+    footer_copyright = models.CharField(
+        max_length=200,
+        default="© 2025 Bethel",
+        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+    )
+    footer_links = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of footer links. Each item: {"label": "About", "url": "/about/"} or add "id": "footer-cookie-settings" for Cookie Settings.'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -6195,6 +6393,25 @@ class GlobalSettings(models.Model):
     
     def __str__(self):
         return f"Global Settings - {self.site_name}"
+    
+    def get_footer_links_default(self):
+        """Default footer links if footer_links is empty"""
+        return [
+            {"label": "About", "url": "/about/"},
+            {"label": "Leadership", "url": "/leadership/"},
+            {"label": "Resources", "url": "/resources/"},
+            {"label": "Testimonies", "url": "/testimonies/"},
+            {"label": "Privacy Policy", "url": "/privacy/"},
+            {"label": "Terms of Service", "url": "/terms/"},
+            {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+        ]
+    
+    def get_footer_links(self):
+        """Return footer links list, using default if empty"""
+        links = self.footer_links if isinstance(self.footer_links, list) else []
+        if not links:
+            return self.get_footer_links_default()
+        return links
     
     def get_global_nav_logo_url(self):
         """Returns the correct URL for the global navigation logo"""

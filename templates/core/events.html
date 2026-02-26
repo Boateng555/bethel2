@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bethel Prayer Ministry | Events</title>
+    <title>Bethel Prayer Ministry International | Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -85,17 +85,16 @@
 </head>
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
     <!-- NAVBAR -->
-    <header class="bg-deep-blue text-white shadow-lg sticky top-0 z-50 border-b border-white">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                {% if global_settings.global_nav_logo %}
-                    <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
-                {% else %}
-                    <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
-                {% endif %}
-                <a href="/" class="text-2xl font-serif font-bold">Bethel Prayer Ministry</a>
-            </div>
-            <nav class="hidden md:flex space-x-6 text-sm">
+    <header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center space-x-4">
+            {% if global_settings.global_nav_logo %}
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% else %}
+                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% endif %}
+            <a href="{% url 'home' %}" class="text-sm font-semibold">Bethel Prayer Ministry International</a>
+        </div>
+        <nav class="hidden md:flex items-center space-x-4 text-sm">
                 <a href="/churches/" class="hover:text-white transition-colors font-semibold">Find a Bethel Church</a>
                 <a href="/about" class="hover:text-white transition-colors">About Us</a>
                 <a href="/sermon" class="hover:text-white transition-colors">Sermons</a>
@@ -125,13 +124,12 @@
                 <a href="/leadership" class="hover:text-white transition-colors">Leadership</a>
                 <a href="/shop" class="hover:text-white transition-colors">Shop</a>
                 <a href="/donation" class="hover:text-white transition-colors font-semibold">Donation</a>
-            </nav>
-            <button class="md:hidden">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
+        </nav>
+        <button class="md:hidden text-white focus:outline-none" aria-label="Open menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
     </header>
 
     <!-- Hero Section -->
@@ -169,9 +167,9 @@
     <!-- Footer -->
     <footer class="bg-deep-blue text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h3 class="text-2xl font-bold mb-4">Bethel Prayer Ministry</h3>
+            <h3 class="text-2xl font-bold mb-4">Bethel Prayer Ministry International</h3>
             <p class="mb-4">Connecting people through faith, prayer, and spiritual growth worldwide.</p>
-            <p>&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+            <p>&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
         </div>
     </footer>
 

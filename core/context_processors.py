@@ -12,11 +12,17 @@ def global_settings(request):
     try:
         settings = GlobalSettings.get_settings()
         gs = settings
+        footer_copyright = getattr(gs, "footer_copyright", "© 2025 Bethel")
+        footer_links = gs.get_footer_links() if hasattr(gs, "get_footer_links") else []
     except Exception:
         gs = None
+        footer_copyright = "© 2025 Bethel"
+        footer_links = []
     # Default meta description for pages that don't override (SEO)
     meta_desc = DEFAULT_META_DESCRIPTION
     return {
         "global_settings": gs,
         "meta_description": meta_desc,
+        "footer_copyright": footer_copyright,
+        "footer_links": footer_links,
     } 

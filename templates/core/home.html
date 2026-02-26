@@ -213,17 +213,17 @@
 <body class="bg-gray-50 text-[#1e3a8a] font-sans">
 {% load static %}
     <!-- NAVBAR -->
-    <header class="bg-deep-blue text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-deep-blue text-white py-2 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if global_settings.global_nav_logo %}
-                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
             {% else %}
-                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
             {% endif %}
-            <span class="text-2xl font-bold font-serif">Bethel Prayer Ministry</span>
+            <span class="text-sm font-semibold">Bethel Prayer Ministry International</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
-        <nav class="hidden md:flex space-x-6 text-sm">
+        <nav class="hidden md:flex items-center space-x-4 text-sm">
             <a href="/churches/" class="hover:text-white transition-colors font-semibold">Find a Bethel Church</a>
             <a href="/about" class="hover:text-white transition-colors">About Us</a>
             <a href="/sermon" class="hover:text-white transition-colors">Sermons</a>
@@ -611,7 +611,7 @@
                 </div>
             </div>
             <div class="border-t border-white mt-8 pt-8 text-center text-very-white">
-                <p>&copy; 2024 Bethel. All rights reserved.</p>
+                <p>{{ footer_copyright|default:"© 2025 Bethel" }}{% if footer_links %} &mdash; {% for link in footer_links %}<a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %} class="hover:text-white">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}{% else %} &mdash; <a href="/about/" class="hover:text-white">About</a> | <a href="/leadership/" class="hover:text-white">Leadership</a> | <a href="/resources/" class="hover:text-white">Resources</a> | <a href="/testimonies/" class="hover:text-white">Testimonies</a> | <a href="/privacy/" class="hover:text-white">Privacy Policy</a> | <a href="/terms/" class="hover:text-white">Terms of Service</a> | <a href="#" id="footer-cookie-settings" class="hover:text-white">Cookie Settings</a>{% endif %}</p>
             </div>
         </div>
     </footer>

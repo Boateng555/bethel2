@@ -97,34 +97,34 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans">
     <!-- NAVBAR -->
-    <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if is_church_site and church %}
                 <a href="{% url 'church_home' church.id %}" class="flex items-center space-x-2">
                     {% if global_settings.global_nav_logo %}
-                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
                     {% elif church.nav_logo %}
-                        <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                        <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
                     {% elif church.logo %}
-                        <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-8 h-8 rounded-full object-cover">
+                        <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
                     {% else %}
-                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
                     {% endif %}
                     <span class="text-sm font-semibold">{{ church.name }}</span>
                 </a>
             {% else %}
                 <a href="{% url 'home' %}" class="flex items-center space-x-2">
                     {% if global_settings.global_nav_logo %}
-                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
+                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
                     {% else %}
-                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
+                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
                     {% endif %}
                     <span class="text-sm font-semibold">Bethel Prayer Ministry International</span>
                 </a>
             {% endif %}
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
-        <nav class="hidden md:flex space-x-6 text-sm">
+        <nav class="hidden md:flex items-center space-x-4 text-sm">
             {% if is_church_site and church %}
                 <!-- Church-specific navigation -->
                 <a href="{% url 'church_home' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Home</a>
@@ -275,18 +275,22 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (editable from Django admin: Global Settings > Footer) -->
     <footer class="footer mt-auto py-3 bg-light border-top">
         <div class="container text-center">
             <span class="text-muted">
-                &copy; {{ year|default:2025 }} Bethel &mdash;
-                <a href="/about/">About</a> |
-                <a href="/leadership/">Leadership</a> |
-                <a href="/resources/">Resources</a> |
-                <a href="{% url 'testimonies' %}">Testimonies</a> |
-                <a href="/privacy/">Privacy Policy</a> |
-                <a href="/terms/">Terms of Service</a> |
-                <a href="#" id="footer-cookie-settings">Cookie Settings</a>
+                {{ footer_copyright|default:"© 2025 Bethel" }} &mdash;
+                {% for link in footer_links %}
+                    <a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %}>{{ link.label }}</a>{% if not forloop.last %} | {% endif %}
+                {% empty %}
+                    <a href="/about/">About</a> |
+                    <a href="/leadership/">Leadership</a> |
+                    <a href="/resources/">Resources</a> |
+                    <a href="{% url 'testimonies' %}">Testimonies</a> |
+                    <a href="/privacy/">Privacy Policy</a> |
+                    <a href="/terms/">Terms of Service</a> |
+                    <a href="#" id="footer-cookie-settings">Cookie Settings</a>
+                {% endfor %}
             </span>
         </div>
     </footer>

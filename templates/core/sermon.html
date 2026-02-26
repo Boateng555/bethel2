@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sermons - Bethel Prayer Ministry</title>
+    <title>Sermons - Bethel Prayer Ministry International</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
@@ -22,20 +22,16 @@
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-[#1e3a8a] shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    {% if global_settings.global_nav_logo %}
-                        <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover">
-                    {% else %}
-                        <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
-                    {% endif %}
-                    <h1 class="text-2xl font-bold text-white">Bethel Prayer Ministry</h1>
-                </div>
-                
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex space-x-6 text-sm">
+    <nav class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            {% if global_settings.global_nav_logo %}
+                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% else %}
+                <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% endif %}
+            <a href="{% url 'home' %}" class="text-sm font-semibold">Bethel Prayer Ministry International</a>
+        </div>
+        <div class="hidden md:flex items-center space-x-4 text-sm">
                     <a href="/churches/" class="text-white hover:text-gray-200 transition-colors font-semibold">Find a Bethel Church</a>
                     <a href="/about" class="text-white hover:text-gray-200 transition-colors">About Us</a>
                     <a href="/sermon" class="text-white font-semibold border-b-2 border-white">Sermons</a>
@@ -46,16 +42,14 @@
                     <a href="/donation" class="text-white hover:text-gray-200 transition-colors font-semibold">Donation</a>
                 </div>
                 
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-            </div>
+        <button id="mobile-menu-button" class="md:hidden text-white hover:text-gray-200 focus:outline-none" aria-label="Open menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
             
-            <!-- Mobile Navigation -->
-            <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="fixed inset-0 z-50 bg-[#1e3a8a] bg-opacity-95 flex flex-col text-lg font-semibold text-white hidden">
                 <!-- Close button at the top (fixed) -->
                 <button id="mobile-menu-close" class="absolute top-4 right-4 text-3xl text-white hover:text-gray-300 p-2 z-10" aria-label="Close menu">&times;</button>
                 
@@ -74,7 +68,6 @@
                     </div>
                 </div>
             </div>
-        </div>
     </nav>
 
     <!-- Main Content -->
@@ -236,7 +229,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8 mt-16">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>&copy; 2024 Bethel Prayer Ministry. All rights reserved.</p>
+            <p>&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
         </div>
     </footer>
 

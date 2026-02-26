@@ -86,7 +86,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans">
     <!-- NAVBAR -->
-    <header class="bg-[#1e3a8a] text-white py-4 px-4 flex items-center justify-between relative z-50">
+    <header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between relative z-50">
         <div class="flex items-center space-x-4">
             {% if is_church_site and church %}
                 <a href="{% url 'church_home' church.id %}" class="flex items-center space-x-2">
@@ -252,18 +252,22 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (editable from Django admin: Global Settings > Footer) -->
     <footer class="footer mt-auto py-3 bg-light border-top">
         <div class="container text-center">
             <span class="text-muted">
-                &copy; {{ year|default:2025 }} Bethel &mdash;
-                <a href="/about/">About</a> |
-                <a href="/leadership/">Leadership</a> |
-                <a href="/resources/">Resources</a> |
-                <a href="{% url 'testimonies' %}">Testimonies</a> |
-                <a href="/privacy/">Privacy Policy</a> |
-                <a href="/terms/">Terms of Service</a> |
-                <a href="#" id="footer-cookie-settings">Cookie Settings</a>
+                {{ footer_copyright|default:"© 2025 Bethel" }} &mdash;
+                {% for link in footer_links %}
+                    <a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %}>{{ link.label }}</a>{% if not forloop.last %} | {% endif %}
+                {% empty %}
+                    <a href="/about/">About</a> |
+                    <a href="/leadership/">Leadership</a> |
+                    <a href="/resources/">Resources</a> |
+                    <a href="{% url 'testimonies' %}">Testimonies</a> |
+                    <a href="/privacy/">Privacy Policy</a> |
+                    <a href="/terms/">Terms of Service</a> |
+                    <a href="#" id="footer-cookie-settings">Cookie Settings</a>
+                {% endfor %}
             </span>
         </div>
     </footer>
