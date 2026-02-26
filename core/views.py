@@ -289,10 +289,13 @@ def smart_home(request):
             print("DEBUG: No churches found, redirecting to global home")
             return redirect('home')
         
-        # If only one church, redirect to it
+        # If only one church, redirect to location URL so address bar matches the church
         if church_count == 1:
             church = churches.first()
             print(f"DEBUG: Only one church found: {church.name} in {church.city}, {church.country}")
+            cslug, cityslug = _location_slugs(church)
+            if cslug and cityslug:
+                return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
             return redirect('church_home', church_id=church.id)
         
         print(f"DEBUG: User location detected - Country: {country}, City: {city}")
@@ -319,11 +322,12 @@ def smart_home(request):
                 # Only redirect for good or excellent matches, and only if score meets minimum
                 if match_quality in ["good", "excellent"]:
                     print(f"DEBUG: Match quality: {match_quality}, redirecting to {nearest_church.name}")
-                    # Add a session message to inform user about the redirect
                     request.session['local_church_redirect'] = True
                     request.session['redirected_church'] = nearest_church.name
-                    # Clear any existing session data to prevent conflicts
                     request.session.modified = True
+                    cslug, cityslug = _location_slugs(nearest_church)
+                    if cslug and cityslug:
+                        return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
                     return redirect('church_home', church_id=nearest_church.id)
                 else:
                     print(f"DEBUG: Match quality too low ({match_quality}), showing church list instead")
@@ -332,8 +336,7 @@ def smart_home(request):
         else:
             print("DEBUG: Could not determine user location")
         
-        # If we can't determine location, no nearby church, or match quality is low, 
-        # try to redirect to main global church as fallback
+        # Try to redirect to main global church as fallback
         try:
             global_settings = GlobalSettings.objects.first()
             if global_settings and global_settings.main_global_church:
@@ -341,7 +344,11 @@ def smart_home(request):
                 request.session['global_church_fallback'] = True
                 request.session['redirected_church'] = global_settings.main_global_church.name
                 request.session.modified = True
-                return redirect('church_home', church_id=global_settings.main_global_church.id)
+                ch = global_settings.main_global_church
+                cslug, cityslug = _location_slugs(ch)
+                if cslug and cityslug:
+                    return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
+                return redirect('church_home', church_id=ch.id)
             else:
                 print("DEBUG: No main global church configured, showing church list")
                 return redirect('church_list')
@@ -1055,6 +1062,69 @@ def church_list(request):
     return render(request, 'core/church_list.html', context)
 
 
+def _location_slugs(church):
+    """Return (country_slug, city_slug) for a church for use in location URLs."""
+    def slug(s):
+        return (s or '').lower().replace(' ', '-').strip('-')
+    return slug(church.country), slug(church.city)
+
+
+# Country name alternatives for /churches/<country>/ and /churches/<country>/<city>/
+COUNTRY_SLUG_ALTERNATIVES = {
+    'germany': ('Germany', 'Deutschland', 'DE'),
+    'deutschland': ('Germany', 'Deutschland', 'DE'),
+    'uk': ('United Kingdom', 'UK', 'England', 'Scotland', 'Wales'),
+    'united-kingdom': ('United Kingdom', 'UK', 'England'),
+    'usa': ('United States', 'USA', 'US', 'United States of America'),
+    'united-states': ('United States', 'USA', 'US'),
+    'netherlands': ('Netherlands', 'The Netherlands', 'Holland'),
+}
+
+
+def church_list_by_country(request, country_slug):
+    """
+    /churches/<country_slug>/ (e.g. /churches/germany/) – list churches in that country.
+    Good for Google: "churches in Germany". Uses same list template with country filter.
+    """
+    country_name = country_slug.replace('-', ' ').title()
+    # Try slug in alternatives (e.g. germany -> Deutschland)
+    try_names = [country_name]
+    if country_slug.lower() in COUNTRY_SLUG_ALTERNATIVES:
+        try_names = list(COUNTRY_SLUG_ALTERNATIVES[country_slug.lower()])
+
+    churches = Church.objects.filter(is_approved=True, is_active=True)
+    q = models.Q()
+    for name in try_names:
+        q |= models.Q(country__iexact=name)
+    churches = churches.filter(q).order_by('city', 'name')
+
+    countries = Church.objects.filter(is_approved=True, is_active=True).values_list('country', flat=True).distinct().order_by('country')
+    cities = Church.objects.filter(is_approved=True, is_active=True).values_list('city', flat=True).distinct().order_by('city')
+
+    for church in churches:
+        logo_url = church.get_logo_url()
+        church.logo_url_absolute = request.build_absolute_uri(logo_url) if logo_url else ''
+        banner_url = church.get_banner_url()
+        church.banner_url_absolute = request.build_absolute_uri(banner_url) if banner_url else ''
+
+    display_country = try_names[0] if try_names else country_name
+    all_events = Event.objects.filter(is_public=True)
+    all_ministries = Ministry.objects.filter(is_public=True)
+
+    context = {
+        'churches': churches,
+        'search_query': '',
+        'country_filter': display_country,
+        'city_filter': '',
+        'countries': countries,
+        'cities': cities,
+        'church_distances': {},
+        'show_logout_success': False,
+        'page_title_override': f'Churches in {display_country}',
+    }
+    return render(request, 'core/church_list.html', context)
+
+
 def church_detail_by_location(request, country_slug, city_slug):
     """
     Resolve /churches/<country_slug>/<city_slug>/ (e.g. /churches/ghana/accra/,
@@ -1064,17 +1134,6 @@ def church_detail_by_location(request, country_slug, city_slug):
     # Convert slug to display name (e.g. "ghana" -> "Ghana", "new-york" -> "New York")
     country_name = country_slug.replace('-', ' ').title()
     city_name = city_slug.replace('-', ' ').title()
-
-    # Common country name alternatives (slug -> possible DB values)
-    country_alternatives = {
-        'germany': ('Germany', 'Deutschland', 'DE'),
-        'deutschland': ('Germany', 'Deutschland', 'DE'),
-        'uk': ('United Kingdom', 'UK', 'England', 'Scotland', 'Wales'),
-        'united-kingdom': ('United Kingdom', 'UK', 'England'),
-        'usa': ('United States', 'USA', 'US', 'United States of America'),
-        'united-states': ('United States', 'USA', 'US'),
-        'netherlands': ('Netherlands', 'The Netherlands', 'Holland'),
-    }
 
     def query_churches(country_filter, city_filter):
         return Church.objects.filter(
@@ -1091,8 +1150,8 @@ def church_detail_by_location(request, country_slug, city_slug):
     )
 
     # 2) If no match, try country alternatives (e.g. germany -> Deutschland)
-    if not churches.exists() and country_slug.lower() in country_alternatives:
-        for alt in country_alternatives[country_slug.lower()]:
+    if not churches.exists() and country_slug.lower() in COUNTRY_SLUG_ALTERNATIVES:
+        for alt in COUNTRY_SLUG_ALTERNATIVES[country_slug.lower()]:
             churches = query_churches(
                 {'country__iexact': alt},
                 {'city__iexact': city_name},
@@ -1111,12 +1170,54 @@ def church_detail_by_location(request, country_slug, city_slug):
     if not churches.exists():
         raise Http404("No church found for this location.")
 
-    # One church: redirect to canonical UUID URL
-    if churches.count() == 1:
-        return redirect('church_detail', church_id=churches.first().id)
+    # Show the church welcome/home page at this URL so the address bar matches the message
+    # "We've automatically redirected you to [Church Name]"
+    church = churches.first()
 
-    # Multiple churches in same city: redirect to first
-    return redirect('church_detail', church_id=churches.first().id)
+    # Same context as church_home so the page looks identical (welcome, Plan Your Visit, etc.)
+    heroes = list(Hero.objects.filter(church=church, is_active=True).prefetch_related('hero_media').order_by('order', '-created_at'))
+    hero = heroes[0] if heroes else None
+    events = Event.objects.filter(
+        church=church,
+        is_public=True,
+        start_date__gte=timezone.now()
+    ).prefetch_related('hero_media').order_by('start_date')[:3]
+    all_events = Event.objects.filter(
+        church=church,
+        is_public=True,
+        start_date__gte=timezone.now()
+    )
+    ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
+    all_ministries = Ministry.objects.filter(church=church, is_active=True)
+    news = News.objects.filter(church=church, is_public=True)[:3]
+    sermons = Sermon.objects.filter(church=church, is_featured=True, is_public=True)[:3]
+    country, city = get_user_location(request)
+    nearest_church = None
+    if country:
+        try:
+            nearest_church = find_nearest_church(country, city)
+        except Exception:
+            pass
+    if request.session.get('local_church_redirect'):
+        request.session['clear_redirect_notification'] = True
+
+    context = {
+        'church': church,
+        'hero': hero,
+        'heroes': heroes,
+        'events': events,
+        'all_events': all_events,
+        'ministries': ministries,
+        'all_ministries': all_ministries,
+        'news': news,
+        'sermons': sermons,
+        'is_church_site': True,
+        'user_country': country,
+        'user_city': city,
+        'nearest_church': nearest_church,
+        'show_logout_success': request.GET.get('logged_out') == '1',
+    }
+    return render(request, 'core/church_home.html', context)
 
 
 def church_detail(request, church_id):

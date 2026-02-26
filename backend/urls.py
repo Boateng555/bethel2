@@ -24,6 +24,7 @@ from django.http import HttpResponse
 from core.sitemaps import (
     StaticViewSitemap,
     ChurchSitemap,
+    ChurchLocationSitemap,
     ChurchPagesSitemap,
     EventSitemap,
     ChurchEventSitemap,
@@ -37,6 +38,7 @@ from core.views import church_detail_by_location
 sitemaps = {
     'static': StaticViewSitemap,
     'churches': ChurchSitemap,
+    'church_locations': ChurchLocationSitemap,
     'church_pages': ChurchPagesSitemap,
     'events': EventSitemap,
     'church_events': ChurchEventSitemap,

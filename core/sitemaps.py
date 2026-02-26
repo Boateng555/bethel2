@@ -50,6 +50,39 @@ class StaticViewSitemap(Sitemap):
         return item[2]
 
 
+def _slug(s):
+    """Turn a name into a URL slug (e.g. 'New York' -> 'new-york')."""
+    return (s or '').lower().replace(' ', '-').strip('-')
+
+class ChurchLocationSitemap(Sitemap):
+    """Country and country+city URLs for SEO: /churches/germany/, /churches/germany/hamburg/."""
+    changefreq = 'weekly'
+    priority = 0.85
+
+    def items(self):
+        churches = Church.objects.filter(is_active=True, is_approved=True).values_list('country', 'city').distinct()
+        seen_countries = set()
+        seen_country_city = set()
+        out = []
+        for country, city in churches:
+            cslug = _slug(country)
+            if cslug and cslug not in seen_countries:
+                seen_countries.add(cslug)
+                out.append(('country', cslug, None))
+            if cslug and city:
+                ccity = _slug(city)
+                if ccity and (cslug, ccity) not in seen_country_city:
+                    seen_country_city.add((cslug, ccity))
+                    out.append(('city', cslug, ccity))
+        return out
+
+    def location(self, item):
+        kind, cslug, ccity = item
+        if kind == 'country':
+            return reverse('church_list_by_country', kwargs={'country_slug': cslug})
+        return reverse('church_detail_by_location', kwargs={'country_slug': cslug, 'city_slug': ccity})
+
+
 class ChurchSitemap(Sitemap):
     """All active, approved churches. New churches appear here automatically when approved."""
     changefreq = 'weekly'

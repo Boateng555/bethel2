@@ -4,7 +4,7 @@ from django.contrib.sitemaps.views import sitemap
 from .views import (
     home, smart_home, robots_txt, events, event_detail, ministries, ministry_detail, newsletter_signup, calendar_view,
     EventListView, MinistryListView, NewsListView, NewsletterSignupCreateView, event_ics,
-    about, donation, shop, watch, visit, sermon, church_list, church_detail, church_detail_by_location, church_donation,
+    about, donation, shop, watch, visit, sermon, church_list, church_list_by_country, church_detail, church_detail_by_location, church_donation,
     church_home, church_events, church_event_detail, church_ministries, church_ministry_detail,
     church_sermons, church_watch, church_news, church_about, church_calendar,
     logout_view,
@@ -38,6 +38,7 @@ from .views import (
 from .sitemaps import (
     StaticViewSitemap,
     ChurchSitemap,
+    ChurchLocationSitemap,
     ChurchPagesSitemap,
     EventSitemap,
     ChurchEventSitemap,
@@ -49,6 +50,7 @@ from .sitemaps import (
 _sitemaps = {
     'static': StaticViewSitemap,
     'churches': ChurchSitemap,
+    'church_locations': ChurchLocationSitemap,
     'church_pages': ChurchPagesSitemap,
     'events': EventSitemap,
     'church_events': ChurchEventSitemap,
@@ -74,6 +76,7 @@ urlpatterns = [
     # Church directory
     path('churches/', church_list, name='church_list'),
     path('churches/<str:country_slug>/<str:city_slug>/', church_detail_by_location, name='church_detail_by_location'),
+    path('churches/<str:country_slug>/', church_list_by_country, name='church_list_by_country'),
     path('churches/<uuid:church_id>/', church_detail, name='church_detail'),
     path('churches/<uuid:church_id>/donate/', church_donation, name='church_donation'),
     # Church-specific website (mirrors main site functionality)
