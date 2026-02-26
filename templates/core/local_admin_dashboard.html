@@ -300,6 +300,15 @@
             </div>
         </a>
         {% endif %}
+        <a href="{% url 'analytics_dashboard' %}" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md hover:border-[#1e3a8a] transition-all flex items-center">
+            <div class="p-3 rounded-full bg-[#a7f3d0] text-[#047857] shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Website visitors</h3>
+                <p class="text-sm text-gray-600">{{ website_visitors_count|default:0 }} visit{{ website_visitors_count|default:0|pluralize }} in last 30 days · View full analytics</p>
+            </div>
+        </a>
     </div>
 
     {% if church %}

@@ -170,7 +170,7 @@ class DatabaseIndependentMiddleware:
                 
                 <div class="contact">
                     <h3>📞 Need Immediate Assistance?</h3>
-                    <p><strong>Email:</strong> info@bethelprayer.org</p>
+                    <p><strong>Email:</strong> members@gmail.com</p>
                     <p><strong>Prayer Requests:</strong> We're still accepting prayer requests via email</p>
                     <p><strong>Emergency Contact:</strong> Available through our prayer network</p>
                 </div>
@@ -181,7 +181,7 @@ class DatabaseIndependentMiddleware:
                 
                 <div class="auto-refresh">
                     <p>This page will automatically refresh every 30 seconds</p>
-                    <p>© 2024 Bethel Prayer Ministry International</p>
+                    <p>© 2026 Bethel</p>
                 </div>
             </div>
             

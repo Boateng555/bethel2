@@ -34,6 +34,26 @@ def smart_media_url(field):
         return field_str 
 
 @register.filter
+def div(value, arg):
+    """Divide value by arg. Use in template: {{ value|div:arg }}"""
+    if value is None or arg is None:
+        return 0
+    try:
+        return float(value) / float(arg) if float(arg) != 0 else 0
+    except (TypeError, ValueError):
+        return 0
+
+@register.filter
+def mul(value, arg):
+    """Multiply value by arg. Use in template: {{ value|mul:arg }}"""
+    if value is None or arg is None:
+        return 0
+    try:
+        return float(value) * float(arg)
+    except (TypeError, ValueError):
+        return 0
+
+@register.filter
 def first_with_image(queryset):
     """
     Returns the first item from a queryset that has an image.

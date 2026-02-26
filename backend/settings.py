@@ -176,9 +176,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Static file storage - Use default Django storage for production stability
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Media files - Local storage
+# Media files - Local storage (absolute path so /media/ URLs resolve on all platforms)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = str((BASE_DIR / 'media').resolve())
 
 # Image handling settings for better quality
 THUMBNAIL_DEBUG = False

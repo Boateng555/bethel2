@@ -1,10 +1,10 @@
-{% extends 'admin/base_site.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Analytics Dashboard{% endblock %}
+{% block title %}Analytics Dashboard - Bethel Prayer Ministry International{% endblock %}
 
 {% block extrahead %}
-{{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -185,6 +185,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
 <div class="page-header">
     <h1>📊 Analytics Dashboard</h1>
     <p><span class="realtime-indicator"></span>Real-time website visitor statistics for the last 30 days</p>
@@ -354,10 +355,10 @@ const dailyVisitorsCtx = document.getElementById('dailyVisitorsChart').getContex
 new Chart(dailyVisitorsCtx, {
     type: 'line',
     data: {
-        labels: {{ daily_visitors|safe }}.map(item => new Date(item.date).toLocaleDateString()),
+        labels: {{ daily_visitors_json|safe }}.map(item => new Date(item.date).toLocaleDateString()),
         datasets: [{
             label: 'Visitors',
-            data: {{ daily_visitors|safe }}.map(item => item.visitors),
+            data: {{ daily_visitors_json|safe }}.map(item => item.visitors),
             borderColor: '#1e3a8a',
             backgroundColor: 'rgba(30, 58, 138, 0.1)',
             tension: 0.4,
@@ -396,9 +397,9 @@ const deviceCtx = document.getElementById('deviceChart').getContext('2d');
 new Chart(deviceCtx, {
     type: 'doughnut',
     data: {
-        labels: {{ device_stats|safe }}.map(item => item.device_type),
+        labels: {{ device_stats_json|safe }}.map(item => item.device_type),
         datasets: [{
-            data: {{ device_stats|safe }}.map(item => item.count),
+            data: {{ device_stats_json|safe }}.map(item => item.count),
             backgroundColor: ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1'],
             borderWidth: 0,
             hoverOffset: 4
@@ -419,10 +420,10 @@ const browserCtx = document.getElementById('browserChart').getContext('2d');
 new Chart(browserCtx, {
     type: 'bar',
     data: {
-        labels: {{ browser_stats|safe }}.map(item => item.browser),
+        labels: {{ browser_stats_json|safe }}.map(item => item.browser),
         datasets: [{
             label: 'Users',
-            data: {{ browser_stats|safe }}.map(item => item.count),
+            data: {{ browser_stats_json|safe }}.map(item => item.count),
             backgroundColor: 'rgba(30, 58, 138, 0.8)',
             borderRadius: 8,
             borderSkipped: false
@@ -456,10 +457,10 @@ const countryCtx = document.getElementById('countryChart').getContext('2d');
 new Chart(countryCtx, {
     type: 'bar',
     data: {
-        labels: {{ country_stats|safe }}.map(item => item.country),
+        labels: {{ country_stats_json|safe }}.map(item => item.country),
         datasets: [{
             label: 'Visitors',
-            data: {{ country_stats|safe }}.map(item => item.count),
+            data: {{ country_stats_json|safe }}.map(item => item.count),
             backgroundColor: 'rgba(59, 130, 246, 0.8)',
             borderRadius: 8,
             borderSkipped: false
@@ -493,4 +494,5 @@ setInterval(function() {
     location.reload();
 }, 30000);
 </script>
+</div>
 {% endblock %}

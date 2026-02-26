@@ -4,6 +4,8 @@ from django.utils.html import format_html
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django import forms
+from django.forms import inlineformset_factory
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.db import models
@@ -196,7 +198,31 @@ class HeroMediaForm(forms.ModelForm):
         image = cleaned_data.get('image')
         video = cleaned_data.get('video')
         if not image and not video:
-            raise forms.ValidationError('You must provide at least an image or a video for each Hero Media entry.')
+            # Allow empty for formset extra rows and when editing order only on existing rows
+            if not self.instance or not self.instance.pk:
+                return cleaned_data
+            if not (getattr(self.instance, 'image', None) or getattr(self.instance, 'video', None)):
+                raise forms.ValidationError('You must provide at least an image or a video for each Hero Media entry.')
+        return cleaned_data
+
+
+class GlobalHeroMediaFormsetForm(forms.ModelForm):
+    """Hero media form that allows empty image/video for formset extra rows."""
+    image = forms.ImageField(required=False)
+    video = forms.FileField(required=False)
+
+    class Meta:
+        model = HeroMedia
+        fields = ['image', 'video', 'order']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        image = cleaned_data.get('image')
+        video = cleaned_data.get('video')
+        # Allow both empty: formset will skip saving new empty rows; existing rows keep current files
+        if not image and not video and self.instance and self.instance.pk:
+            if not (self.instance.image or self.instance.video):
+                raise forms.ValidationError('Provide at least an image or a video, or delete this row.')
         return cleaned_data
 
 class EventHeroMediaForm(forms.ModelForm):
@@ -1677,7 +1703,53 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
     form = GlobalSettingsForm
     """Admin for global settings"""
     list_display = ['site_name', 'updated_at']
-    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview', 'global_hero_preview']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'global_nav_logo_preview', 'global_hero_preview', 'global_hero_media_link']
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('<path:object_id>/hero-media/', self.admin_site.admin_view(self.hero_media_view), name='core_globalsettings_hero_media'),
+        ]
+        return custom + urls
+
+    def hero_media_view(self, request, object_id):
+        """Edit the selected global hero's pictures and videos."""
+        from .models import Hero
+        obj = get_object_or_404(GlobalSettings, pk=object_id)
+        hero = obj.global_hero
+        if not hero:
+            self.message_user(request, 'Save and select a global hero above first, then you can edit its pictures and videos.', level=40)
+            return redirect(reverse('admin:core_globalsettings_change', args=[object_id]))
+        HeroMediaFormSet = inlineformset_factory(Hero, HeroMedia, form=GlobalHeroMediaFormsetForm, extra=2, can_delete=True, max_num=20)
+        if request.method == 'POST':
+            formset = HeroMediaFormSet(request.POST, request.FILES, instance=hero)
+            if formset.is_valid():
+                formset.save()
+                self.message_user(request, 'Hero pictures and videos saved.')
+                return redirect(reverse('admin:core_globalsettings_hero_media', args=[object_id]))
+        else:
+            formset = HeroMediaFormSet(instance=hero)
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Edit global hero pictures & videos',
+            'opts': self.model._meta,
+            'obj': obj,
+            'hero': hero,
+            'formset': formset,
+            'back_url': reverse('admin:core_globalsettings_change', args=[object_id]),
+        }
+        return render(request, 'admin/core/globalsettings/hero_media.html', context)
+    
+    def global_hero_media_link(self, obj):
+        """Link to edit the global hero's pictures and videos."""
+        if not obj or not obj.global_hero:
+            return mark_safe('<p style="color:#666;">Select and save a global hero above, then you can edit its pictures and videos here.</p>')
+        url = reverse('admin:core_globalsettings_hero_media', args=[obj.pk])
+        return format_html(
+            '<p><a href="{}" class="button" style="display:inline-block;padding:10px 16px;background:#1e3a8a;color:white;text-decoration:none;border-radius:6px;font-weight:500;">Edit hero pictures &amp; videos</a></p>',
+            url
+        )
+    global_hero_media_link.short_description = "Hero pictures & videos"
     
     def global_nav_logo_preview(self, obj):
         """Display a preview of the global navigation logo"""
@@ -1690,25 +1762,33 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
     global_nav_logo_preview.short_description = "Global Navigation Logo Preview"
     
     def global_hero_preview(self, obj):
-        """Display a preview of the global hero"""
+        """Display a preview of the global hero and its carousel media (pictures/videos)."""
         if obj.global_hero:
             hero = obj.global_hero
-            preview_html = f'<div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">'
+            preview_html = '<div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9;">'
             preview_html += f'<h4 style="margin: 0 0 10px 0; color: #333;">{hero.title}</h4>'
             preview_html += f'<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">{hero.subtitle[:100]}{"..." if len(hero.subtitle) > 100 else ""}</p>'
-            
             if hero.background_image:
                 preview_html += f'<img src="{hero.get_background_image_url()}" style="max-width: 200px; max-height: 120px; border-radius: 4px; object-fit: cover;" />'
             elif hero.background_video:
-                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">📹 Video Background</div>'
+                preview_html += '<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">Video Background</div>'
             else:
-                preview_html += f'<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">No Background Media</div>'
-            
-            preview_html += f'<div style="margin-top: 10px; font-size: 12px; color: #888;">'
-            preview_html += f'Status: {"✅ Active" if hero.is_active else "❌ Inactive"} | '
-            preview_html += f'Order: {hero.order}'
-            preview_html += f'</div></div>'
-            
+                preview_html += '<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 4px; color: #666;">No Background Media</div>'
+            # Hero carousel media (pictures and videos)
+            media_list = list(hero.hero_media.all().order_by('order', 'id')[:12])
+            if media_list:
+                preview_html += '<p style="margin: 12px 0 6px 0; font-size: 13px; color: #333;">Carousel media:</p><div style="display: flex; flex-wrap: wrap; gap: 8px;">'
+                for m in media_list:
+                    if m.image:
+                        preview_html += f'<img src="{m.get_image_url()}" alt="" style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px;" />'
+                    elif m.video:
+                        preview_html += '<div style="width: 80px; height: 50px; background: #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px;">Video</div>'
+                preview_html += '</div>'
+            else:
+                preview_html += '<p style="margin-top: 10px; font-size: 12px; color: #888;">No carousel pictures/videos yet. Use "Edit hero pictures &amp; videos" below to add them.</p>'
+            preview_html += '<div style="margin-top: 10px; font-size: 12px; color: #888;">'
+            preview_html += f'Status: {"Active" if hero.is_active else "Inactive"} | Order: {hero.order}'
+            preview_html += '</div></div>'
             return format_html(preview_html)
         return "No global hero selected"
     global_hero_preview.short_description = "Global Hero Preview"
@@ -1736,8 +1816,8 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
             'fields': ('site_name', 'site_description', 'global_contact_email', 'global_contact_phone', 'global_nav_logo', 'global_nav_logo_preview')
         }),
         ('Global Hero Settings', {
-            'fields': ('global_hero', 'global_hero_preview', 'global_hero_rotation_enabled', 'global_hero_rotation_interval', 'global_hero_fallback_enabled'),
-            'description': 'Configure the hero banner that appears on the main global site homepage. Select a hero that has no church association (global heroes only).'
+            'fields': ('global_hero', 'global_hero_preview', 'global_hero_media_link', 'global_hero_rotation_enabled', 'global_hero_rotation_interval', 'global_hero_fallback_enabled'),
+            'description': 'Configure the hero banner that appears on the main global site homepage. Select a hero, then use "Edit hero pictures & videos" to add or change carousel images and videos.'
         }),
         ('Local Church Redirect Settings', {
             'fields': ('local_church_redirect_enabled', 'local_church_redirect_min_score', 'local_church_redirect_max_distance_km', 'main_global_church'),
@@ -1745,7 +1825,7 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
         }),
         ('Footer (site-wide)', {
             'fields': ('footer_copyright', 'footer_links'),
-            'description': 'Footer text and links shown on every page. Copyright: e.g. "© 2025 Bethel". Links: JSON list, e.g. [{"label": "About", "url": "/about/"}, {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"}]'
+            'description': 'Footer text and links shown on every page. Copyright: e.g. "© 2026 Bethel". Links: JSON list, e.g. [{"label": "About", "url": "/about/"}, {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"}]'
         }),
         ('System Information', {
             'fields': ('id', 'created_at', 'updated_at'),

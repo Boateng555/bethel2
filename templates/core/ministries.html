@@ -89,8 +89,8 @@
     <!-- Navigation -->
     <nav class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between">
         <div class="flex items-center space-x-4">
-            {% if global_settings.global_nav_logo %}
-                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% if global_nav_logo_url %}
+                <img src="{{ global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover shrink-0" width="32" height="32" onerror="this.onerror=null; this.src='{% static 'img/bethel_logo.png' %}';">
             {% else %}
                 <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
             {% endif %}

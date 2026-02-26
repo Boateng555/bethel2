@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:core_globalsettings_changelist' %}">Core</a>
+    &rsaquo; <a href="{{ back_url }}">Global settings</a>
+    &rsaquo; Hero pictures &amp; videos
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Edit global hero pictures &amp; videos</h1>
+<p style="margin-bottom: 20px; color: #666;">Hero: <strong>{{ hero.title }}</strong>. Add or change images and videos for the homepage carousel. Order: lower numbers show first.</p>
+
+<form method="post" enctype="multipart/form-data" id="hero-media-form">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <ul class="errorlist">{{ formset.non_form_errors }}</ul>
+    {% endif %}
+    <div class="module">
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 28px;">Delete</th>
+                    <th>Image</th>
+                    <th>Video</th>
+                    <th style="width: 80px;">Order</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                <tr class="form-row {% if form.errors %}errors{% endif %}">
+                    <td>
+                        {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+                        {{ form.DELETE }}
+                    </td>
+                    <td>
+                        {% if form.instance.image %}
+                            <div style="margin-bottom: 4px;"><img src="{{ form.instance.get_image_url }}" alt="" style="max-width: 160px; max-height: 90px; object-fit: cover;" /></div>
+                        {% endif %}
+                        {{ form.image }}
+                        {{ form.image.errors }}
+                    </td>
+                    <td>
+                        {% if form.instance.video %}
+                            <div style="margin-bottom: 4px; font-size: 12px; color: #666;">Current video set</div>
+                        {% endif %}
+                        {{ form.video }}
+                        {{ form.video.errors }}
+                    </td>
+                    <td>{{ form.order }}{{ form.order.errors }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="submit-row" style="margin-top: 20px;">
+        <input type="submit" value="Save" class="default" />
+        <a href="{{ back_url }}" class="button">Back to Global settings</a>
+    </div>
+</form>
+{% endblock %}

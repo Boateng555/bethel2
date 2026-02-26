@@ -1,0 +1,65 @@
+{% extends "core/base.html" %}
+{% block title %}Edit hero pictures & videos – Full admin{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="{{ back_url }}" class="text-[#1e3a8a] hover:underline font-medium">← Back to Global settings</a>
+            <span class="text-gray-400">|</span>
+            <h1 class="text-2xl font-bold text-gray-900">Edit hero pictures & videos</h1>
+        </div>
+    </div>
+    <p class="mb-6 text-gray-600">Hero: <strong>{{ hero.title }}</strong>. Add or change images and videos for the homepage carousel. Order: lower numbers show first.</p>
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+                <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{{ formset.non_form_errors }}</div>
+            {% endif %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-2 pr-2 text-sm font-medium text-gray-700 w-12">Delete</th>
+                            <th class="text-left py-2 pr-2 text-sm font-medium text-gray-700">Image</th>
+                            <th class="text-left py-2 pr-2 text-sm font-medium text-gray-700">Video</th>
+                            <th class="text-left py-2 text-sm font-medium text-gray-700 w-24">Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr class="border-b border-gray-100 {% if form.errors %}bg-red-50/50{% endif %}">
+                            <td class="py-3 pr-2 align-top">
+                                {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+                                {{ form.DELETE }}
+                            </td>
+                            <td class="py-3 pr-2 align-top">
+                                {% if form.instance.image %}
+                                    <div class="mb-2"><img src="{{ form.instance.get_image_url }}" alt="" class="max-w-[160px] max-h-[90px] object-cover rounded" /></div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}<p class="mt-1 text-sm text-red-600">{{ form.image.errors.0 }}</p>{% endif %}
+                            </td>
+                            <td class="py-3 pr-2 align-top">
+                                {% if form.instance.video %}
+                                    <p class="mb-1 text-xs text-gray-500">Current video set</p>
+                                {% endif %}
+                                {{ form.video }}
+                                {% if form.video.errors %}<p class="mt-1 text-sm text-red-600">{{ form.video.errors.0 }}</p>{% endif %}
+                            </td>
+                            <td class="py-3 align-top">{{ form.order }}{% if form.order.errors %}<p class="mt-1 text-sm text-red-600">{{ form.order.errors.0 }}</p>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="submit" class="bg-[#1e3a8a] hover:bg-[#1e40a0] text-white px-6 py-2 rounded-lg font-medium">Save</button>
+                <a href="{{ back_url }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-medium">Back to Global settings</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

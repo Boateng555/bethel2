@@ -339,15 +339,15 @@
                     </div>
                 </div>
             </div>
-        {% else %}
-            <!-- Fallback hero without hero content -->
+        {% elif hero_fallback_enabled %}
+            <!-- Fallback hero when Global hero fallback is enabled and no hero selected -->
             <div class="absolute inset-0 bg-gray-500"></div>
             <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
                 <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white">
-                    Welcome to Bethel
+                    Welcome to {{ global_settings.site_name|default:"Bethel" }}
                 </h1>
                 <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl">
-                    Join us in worship and community as we grow together in faith.
+                    {{ global_settings.site_description|default:"Join us in worship and community as we grow together in faith." }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="/churches/" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">
@@ -370,6 +370,29 @@
                             <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
                         </div>
                         <!-- Reflection effect -->
+                        <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
+                            <i class="fas fa-chevron-down text-xl mb-1"></i>
+                            <i class="fas fa-chevron-down text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- No hero and fallback disabled: minimal hero bar -->
+            <div class="absolute inset-0 bg-gray-600"></div>
+            <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-white">{{ global_settings.site_name|default:"Bethel" }}</h1>
+            </div>
+            
+            <!-- Scroll Down Indicator -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+                <div class="flex flex-col items-center text-white">
+                    <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
+                    <div class="relative">
+                        <div class="flex flex-col items-center animate-bounce">
+                            <i class="fas fa-chevron-down text-xl mb-1 drop-shadow-lg"></i>
+                            <i class="fas fa-chevron-down text-xl drop-shadow-lg"></i>
+                        </div>
                         <div class="flex flex-col items-center opacity-30 transform scale-y-[-1] mt-1">
                             <i class="fas fa-chevron-down text-xl mb-1"></i>
                             <i class="fas fa-chevron-down text-xl"></i>
@@ -578,15 +601,14 @@
                 <div>
                     <h4 class="font-semibold mb-4">Contact Info</h4>
                     <div class="text-very-white space-y-2">
-                        <p>123 Church Street</p>
-                        <p>City, State 12345</p>
+                        <p>Kleine Bahnstraße 10, 22525</p>
                         <p>Phone: (555) 123-4567</p>
-                        <p>Email: info@bethel.com</p>
+                        <p>Email: members@gmail.com</p>
                     </div>
                 </div>
             </div>
             <div class="border-t border-white mt-8 pt-8 text-center text-very-white">
-                <p>&copy; 2024 Bethel. All rights reserved.</p>
+                <p>© 2026 Bethel — <a href="{% url 'about' %}" class="hover:text-white">About</a> | <a href="{% url 'leadership' %}">Leadership</a> | <a href="{% url 'resources' %}">Resources</a> | <a href="{% url 'testimonies' %}">Testimonies</a> | <a href="{% url 'privacy' %}">Privacy Policy</a> | <a href="{% url 'terms' %}">Terms of Service</a> | <a href="#" id="footer-cookie-settings">Cookie Settings</a> | <a href="{% url 'apply_to_join' %}" class="font-semibold hover:text-white">Apply to Join</a></p>
             </div>
         </div>
     </footer>

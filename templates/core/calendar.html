@@ -128,8 +128,8 @@
     <!-- NAVBAR -->
     <header class="bg-[#1e3a8a] text-white py-2 px-4 flex items-center justify-between sticky top-0 z-50">
         <div class="flex items-center space-x-4">
-            {% if global_settings.global_nav_logo %}
-                <img src="{{ global_settings.get_global_nav_logo_url }}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
+            {% if global_nav_logo_url %}
+                <img src="{{ global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover shrink-0" width="32" height="32" onerror="this.onerror=null; this.src='{% static 'img/bethel_logo.png' %}';">
             {% else %}
                 <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-7 h-7 rounded-full object-cover">
             {% endif %}
@@ -248,7 +248,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h3 class="text-2xl font-bold mb-4">Bethel Prayer Ministry International</h3>
             <p class="mb-4">Connecting people through faith, prayer, and spiritual growth worldwide.</p>
-            <p>&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+            <p>{{ footer_copyright|default:"© 2026 Bethel" }}{% if footer_links %} — {% for link in footer_links %}<a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %} class="hover:text-white">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}{% endif %}</p>
         </div>
     </footer>
 

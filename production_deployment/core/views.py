@@ -1986,7 +1986,8 @@ def static_fallback(request):
             
             <div class="contact">
                 <h3>📞 Contact Information</h3>
-                <p><strong>Email:</strong> info@bethelprayer.org</p>
+                <p><strong>Email:</strong> members@gmail.com</p>
+                <p>© 2026 Bethel. All rights reserved.</p>
                 <p><strong>Emergency Contact:</strong> Available through our prayer network</p>
                 <p><strong>Prayer Requests:</strong> We're still accepting prayer requests via email</p>
             </div>
@@ -1996,7 +1997,7 @@ def static_fallback(request):
             </div>
             
             <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
-                <p>© 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+                <p>© 2026 Bethel. All rights reserved.</p>
             </div>
         </div>
         

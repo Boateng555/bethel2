@@ -1706,8 +1706,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -1736,6 +1736,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -1746,14 +1747,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -2484,8 +2487,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -2514,6 +2517,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -2524,14 +2528,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -3262,8 +3268,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -3292,6 +3298,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -3302,14 +3309,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -4040,8 +4049,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -4070,6 +4079,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -4080,14 +4090,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -4818,8 +4830,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -4848,6 +4860,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -4858,14 +4871,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -5596,8 +5611,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -5626,6 +5641,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -5636,14 +5652,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists
@@ -6374,8 +6392,8 @@ class GlobalSettings(models.Model):
     # Footer (editable from admin)
     footer_copyright = models.CharField(
         max_length=200,
-        default="© 2025 Bethel",
-        help_text="Footer copyright text (e.g. © 2025 Bethel)"
+        default="© 2026 Bethel",
+        help_text="Footer copyright text (e.g. © 2026 Bethel)"
     )
     footer_links = models.JSONField(
         default=list,
@@ -6404,6 +6422,7 @@ class GlobalSettings(models.Model):
             {"label": "Privacy Policy", "url": "/privacy/"},
             {"label": "Terms of Service", "url": "/terms/"},
             {"label": "Cookie Settings", "url": "#", "id": "footer-cookie-settings"},
+            {"label": "Apply to Join", "url": "/apply-to-join/"},
         ]
     
     def get_footer_links(self):
@@ -6414,14 +6433,16 @@ class GlobalSettings(models.Model):
         return links
     
     def get_global_nav_logo_url(self):
-        """Returns the correct URL for the global navigation logo"""
-        if self.global_nav_logo:
+        """Returns the correct URL for the global navigation logo (relative path for use with MEDIA_URL)."""
+        if not self.global_nav_logo:
+            return ''
+        try:
             logo_str = str(self.global_nav_logo)
             if logo_str.startswith('http'):
                 return logo_str
-            else:
-                return self.global_nav_logo.url
-        return ''
+            return self.global_nav_logo.url
+        except (ValueError, OSError):
+            return ''
     
     def save(self, *args, **kwargs):
         # Ensure only one global settings instance exists

@@ -14,6 +14,24 @@
         {% if form.non_field_errors %}
         <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{{ form.non_field_errors }}</div>
         {% endif %}
+        {% if hero_media_url and is_edit %}
+        <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 class="text-sm font-semibold text-gray-800 mb-2">Global hero carousel</h3>
+            {% if global_hero %}
+                <p class="text-sm text-gray-600 mb-2">{{ global_hero.title }} — {% if global_hero_media_list %}{{ global_hero_media_list|length }} item(s){% else %}No carousel pictures/videos yet.{% endif %}</p>
+                {% if global_hero_media_list %}
+                <div class="flex flex-wrap gap-2 mb-3">
+                    {% for m in global_hero_media_list %}
+                        {% if m.image %}<img src="{{ m.get_image_url }}" alt="" class="w-16 h-10 object-cover rounded" />{% elif m.video %}<span class="inline-flex items-center px-2 py-1 rounded bg-gray-200 text-xs">Video</span>{% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <a href="{{ hero_media_url }}" class="inline-block bg-[#1e3a8a] hover:bg-[#1e40a0] text-white px-4 py-2 rounded-lg text-sm font-medium">Edit hero pictures &amp; videos</a>
+            {% else %}
+                <p class="text-sm text-gray-500">Select and save a global hero above, then you can edit its pictures and videos here.</p>
+            {% endif %}
+        </div>
+        {% endif %}
         <form method="post" enctype="multipart/form-data" class="space-y-4">
             {% csrf_token %}
             {% for field in form %}

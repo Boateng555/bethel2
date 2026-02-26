@@ -7,7 +7,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from rest_framework import generics
 from django.contrib.auth.models import User
-from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings, PrayerRequest, ContactMessage, LiveStreamSettings, EventSpeaker, EventScheduleItem, EventHeroMedia, MinistryJoinRequest
+from .models import Event, Ministry, News, NewsletterSignup, Hero, Sermon, Church, DonationMethod, ChurchAdmin, Convention, ChurchApplication, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, EventHighlight, GlobalSettings, PrayerRequest, ContactMessage, LiveStreamSettings, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, MinistryJoinRequest
 from .serializers import EventSerializer, MinistrySerializer, NewsSerializer, NewsletterSignupSerializer
 from datetime import datetime, timedelta, time
 from django.utils import timezone
@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import admin
 from django import forms as django_forms
-from django.forms import modelform_factory
+from django.forms import modelform_factory, inlineformset_factory
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, HttpResponseForbidden
 from django.core.management import call_command
@@ -122,20 +122,16 @@ def find_nearest_church(country, city):
     if not country:
         return None
     
-    # Get configuration from GlobalSettings
+    # Get configuration from GlobalSettings (same instance as full-admin edit)
     try:
-        global_settings = GlobalSettings.objects.first()
-        if global_settings:
-            min_score = global_settings.local_church_redirect_min_score
-        else:
-            # Fallback to environment variables
-            from django.conf import settings
-            min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+        global_settings = GlobalSettings.get_settings()
+        min_score = getattr(global_settings, 'local_church_redirect_min_score', 100)
+        max_distance_km = getattr(global_settings, 'local_church_redirect_max_distance_km', None)
     except Exception as e:
         print(f"DEBUG: Error getting global settings in find_nearest_church: {e}")
-        # Fallback to environment variables
         from django.conf import settings
         min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+        max_distance_km = None
     
     # Get all active and approved churches
     churches = Church.objects.filter(is_active=True, is_approved=True)
@@ -168,15 +164,14 @@ def find_nearest_church(country, city):
             score += 100
         
         # If we have coordinates for the church, we could add distance calculation here
-        # For now, we'll be more conservative and only return churches with good matches
-        
+        # max_distance_km from GlobalSettings can be used to filter by distance when user coords available
         church_scores.append((church, score))
     
     # Sort by score (highest first)
     church_scores.sort(key=lambda x: x[1], reverse=True)
     
     # Only return a church if it has a reasonable match score
-    # Use the configured minimum score
+    # Use the configured minimum score (and max_distance_km when distance logic is used)
     if church_scores and church_scores[0][1] >= min_score:
         best_church = church_scores[0][0]
         best_score = church_scores[0][1]
@@ -222,17 +217,11 @@ def smart_home(request):
     Smart home view that redirects users to their nearest church based on location
     """
     try:
-        # Get global settings for configuration
+        # Get global settings for configuration (same instance as full-admin edit)
         try:
-            global_settings = GlobalSettings.objects.first()
-            if global_settings:
-                local_redirect_enabled = global_settings.local_church_redirect_enabled
-                min_score = global_settings.local_church_redirect_min_score
-            else:
-                # Fallback to environment variables if no global settings
-                from django.conf import settings
-                local_redirect_enabled = getattr(settings, 'LOCAL_CHURCH_REDIRECT_ENABLED', True)
-                min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
+            global_settings = GlobalSettings.get_settings()
+            local_redirect_enabled = getattr(global_settings, 'local_church_redirect_enabled', True)
+            min_score = getattr(global_settings, 'local_church_redirect_min_score', 100)
         except Exception as e:
             print(f"DEBUG: Error getting global settings: {e}")
             # Fallback to environment variables
@@ -336,10 +325,10 @@ def smart_home(request):
         else:
             print("DEBUG: Could not determine user location")
         
-        # Try to redirect to main global church as fallback
+        # Try to redirect to main global church as fallback (same instance as full-admin edit)
         try:
-            global_settings = GlobalSettings.objects.first()
-            if global_settings and global_settings.main_global_church:
+            global_settings = GlobalSettings.get_settings()
+            if global_settings.main_global_church:
                 print(f"DEBUG: No local church found, redirecting to main global church: {global_settings.main_global_church.name}")
                 request.session['global_church_fallback'] = True
                 request.session['redirected_church'] = global_settings.main_global_church.name
@@ -391,17 +380,26 @@ def home(request):
     # If no churches, or user chose global, show the global homepage
     # Show the global site with aggregated content from all churches
     
-    # Get global hero from GlobalSettings (explicit selection)
+    # Get global hero and hero settings from GlobalSettings (same instance as full-admin edit)
     try:
         from .models import GlobalSettings
         global_settings = GlobalSettings.get_settings()
         hero = global_settings.global_hero
         if not (hero and hero.is_active):
-            # Fallback: try most recent global hero with media
-            hero = Hero.objects.filter(is_active=True, church__isnull=True).prefetch_related('hero_media').order_by('order', '-created_at').first()
+            # Use fallback hero only when global_hero_fallback_enabled is True
+            if getattr(global_settings, 'global_hero_fallback_enabled', True):
+                hero = Hero.objects.filter(is_active=True, church__isnull=True).prefetch_related('hero_media').order_by('order', '-created_at').first()
+            else:
+                hero = None
+        hero_rotation_enabled = getattr(global_settings, 'global_hero_rotation_enabled', False)
+        hero_rotation_interval = max(3, getattr(global_settings, 'global_hero_rotation_interval', 5))
+        hero_fallback_enabled = getattr(global_settings, 'global_hero_fallback_enabled', True)
     except Exception as e:
         print(f"DEBUG: Error getting global hero: {e}")
         hero = None
+        hero_rotation_enabled = False
+        hero_rotation_interval = 5
+        hero_fallback_enabled = True
     
     # Get public content from all churches for the global site
     # Events, News, Sermons, Ministries appear immediately when public (no approval needed)
@@ -468,6 +466,9 @@ def home(request):
     
     context = {
         'hero': hero,
+        'hero_rotation_enabled': hero_rotation_enabled,
+        'hero_rotation_interval': hero_rotation_interval,
+        'hero_fallback_enabled': hero_fallback_enabled,
         'upcoming_events': upcoming_events,
         'ministries': public_ministries,
         'sermons': latest_sermons,
@@ -1813,6 +1814,15 @@ def local_admin_dashboard(request):
     else:
         context['pending_global_live_count'] = 0
 
+    # Website visitors count (last 30 days) for analytics card
+    try:
+        from .analytics_models import VisitorSession
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+        context['website_visitors_count'] = VisitorSession.objects.filter(started_at__gte=start_date).count()
+    except Exception:
+        context['website_visitors_count'] = 0
+
     return render(request, 'core/local_admin_dashboard.html', context)
 
 
@@ -2047,6 +2057,12 @@ def full_admin_edit(request, app_label, model_name, pk):
         'church': None,
         'church_admin': None,
     }
+    # For Global Settings edit: add hero media link and preview
+    if model_name == 'globalsettings' and hasattr(obj, 'global_hero'):
+        hero = getattr(obj, 'global_hero', None)
+        context['hero_media_url'] = reverse('full_admin_hero_media', args=[str(obj.pk)]) if obj.pk else None
+        context['global_hero'] = hero
+        context['global_hero_media_list'] = list(hero.hero_media.all().order_by('order', 'id')[:12]) if hero else []
     return render(request, 'core/full_admin_form.html', context)
 
 
@@ -2062,6 +2078,55 @@ def full_admin_delete(request, app_label, model_name, pk):
     obj.delete()
     messages.success(request, f'Deleted {model._meta.verbose_name}.')
     return redirect('full_admin_list', app_label=app_label, model_name=model_name)
+
+
+class FullAdminHeroMediaForm(django_forms.ModelForm):
+    """Hero media form for full-admin; allows empty image/video for extra formset rows."""
+    image = django_forms.ImageField(required=False)
+    video = django_forms.FileField(required=False)
+
+    class Meta:
+        model = HeroMedia
+        fields = ['image', 'video', 'order']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        image = cleaned_data.get('image')
+        video = cleaned_data.get('video')
+        if not image and not video and self.instance and self.instance.pk:
+            if not (getattr(self.instance, 'image', None) or getattr(self.instance, 'video', None)):
+                raise django_forms.ValidationError('Provide at least an image or a video, or delete this row.')
+        return cleaned_data
+
+
+def full_admin_hero_media(request, pk):
+    """Edit the selected global hero's pictures and videos (full-admin)."""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return redirect(reverse('local_admin_login') + '?' + urlencode({'next': request.get_full_path()}))
+    obj = get_object_or_404(GlobalSettings, pk=pk)
+    hero = obj.global_hero
+    edit_url = reverse('full_admin_edit', args=['core', 'globalsettings', pk])
+    if not hero:
+        messages.warning(request, 'Save and select a global hero first, then you can edit its pictures and videos.')
+        return redirect(edit_url)
+    HeroMediaFormSet = inlineformset_factory(Hero, HeroMedia, form=FullAdminHeroMediaForm, extra=2, can_delete=True, max_num=20)
+    if request.method == 'POST':
+        formset = HeroMediaFormSet(request.POST, request.FILES, instance=hero)
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, 'Hero pictures and videos saved.')
+            return redirect('full_admin_hero_media', pk=pk)
+    else:
+        formset = HeroMediaFormSet(instance=hero)
+    context = {
+        'obj': obj,
+        'hero': hero,
+        'formset': formset,
+        'back_url': edit_url,
+        'church': None,
+        'church_admin': None,
+    }
+    return render(request, 'core/full_admin_hero_media.html', context)
 
 
 def local_admin_events(request):
@@ -4103,7 +4168,7 @@ def static_fallback(request):
             
             <div class="contact">
                 <h3>📞 Contact Information</h3>
-                <p><strong>Email:</strong> info@bethelprayer.org</p>
+                <p><strong>Email:</strong> members@gmail.com</p>
                 <p><strong>Emergency Contact:</strong> Available through our prayer network</p>
                 <p><strong>Prayer Requests:</strong> We're still accepting prayer requests via email</p>
             </div>
@@ -4113,7 +4178,7 @@ def static_fallback(request):
             </div>
             
             <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
-                <p>© 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+                <p>© 2026 Bethel. All rights reserved.</p>
             </div>
         </div>
         
@@ -4221,8 +4286,16 @@ def clear_redirect_notification(request):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def analytics_dashboard(request):
-    """Analytics dashboard for admins"""
-    if not request.user.is_staff:
+    """Analytics dashboard for staff and church admins"""
+    if not request.user.is_authenticated:
+        return redirect('admin:login')
+    # Allow staff or any active church admin (local admin dashboard user)
+    try:
+        from .models import ChurchAdmin
+        is_church_admin = ChurchAdmin.objects.filter(user=request.user, is_active=True).exists()
+    except Exception:
+        is_church_admin = False
+    if not (request.user.is_staff or is_church_admin):
         return redirect('admin:login')
     
     from .analytics_models import VisitorSession, PageView, AnalyticsSettings
@@ -4338,6 +4411,7 @@ def analytics_dashboard(request):
         else:
             session.update({'lat': 0, 'lng': 0})
     
+    # JSON-serialized for chart JS (dates and querysets need default=str)
     context = {
         'total_sessions': total_sessions,
         'total_page_views': total_page_views,
@@ -4352,12 +4426,58 @@ def analytics_dashboard(request):
         'visitor_sessions': list(visitor_sessions),
         'daily_visitors': list(daily_visitors),
         'hourly_activity': list(hourly_activity),
+        'daily_visitors_json': json.dumps(list(daily_visitors), default=str),
+        'device_stats_json': json.dumps(list(device_stats), default=str),
+        'browser_stats_json': json.dumps(list(browser_stats), default=str),
+        'country_stats_json': json.dumps(list(country_stats), default=str),
         'start_date': start_date,
         'end_date': end_date,
         'settings': settings,
     }
     
     return render(request, 'core/analytics_dashboard.html', context)
+
+def _get_footer_context():
+    """Get footer_copyright and footer_links for error pages (no request context)."""
+    try:
+        gs = GlobalSettings.get_settings()
+        footer_copyright = getattr(gs, 'footer_copyright', '© 2026 Bethel')
+        if isinstance(footer_copyright, str) and '2025' in footer_copyright:
+            footer_copyright = footer_copyright.replace('2025', '2026')
+        if not isinstance(footer_copyright, str):
+            footer_copyright = '© 2026 Bethel'
+        footer_links = gs.get_footer_links() if hasattr(gs, 'get_footer_links') else []
+        if not isinstance(footer_links, list):
+            footer_links = []
+    except Exception:
+        footer_copyright = '© 2026 Bethel'
+        footer_links = []
+    return {'footer_copyright': footer_copyright, 'footer_links': footer_links}
+
+
+def custom_error_500(request):
+    """Custom 500 handler so footer comes from admin."""
+    context = _get_footer_context()
+    return render(request, '500.html', context, status=500)
+
+
+def custom_error_404(request, exception):
+    """Custom 404 handler so footer comes from admin."""
+    context = _get_footer_context()
+    return render(request, '404.html', context, status=404)
+
+
+def custom_error_403(request, exception):
+    """Custom 403 handler so footer comes from admin."""
+    context = _get_footer_context()
+    return render(request, '403.html', context, status=403)
+
+
+def custom_error_400(request, exception):
+    """Custom 400 handler so footer comes from admin."""
+    context = _get_footer_context()
+    return render(request, '400.html', context, status=400)
+
 
 @login_required
 def user_profile(request):

@@ -263,7 +263,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-8 text-center">
-                <p class="text-gray-300">&copy; 2024 Bethel Prayer Ministry International. All rights reserved.</p>
+                <p class="text-gray-300">{{ footer_copyright|default:"© 2026 Bethel" }}{% if footer_links %} — {% for link in footer_links %}<a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %} class="hover:text-white">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}{% endif %}</p>
             </div>
         </div>
     </footer>

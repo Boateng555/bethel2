@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Bethel Prayer Ministry International{% endblock %}</title>
+    <title>{% block title %}{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -148,8 +148,9 @@
                     <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
                 {% endif %}
                 <a href="{% url 'church_donation' church.id %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Donate</a>
+                <a href="{% url 'apply_to_join' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white font-semibold">Apply to Join</a>
                 <a href="/churches/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Find Other Churches</a>
-                <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Global Site</a>
+                <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white inline-flex items-center gap-1.5" title="Global Site"><i class="fa-solid fa-globe"></i> Global Site</a>
                 <a href="/local-admin/" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Admin</a>
             {% else %}
                 <!-- Global navigation -->
@@ -182,6 +183,8 @@
                 <a href="/leadership" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Leadership</a>
                 <a href="/shop" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white">Shop</a>
                 <a href="/donation" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white font-semibold">Donation</a>
+                <a href="{% url 'apply_to_join' %}" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white font-semibold">Apply to Join</a>
+                <a href="{% url 'home' %}?global=1" class="text-white hover:text-gray-200 transition-colors border-b-2 border-transparent hover:border-white inline-flex items-center gap-1.5" title="Global Site"><i class="fa-solid fa-globe"></i></a>
             {% endif %}
         </nav>
         <!-- Mobile Hamburger Button -->
@@ -214,8 +217,9 @@
                         <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
                     {% endif %}
                     <a href="{% url 'church_donation' church.id %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Donate</a>
+                    <a href="{% url 'apply_to_join' %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Apply to Join</a>
                     <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Find Other Churches</a>
-                    <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Global Site</a>
+                    <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2"><i class="fa-solid fa-globe mr-2"></i>Global Site</a>
                     <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin Login</a>
                 {% else %}
                     <!-- Global mobile navigation -->
@@ -229,6 +233,8 @@
                     <a href="/leadership" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Leadership</a>
                     <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
                     <a href="/donation" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Donation</a>
+                    <a href="{% url 'apply_to_join' %}" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2 font-bold">Apply to Join</a>
+                    <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2"><i class="fa-solid fa-globe mr-2"></i>Global Site</a>
                 {% endif %}
             </div>
         </div>
@@ -256,17 +262,18 @@
     <footer class="footer mt-auto py-3 bg-light border-top">
         <div class="container text-center">
             <span class="text-muted">
-                {{ footer_copyright|default:"© 2025 Bethel" }} &mdash;
+                {{ footer_copyright|default:"© 2026 Bethel" }} &mdash;
                 {% for link in footer_links %}
-                    <a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %}>{{ link.label }}</a>{% if not forloop.last %} | {% endif %}
+                    <a href="{{ link.url }}"{% if link.id %} id="{{ link.id }}"{% endif %} class="hover:underline">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}
                 {% empty %}
-                    <a href="/about/">About</a> |
-                    <a href="/leadership/">Leadership</a> |
-                    <a href="/resources/">Resources</a> |
+                    <a href="{% url 'about' %}">About</a> |
+                    <a href="{% url 'leadership' %}">Leadership</a> |
+                    <a href="{% url 'resources' %}">Resources</a> |
                     <a href="{% url 'testimonies' %}">Testimonies</a> |
-                    <a href="/privacy/">Privacy Policy</a> |
-                    <a href="/terms/">Terms of Service</a> |
-                    <a href="#" id="footer-cookie-settings">Cookie Settings</a>
+                    <a href="{% url 'privacy' %}">Privacy Policy</a> |
+                    <a href="{% url 'terms' %}">Terms of Service</a> |
+                    <a href="#" id="footer-cookie-settings">Cookie Settings</a> |
+                    <a href="{% url 'apply_to_join' %}" class="font-semibold">Apply to Join</a>
                 {% endfor %}
             </span>
         </div>

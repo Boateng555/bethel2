@@ -32,7 +32,7 @@ from core.sitemaps import (
     ChurchMinistrySitemap,
     NewsSitemap,
 )
-from core.views import church_detail_by_location
+from core.views import church_detail_by_location, custom_error_500, custom_error_404, custom_error_403, custom_error_400
 
 # Sitemaps for SEO (churches/events/ministries/news included; new churches appear automatically)
 sitemaps = {
@@ -77,11 +77,15 @@ urlpatterns = [
 ]
 
 # Serve media files in both development and production
+import os
+_media_root = settings.MEDIA_ROOT
+urlpatterns += static(settings.MEDIA_URL, document_root=_media_root)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    print("Serving local media files for development")
-else:
-    # In production, also serve media files through Django
-    # This is a fallback if nginx is not configured properly
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    print("Serving media files in production (fallback)")
+    print("Media: serving from MEDIA_ROOT =", _media_root)
+    print("Media: exists?", os.path.exists(_media_root))
+
+# Custom error handlers so footer (copyright/links) comes from admin and updates everywhere
+handler500 = custom_error_500
+handler404 = custom_error_404
+handler403 = custom_error_403
+handler400 = custom_error_400
