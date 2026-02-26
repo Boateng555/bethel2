@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 
 from core.sitemaps import (
@@ -68,10 +69,31 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
+def sitemap_with_canonical_domain(request, **kwargs):
+    """Serve sitemap using SITE_DOMAIN as the domain so URLs show your real domain, not example.com."""
+    site_domain = getattr(settings, 'SITE_DOMAIN', '').strip()
+    if site_domain:
+        # Django sitemap uses get_current_site(request).domain; patch it so we use SITE_DOMAIN
+        from types import SimpleNamespace
+        _real_get_current_site = get_current_site
+        _fake_site = SimpleNamespace(domain=site_domain, name=site_domain.split('.')[0] or 'Site')
+
+        def _patched_get_current_site(req):
+            return _fake_site
+
+        import django.contrib.sites.shortcuts as shortcuts_module
+        shortcuts_module.get_current_site = _patched_get_current_site
+        try:
+            return sitemap(request, **kwargs)
+        finally:
+            shortcuts_module.get_current_site = _real_get_current_site
+    return sitemap(request, **kwargs)
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('sitemap.xml', sitemap_with_canonical_domain, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     # Location-based church URL (e.g. /churches/germany/hamburg/) – before core.urls so it matches
     path('churches/<str:country_slug>/<str:city_slug>/', church_detail_by_location, name='church_detail_by_location'),
     path('', include('core.urls')),
