@@ -464,6 +464,14 @@ def home(request):
         all_ministries = []
         recent_testimonies = []
     
+    # SEO: og:image from hero or first hero media
+    og_image = None
+    if hero:
+        first_media = next((m for m in hero.hero_media.all().order_by('order', 'id') if m.image), None)
+        if first_media:
+            og_image = request.build_absolute_uri(first_media.get_image_url())
+        elif getattr(hero, 'background_image', None):
+            og_image = request.build_absolute_uri(hero.get_background_image_url())
     context = {
         'hero': hero,
         'hero_rotation_enabled': hero_rotation_enabled,
@@ -480,6 +488,9 @@ def home(request):
         'nearest_church': nearest_church,
         'is_global_site': go_global,  # Only True if user explicitly requested global site
         'recent_testimonies': recent_testimonies,
+        'og_title': None,  # template uses global_settings.site_name
+        'og_description': None,  # template uses meta_description from context processor
+        'og_image': og_image,
     }
     return render(request, 'core/home.html', context)
 
@@ -494,6 +505,8 @@ def events(request):
         'featured_events': featured_events,
         'all_ministries': all_ministries,
         'past_highlights': past_highlights,
+        'meta_description': 'Upcoming events at Bethel Prayer Ministry International. Find church events, conferences, and gatherings near you.',
+        'og_title': 'Events – Bethel Prayer Ministry International',
     }
     return render(request, 'core/events.html', context)
 
@@ -561,6 +574,17 @@ def event_detail(request, event_id):
         img.save(buffer, format="PNG")
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
+    # SEO for event detail
+    meta_desc = (event.description or event.title or '')[:160]
+    if not meta_desc:
+        meta_desc = f"{event.title} at {event.church.name if event.church else 'Bethel'}. Join us."
+    og_image = None
+    if event.hero_media.exists():
+        first_img = next((m for m in event.hero_media.all().order_by('order', 'id') if getattr(m, 'image', None)), None)
+        if first_img:
+            og_image = request.build_absolute_uri(first_img.get_image_url())
+    if not og_image and getattr(event, 'banner_image', None):
+        og_image = request.build_absolute_uri(event.banner_image.url)
     context = {
         'event': event,
         'all_events': all_events,
@@ -570,6 +594,10 @@ def event_detail(request, event_id):
         'past_highlights': past_highlights,
         'registration_count': registration_count,
         'qr_code_base64': qr_code_base64,
+        'meta_description': meta_desc[:160],
+        'og_title': f"{event.title} – Bethel Events",
+        'og_description': meta_desc[:160],
+        'og_image': og_image,
     }
     
     # Use big event template if marked as big event
@@ -596,6 +624,8 @@ def ministries(request):
     context = {
         'all_ministries': all_ministries,
         'all_events': all_events,
+        'meta_description': 'Explore ministries at Bethel Prayer Ministry International. Get involved in worship, youth, outreach, and more.',
+        'og_title': 'Ministries – Bethel Prayer Ministry International',
     }
     return render(request, 'core/ministries.html', context)
 
@@ -605,13 +635,22 @@ def ministry_detail(request, ministry_id):
     all_events = Event.objects.filter(is_public=True)  # For navigation dropdown
     join_success = False
     if request.method == 'POST':
-        # You can add form validation and saving logic here
         join_success = True
+    meta_desc = (ministry.description or ministry.name or '')[:160]
+    if not meta_desc:
+        meta_desc = f"{ministry.name} – Bethel Prayer Ministry International. Get involved."
+    og_image = None
+    if getattr(ministry, 'image', None) and ministry.image:
+        og_image = request.build_absolute_uri(ministry.image.url)
     context = {
         'ministry': ministry,
         'all_ministries': all_ministries,
         'all_events': all_events,
         'join_success': join_success,
+        'meta_description': meta_desc[:160],
+        'og_title': f"{ministry.name} – Bethel Ministries",
+        'og_description': meta_desc[:160],
+        'og_image': og_image,
     }
     return render(request, 'core/ministry_detail.html', context)
 
@@ -846,6 +885,8 @@ def sermon(request):
         'keyword': keyword,  # Pass back to template to preserve form values
         'preacher': preacher,
         'date_filter': date_filter,
+        'meta_description': 'Watch and listen to sermons from Bethel Prayer Ministry International. Browse by preacher, date, and topic.',
+        'og_title': 'Sermons – Bethel Prayer Ministry International',
     }
     return render(request, 'core/sermon.html', context)
 
@@ -3842,12 +3883,24 @@ def news_detail(request, news_id):
         is_public=True
     ).exclude(id=news.id).order_by('-date')[:3]
     
+    # SEO
+    meta_desc = (news.excerpt or news.content or news.title or '')[:160]
+    if not meta_desc:
+        meta_desc = f"{news.title} – {news.church.name}. Bethel Prayer Ministry International."
+    og_image = None
+    if getattr(news, 'image', None) and news.image:
+        og_image = request.build_absolute_uri(news.get_image_url() if hasattr(news, 'get_image_url') else news.image.url)
+    
     context = {
         'news': news,
         'all_events': all_events,
         'all_ministries': all_ministries,
         'related_news': related_news,
         'church': news.church,
+        'meta_description': meta_desc[:160],
+        'og_title': f"{news.title} – Bethel",
+        'og_description': meta_desc[:160],
+        'og_image': og_image,
     }
     
     return render(request, 'core/news_detail.html', context)

@@ -2,6 +2,10 @@
 
 {% block title %}{{ news.title }} - {{ news.church.name }}{% endblock %}
 
+{% block json_ld_extra %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"{{ news.title|escapejs }}","datePublished":"{{ news.date|date:'c' }}","author":{"@type":"Organization","name":"{{ news.church.name|escapejs }}"},"publisher":{"@type":"Organization","name":"{{ news.church.name|escapejs }}"}{% if news.image %},"image":"{{ request.scheme }}://{{ request.get_host }}{{ news.get_image_url }}"{% endif %}}</script>
+{% endblock %}
+
 {% block content %}
 <!-- Header -->
 <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] text-white py-16">

@@ -4,6 +4,10 @@
 
 {% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'church_detail' church.id %}">{% endblock %}
 
+{% block json_ld_extra %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Place","name":"{{ church.name|escapejs }}","address":{"@type":"PostalAddress","streetAddress":"{{ church.address|escapejs }}","addressLocality":"{{ church.city|escapejs }}","addressRegion":"{{ church.state_province|escapejs }}","addressCountry":"{{ church.country|escapejs }}","postalCode":"{{ church.postal_code|escapejs }}"},"url":"{{ request.scheme }}://{{ request.get_host }}{% url 'church_detail' church.id %}","telephone":"{{ church.phone|default:''|escapejs }}"{% if church.logo %},"image":"{{ request.scheme }}://{{ request.get_host }}{{ church.get_logo_url }}"{% endif %}}</script>
+{% endblock %}
+
 {% block content %}
 <!-- Full-width banner/image (picture full) -->
 <div class="w-full -mx-0 mb-6" style="margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw;">

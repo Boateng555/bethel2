@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ event.title }} - Bethel Prayer Ministry International</title>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Event","name":"{{ event.title|escapejs }}","description":"{{ event.description|default:event.title|truncatechars:300|escapejs }}","startDate":"{{ event.start_date|date:'c' }}","endDate":"{{ event.end_date|date:'c' }}"{% if event.location %},"location":{"@type":"Place","name":"{{ event.location|escapejs }}"{% if event.address %},"address":"{{ event.address|escapejs }}"{% endif %}}{% endif %}{% if event.church %},"organizer":{"@type":"Organization","name":"{{ event.church.name|escapejs }}"}{% endif %}{% if og_image %},"image":"{{ og_image }}"{% endif %}}</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {

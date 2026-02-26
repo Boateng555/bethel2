@@ -61,6 +61,7 @@ def robots_txt(request):
         "Disallow: /global-admin/",
         "Disallow: /accounts/",
         "Disallow: /api/",
+        "Disallow: /newsletter-signup/",
         "",
         f"Sitemap: {sitemap_url}",
     ]

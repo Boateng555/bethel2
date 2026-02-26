@@ -6,15 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}{% endblock %}</title>
     {% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
-    {% block meta_description %}{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}{% endblock %}
+    {% block meta_description %}<meta name="description" content="{% if meta_description %}{{ meta_description|truncatechars:160 }}{% else %}{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:160 }}{% else %}Bethel Prayer Ministry International – Find a church near you, events, ministries, sermons, and news. Join us for worship and community.{% endif %}{% endif %}">{% endblock %}
     {% block meta_robots %}{% if meta_robots %}<meta name="robots" content="{{ meta_robots }}">{% endif %}{% endblock %}
     {% block og_tags %}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}">
-    {% if og_title %}<meta property="og:title" content="{{ og_title }}">{% endif %}
-    {% if og_description %}<meta property="og:description" content="{{ og_description }}">{% endif %}
-    {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
+    <meta property="og:title" content="{% if og_title %}{{ og_title }}{% else %}{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}{% endif %}">
+    <meta property="og:description" content="{% if og_description %}{{ og_description|truncatechars:160 }}{% else %}{% if meta_description %}{{ meta_description|truncatechars:160 }}{% else %}{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:160 }}{% else %}Bethel Prayer Ministry International – Find a church near you, events, ministries, sermons, and news.{% endif %}{% endif %}{% endif %}">
+    {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% elif global_nav_logo_url %}<meta property="og:image" content="{{ global_nav_logo_url }}">{% endif %}
     <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:locale" content="en_US">
+    {% endblock %}
+    {% block twitter_cards %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% if og_title %}{{ og_title }}{% else %}{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}{% endif %}">
+    <meta name="twitter:description" content="{% if og_description %}{{ og_description|truncatechars:160 }}{% else %}{% if meta_description %}{{ meta_description|truncatechars:160 }}{% else %}{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:160 }}{% else %}Bethel Prayer Ministry International – Find a church near you, events, ministries, sermons, and news.{% endif %}{% endif %}{% endif %}">
+    {% if og_image %}<meta name="twitter:image" content="{{ og_image }}">{% elif global_nav_logo_url %}<meta name="twitter:image" content="{{ global_nav_logo_url }}">{% endif %}
+    {% endblock %}
+    {% block json_ld %}
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"{% if global_settings and global_settings.site_name %}{{ global_settings.site_name|escapejs }}{% else %}Bethel Prayer Ministry International{% endif %}","url":"{{ request.scheme }}://{{ request.get_host }}/","description":"{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:200|escapejs }}{% else %}Find a Bethel church near you, events, ministries, sermons, and news. Join us for worship and community.{% endif %}"}</script>
+    {% block json_ld_extra %}{% endblock %}
     {% endblock %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
