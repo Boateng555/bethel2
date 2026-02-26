@@ -25,6 +25,24 @@ class AllowProductionHostMiddleware:
         return self.get_response(request)
 
 
+class CanonicalHostSitemapMiddleware:
+    """
+    For /sitemap.xml and /robots.txt, force request host to SITE_DOMAIN so that
+    generated URLs use your canonical domain (e.g. bethelprayerministryinternational.com).
+    Fixes Google Search Console "URL not allowed for a Sitemap at this location" when
+    the app is behind a proxy (e.g. Railway) that sends a different Host.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        path = (request.path or '').rstrip('/')
+        site_domain = getattr(django_settings, 'SITE_DOMAIN', '').strip()
+        if site_domain and path in ('/sitemap.xml', '/robots.txt'):
+            request.META['HTTP_HOST'] = site_domain
+        return self.get_response(request)
+
+
 class RedirectLocalAdminToDashboardMiddleware:
     """
     Church staff should not see the Django admin (database) interface. When they go to /admin/:

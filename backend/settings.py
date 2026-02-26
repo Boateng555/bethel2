@@ -115,6 +115,7 @@ INSTALLED_APPS = [
 # Middleware - Optimized for production
 MIDDLEWARE = [
     'core.middleware.AllowProductionHostMiddleware',  # Allow production host before Django's host check
+    'core.middleware.CanonicalHostSitemapMiddleware',  # Sitemap/robots use SITE_DOMAIN for Google Search Console
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -200,6 +201,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 SITE_ID = 1
 # Set SITE_DOMAIN in .env to your production domain (e.g. www.bethel.org) for sitemap/SEO
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN', '').strip()
+# Optional: from Google Search Console → Add property → Verify → HTML tag (content="...")
+GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '').strip() or None
 
 # Session settings - Extended for better user experience
 if USE_PROD_DB:

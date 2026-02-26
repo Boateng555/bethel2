@@ -37,7 +37,7 @@ class StaticViewSitemap(Sitemap):
             ('watch', 0.7, 'weekly'),
             ('visit', 0.7, 'monthly'),
             ('sermon', 0.7, 'weekly'),
-            ('newsletter-signup', 0.5, 'monthly'),
+            # newsletter-signup omitted: disallowed in robots.txt
         ]
 
     def location(self, item):

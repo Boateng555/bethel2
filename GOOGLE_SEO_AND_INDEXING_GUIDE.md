@@ -4,6 +4,29 @@ This guide walks you through getting Google to **fully recognize and index** all
 
 ---
 
+## Quick: How do I make my website appear on Google and get my name recognized?
+
+1. **Put your site live**  
+   Deploy so it’s reachable at your domain (e.g. `https://www.bethelprayerministryinternational.com`).
+
+2. **Tell Google the site exists**  
+   - Go to [Google Search Console](https://search.google.com/search-console) → **Add property** → enter your full site URL.  
+   - **Verify** ownership (HTML meta tag, DNS, or file upload).  
+   - In **Sitemaps**, submit: `sitemap.xml`.  
+   Google will then start crawling and indexing your pages.
+
+3. **Use the name you want Google to show**  
+   - In **Global Settings** in your admin, set **Site name** to the exact name you want (e.g. “Bethel Prayer Ministry International”).  
+   That name is already in your page titles, meta tags, and schema, so Google will associate it with your site.
+
+4. **Speed up indexing (optional)**  
+   In Search Console → **URL Inspection** → enter your homepage URL → **Request indexing**.  
+   Do the same for a few key pages (e.g. `/global/`, `/churches/`).
+
+**Time:** Google usually starts showing new sites within a few days to a few weeks. Name recognition improves as more pages are indexed and linked.
+
+---
+
 ## 1. Submit your site to Google Search Console
 
 1. **Go to Google Search Console**  
@@ -15,12 +38,12 @@ This guide walks you through getting Google to **fully recognize and index** all
    - Use the **exact** URL people use (with or without `www`) and stick to that everywhere (canonical, sitemap, etc.).
 
 3. **Verify ownership** (pick one):
-   - **HTML file upload:** Download the file, put it in your site’s root (e.g. so `https://www.yourbethelsite.org/xxxxx.html` is reachable), then click “Verify”.
-   - **HTML meta tag:** Add the tag to your main template’s `<head>`. In `templates/core/base.html` you can add:
-     ```html
-     <meta name="google-site-verification" content="YOUR_CODE_HERE">
+   - **HTML meta tag (easiest):** In Google Search Console, choose “HTML tag” and copy the **content** value (the long string inside `content="..."`). Add to your **production** `.env`:
+     ```env
+     GOOGLE_SITE_VERIFICATION=that_long_string_here
      ```
-     Then click “Verify” in Search Console.
+     Restart the app. The site already adds `<meta name="google-site-verification" content="...">` on every page when this is set. Then click “Verify” in Search Console.
+   - **HTML file upload:** Download the file, put it in your site’s root (e.g. so `https://www.yourbethelsite.org/xxxxx.html` is reachable), then click “Verify”.
    - **DNS (recommended if you can):** Add the TXT record Google gives you at your domain DNS. Then verify.
 
 4. **After verification**  
