@@ -552,7 +552,13 @@
                 <div>
                     <div class="text-[#1e3a8a] text-3xl mb-2">📍</div>
                     <h3 class="text-lg font-semibold mb-2">Location</h3>
-                    <p class="text-gray-600">{{ church.address|default:"Contact us for directions" }}</p>
+                    <p class="text-gray-600">
+                        {% if church.address %}
+                            {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-[#1e3a8a] hover:underline" %}
+                        {% else %}
+                            Contact us for directions
+                        {% endif %}
+                    </p>
                 </div>
                 <div>
                     <div class="text-[#1e3a8a] text-3xl mb-2">⏰</div>

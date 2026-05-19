@@ -202,7 +202,7 @@
                             <span class="distance-text">Getting distance...</span>
                         </span>
                         {% else %}
-                        <span class="text-sm">{{ church.address }}</span>
+                        {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-sm text-[#1e3a8a] hover:underline" %}
                         {% endif %}
                     </div>
                     

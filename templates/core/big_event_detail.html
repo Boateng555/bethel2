@@ -368,6 +368,7 @@
                 {% endif %}
             </div>
         </div>
+        {% include 'core/_scroll_down_indicator.html' %}
     </section>
 
     <!-- Celebration Overlay -->
@@ -757,7 +758,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Location</h3>
-                    <p class="text-gray-400">{{ event.church.get_full_address }}</p>
+                    <p class="text-gray-400">{% include 'core/_maps_link.html' with maps_url=event.church.maps_url text=event.church.get_full_address link_class="text-gray-300 hover:text-white hover:underline" %}</p>
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-gray-800 text-center">

@@ -96,6 +96,11 @@ class Church(models.Model):
         if self.postal_code:
             parts.append(self.postal_code)
         return ", ".join(parts)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.get_full_address())
     
     def get_logo_url(self):
         """Returns the correct URL for the logo field"""

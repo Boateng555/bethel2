@@ -243,7 +243,7 @@
                     <svg class="w-5 h-5 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                     </svg>
-                    <span class="text-gray-600">{{ church.get_full_address }}</span>
+                    {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.get_full_address link_class="text-[#1e3a8a] hover:underline" %}
                 </div>
             </div>
             

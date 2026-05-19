@@ -160,7 +160,7 @@
                         </svg>
                         <div>
                             <p class="text-sm text-gray-900 font-medium">Address</p>
-                            <p class="text-sm text-gray-600">{{ church.get_full_address }}</p>
+                            <p class="text-sm text-gray-600">{% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.get_full_address link_class="text-[#1e3a8a] hover:underline" %}</p>
                         </div>
                     </div>
                     
