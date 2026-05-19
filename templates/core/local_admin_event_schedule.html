@@ -25,7 +25,7 @@
                             <div class="font-medium text-gray-900 mt-1">{{ item.title }}</div>
                             {% if item.description %}<p class="text-sm text-gray-600 mt-1">{{ item.description }}</p>{% endif %}
                             {% if item.speaker %}<p class="text-sm text-gray-500 mt-1">Speaker: {{ item.speaker.name }}</p>{% endif %}
-                            {% if item.location %}<p class="text-sm text-gray-500">Location: {{ item.location }}</p>{% endif %}
+                            {% if item.location %}<p class="text-sm text-gray-500">Location: {% include 'core/_maps_link.html' with maps_url=item.maps_url text=item.location link_class="text-[#1e3a8a] hover:underline" %}</p>{% endif %}
                         </div>
                         <div class="flex items-center gap-2 flex-shrink-0">
                             <a href="{% url 'local_admin_event_schedule_edit' event.id item.id %}" class="text-[#1e3a8a] hover:underline text-sm">Edit</a>

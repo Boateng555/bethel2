@@ -1,0 +1,5 @@
+{% if maps_url and text %}
+<a href="{{ maps_url }}" target="_blank" rel="noopener noreferrer" class="{% if link_class %}{{ link_class }}{% else %}text-[#1e3a8a] hover:text-[#1e40a0] hover:underline font-medium{% endif %}">{{ text|linebreaksbr }}</a>
+{% elif text %}
+{{ text|linebreaksbr }}
+{% endif %}

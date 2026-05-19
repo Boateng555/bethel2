@@ -1,0 +1,12 @@
+{% if event.location or event.address %}
+<div class="{% if wrapper_class %}{{ wrapper_class }}{% else %}text-gray-700{% endif %}">
+    {% if event.location and not event.address %}
+        {% include 'core/_event_maps_link.html' with event=event text=event.location %}
+    {% elif event.location and event.address %}
+        <span>{{ event.location }}</span><br>
+        {% include 'core/_event_maps_link.html' with event=event text=event.address %}
+    {% elif event.address %}
+        {% include 'core/_event_maps_link.html' with event=event text=event.address %}
+    {% endif %}
+</div>
+{% endif %}

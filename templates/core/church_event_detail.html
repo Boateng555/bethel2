@@ -164,10 +164,13 @@
                     <p class="text-xl leading-relaxed">{{ event.description }}</p>
                 </div>
                 
-                {% if event.address %}
+                {% if event.address or event.location %}
                 <div class="mt-8 p-6 bg-gray-50 rounded-lg">
                     <h3 class="text-xl font-semibold text-deep-blue mb-4">Location Details</h3>
-                    <p class="text-gray-700">{{ event.address }}</p>
+                    {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-700" %}
+                    {% if event.maps_url %}
+                    <p class="mt-2 text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>Tap the address to open in Google Maps</p>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -189,10 +192,10 @@
                             <p class="text-gray-600">{{ event.start_date|time:"g:i A" }} - {{ event.end_date|time:"g:i A" }}</p>
                         </div>
                         
-                        {% if event.location %}
+                        {% if event.location or event.address %}
                         <div>
                             <h4 class="font-semibold text-gray-900 mb-2">Location</h4>
-                            <p class="text-gray-600">{{ event.location }}</p>
+                            {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-600" %}
                         </div>
                         {% endif %}
                         

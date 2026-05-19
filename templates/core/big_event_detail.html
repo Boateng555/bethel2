@@ -395,10 +395,13 @@
                     <div class="prose prose-lg max-w-none text-gray-700">
                         <p class="text-xl leading-relaxed">{{ event.description }}</p>
                     </div>
-                    {% if event.address %}
+                    {% if event.address or event.location %}
                     <div class="mt-8 p-6 bg-gray-50 rounded-lg">
                         <h3 class="text-xl font-semibold text-deep-blue mb-4">Location Details</h3>
-                        <p class="text-gray-700">{{ event.address }}</p>
+                        {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-700" %}
+                        {% if event.maps_url %}
+                        <p class="mt-2 text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>Tap the address to open in Google Maps</p>
+                        {% endif %}
                     </div>
                     {% endif %}
 
@@ -419,11 +422,11 @@
                                 <p class="text-gray-600">{{ event.start_date|date:"F j, Y" }}</p>
                                 <p class="text-gray-600">{{ event.start_date|time:"g:i A" }} - {{ event.end_date|time:"g:i A" }}</p>
             </div>
-                            {% if event.location %}
+                            {% if event.location or event.address %}
                             <div>
                                 <h4 class="font-semibold text-gray-900 mb-2">Location</h4>
-                                <p class="text-gray-600">{{ event.location }}</p>
-                                </div>
+                                {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-600" %}
+                            </div>
                             {% endif %}
                             <div>
                                 <h4 class="font-semibold text-gray-900 mb-2">Event Type</h4>
@@ -527,7 +530,7 @@
             <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
                 <i class="fas fa-map-marker-alt text-[#1e3a8a] text-3xl mb-2"></i>
                 <div class="text-lg font-semibold">Location</div>
-                <div class="text-gray-700">{{ event.location }}<br>{{ event.address }}</div>
+                {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-700 text-center" %}
             </div>
         </div>
         {% if event.theme %}
@@ -593,7 +596,10 @@
                         </div>
                         {% endif %}
                         {% if item.location %}
-                        <div class="mt-2 md:mt-0 md:ml-6 text-sm text-gray-500"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</div>
+                        <div class="mt-2 md:mt-0 md:ml-6 text-sm text-gray-500">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {% include 'core/_maps_link.html' with maps_url=item.maps_url text=item.location link_class="text-[#1e3a8a] hover:underline" %}
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}

@@ -585,6 +585,27 @@ class Event(models.Model):
             return first_media.get_image_url()
         return None
 
+    def maps_query(self):
+        """Address string used for Google Maps search."""
+        if self.address and self.address.strip():
+            query = self.address.strip()
+            if (
+                self.location
+                and self.location.strip()
+                and self.location.strip().lower() not in query.lower()
+            ):
+                return f"{self.location.strip()}, {query}"
+            return query
+        if self.location and self.location.strip():
+            return self.location.strip()
+        return ''
+
+    @property
+    def maps_url(self):
+        """Google Maps link for the event venue (empty if no location/address)."""
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.maps_query())
+
 class Ministry(models.Model):
     """Church ministries with multi-tenant support"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -1473,6 +1494,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -2254,6 +2280,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -3035,6 +3066,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -3816,6 +3852,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -4597,6 +4638,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -5378,6 +5424,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -6159,6 +6210,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
@@ -6940,6 +6996,11 @@ class EventScheduleItem(models.Model):
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
     location = models.CharField(max_length=200, blank=True)
+
+    @property
+    def maps_url(self):
+        from .maps_utils import maps_url_for_address
+        return maps_url_for_address(self.location)
     
     def __str__(self):
         return f"{self.day}: {self.title} ({self.start_time}-{self.end_time})"
