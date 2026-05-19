@@ -1,3 +1,4 @@
+from django.conf import settings as django_settings
 from .models import GlobalSettings
 
 # Default SEO description used when a page doesn't set meta_description
@@ -47,10 +48,12 @@ def global_settings(request):
         footer_links = []
         meta_desc = DEFAULT_META_DESCRIPTION
         global_nav_logo_url = ""
+    google_site_verification = getattr(django_settings, "GOOGLE_SITE_VERIFICATION", None) or ""
     return {
         "global_settings": gs,
         "meta_description": meta_desc,
         "footer_copyright": footer_copyright,
         "footer_links": footer_links,
         "global_nav_logo_url": global_nav_logo_url,
+        "google_site_verification": google_site_verification,
     } 

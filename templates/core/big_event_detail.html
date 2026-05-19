@@ -808,40 +808,31 @@
             const overlay = document.getElementById('celebration-overlay');
             if (!overlay) return;
             
-            // Show celebration overlay
+            // Show celebration overlay briefly (~1 second)
             overlay.style.display = 'flex';
-            
-            // Start confetti animation
             startConfetti();
             
-            // Auto-hide after 2 minutes (configurable)
-            const celebrationDuration = 2 * 60 * 1000; // 2 minutes in milliseconds
+            const celebrationDuration = 1000; // 1 second
             setTimeout(() => {
                 overlay.style.display = 'none';
                 stopConfetti();
             }, celebrationDuration);
         }
         
-        // Confetti Animation
+        // Confetti Animation — quick burst only (matches short overlay)
         function startConfetti() {
             const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
             
             function fireConfetti() {
+                if (typeof confetti !== 'function') return;
                 confetti({
-                    particleCount: 100,
+                    particleCount: 80,
                     spread: 70,
                     origin: { y: 0.6 },
                     colors: colors
                 });
             }
             
-            // Fire confetti every 500ms for 2 minutes
-            const confettiInterval = setInterval(fireConfetti, 500);
-            
-            // Store interval ID to stop later
-            window.confettiInterval = confettiInterval;
-            
-            // Fire initial burst
             fireConfetti();
         }
         

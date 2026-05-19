@@ -267,11 +267,39 @@ class LocalAdminEventHeroMediaForm(forms.ModelForm):
         model = EventHeroMedia
         fields = ('image', 'video', 'order')
         widgets = {
-            'image': forms.FileInput(attrs={'class': INPUT_CLASS, 'accept': 'image/*'}),
-            'video': forms.FileInput(attrs={'class': INPUT_CLASS, 'accept': 'video/*'}),
+            'image': forms.FileInput(attrs={
+                'class': INPUT_CLASS,
+                'accept': 'image/*',
+                'data-compress-image': 'true',
+            }),
+            'video': forms.FileInput(attrs={
+                'class': INPUT_CLASS,
+                'accept': 'video/*',
+                'data-compress-video': 'true',
+            }),
             'order': forms.NumberInput(attrs={'class': INPUT_CLASS}),
         }
-        help_texts = {'order': 'Display order (0 = first).'}
+        help_texts = {
+            'order': 'Display order (0 = first).',
+        }
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image:
+            from .media_utils import compress_image_upload
+            compressed = compress_image_upload(image)
+            if compressed:
+                return compressed
+        return image
+
+    def clean_video(self):
+        video = self.cleaned_data.get('video')
+        if video:
+            from .media_utils import compress_video_upload
+            compressed = compress_video_upload(video)
+            if compressed:
+                return compressed
+        return video
 
     def clean(self):
         cleaned = super().clean()

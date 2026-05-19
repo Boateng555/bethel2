@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
     <title>{% if global_settings and global_settings.site_name %}{{ global_settings.site_name }}{% else %}Bethel Prayer Ministry International{% endif %}</title>
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
     <meta name="description" content="{% if meta_description %}{{ meta_description|truncatechars:160 }}{% else %}{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:160 }}{% else %}Bethel Prayer Ministry International – Find a church near you, events, ministries, sermons, and news. Join us for worship and community.{% endif %}{% endif %}">

@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load static %}
 {% block title %}Hero images & videos – {{ event.title }} – {{ church.name }}{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
@@ -7,7 +8,11 @@
             <h1 class="text-2xl font-bold text-gray-900">Hero images & videos</h1>
             <a href="{{ list_url }}" class="text-[#1e3a8a] hover:underline">← Back to Edit Event</a>
         </div>
-        <p class="text-gray-600 mb-6">Event: <strong>{{ event.title }}</strong>. These appear in the banner carousel at the top of the event page.</p>
+        <p class="text-gray-600 mb-4">Event: <strong>{{ event.title }}</strong>. These appear in the banner carousel at the top of the event page.</p>
+        <p class="text-sm text-blue-800 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-6">
+            Photos and videos are <strong>automatically compressed</strong> before upload (large phone/WhatsApp files are fine).
+            Images are optimized to about 400&nbsp;KB; videos are compressed on the server after upload.
+        </p>
 
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Add image or video</h2>
@@ -55,4 +60,5 @@
         </div>
     </div>
 </div>
+<script src="{% static 'js/media-upload-compress.js' %}"></script>
 {% endblock %}
