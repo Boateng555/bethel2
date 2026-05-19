@@ -41,6 +41,7 @@ import base64
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.core.mail import send_mail
 import math
+from .event_queries import upcoming_events_cutoff
 
 
 import os
@@ -406,7 +407,7 @@ def home(request):
     try:
         upcoming_events = Event.objects.filter(
             is_public=True,
-            start_date__gte=timezone.now()
+            end_date__gte=upcoming_events_cutoff(),
         ).prefetch_related('hero_media').order_by('start_date')[:6]
     except Exception as e:
         print(f"DEBUG: Error getting upcoming events: {e}")
@@ -1222,12 +1223,12 @@ def church_detail_by_location(request, country_slug, city_slug):
     events = Event.objects.filter(
         church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     ).prefetch_related('hero_media').order_by('start_date')[:3]
     all_events = Event.objects.filter(
         church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     )
     ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
@@ -1266,11 +1267,11 @@ def church_detail(request, church_id):
     """Display detailed information about a specific church"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
     
-    # Get church-specific data - only show future events
+    # Events still visible for one week after they end
     events = Event.objects.filter(
-        church=church, 
-        is_public=True, 
-        start_date__gte=timezone.now()
+        church=church,
+        is_public=True,
+        end_date__gte=upcoming_events_cutoff(),
     ).order_by('start_date')[:5]
     ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
     news = News.objects.filter(church=church, is_public=True).order_by('-date')[:3]
@@ -1336,16 +1337,16 @@ def church_home(request, church_id):
     heroes = list(Hero.objects.filter(church=church, is_active=True).prefetch_related('hero_media').order_by('order', '-created_at'))
     hero = heroes[0] if heroes else None  # first hero for backward compatibility in template
     
-    # Show all future public events (not just featured)
+    # Show public events until one week after they end
     events = Event.objects.filter(
-        church=church, 
+        church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     ).prefetch_related('hero_media').order_by('start_date')[:3]
     all_events = Event.objects.filter(
-        church=church, 
+        church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     )
     ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
@@ -2194,7 +2195,7 @@ def local_admin_events(request):
         'church_admin': church_admin,
         'past_highlights': past_highlights,
         'public_events_count': events.filter(is_public=True).count(),
-        'upcoming_events_count': events.filter(start_date__gte=now).count(),
+        'upcoming_events_count': events.filter(end_date__gte=upcoming_events_cutoff()).count(),
         'featured_events_count': events.filter(is_featured=True).count(),
     }
     

@@ -23,6 +23,7 @@ import qrcode
 import io
 import base64
 from django.core.mail import send_mail
+from .event_queries import upcoming_events_cutoff
 import math
 
 
@@ -699,11 +700,10 @@ def church_detail(request, church_id):
     """Display detailed information about a specific church"""
     church = get_object_or_404(Church, id=church_id, is_approved=True, is_active=True)
     
-    # Get church-specific data - only show future events
     events = Event.objects.filter(
-        church=church, 
-        is_public=True, 
-        start_date__gte=timezone.now()
+        church=church,
+        is_public=True,
+        end_date__gte=upcoming_events_cutoff(),
     ).order_by('start_date')[:5]
     ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
     news = News.objects.filter(church=church, is_public=True).order_by('-date')[:3]
@@ -751,16 +751,15 @@ def church_home(request, church_id):
     # Get church-specific hero (if any) with prefetched hero media
     hero = Hero.objects.filter(church=church, is_active=True).prefetch_related('hero_media').order_by('order', '-created_at').first()
     
-    # Show all future public events (not just featured)
     events = Event.objects.filter(
-        church=church, 
+        church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     ).prefetch_related('hero_media').order_by('start_date')[:3]
     all_events = Event.objects.filter(
-        church=church, 
+        church=church,
         is_public=True,
-        start_date__gte=timezone.now()
+        end_date__gte=upcoming_events_cutoff(),
     )
     ministries = Ministry.objects.filter(church=church, is_active=True)[:6]
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
