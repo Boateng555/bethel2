@@ -147,12 +147,32 @@
     width: min(100%, 340px) !important;
   }
   
-  /* Reduce card height on mobile */
+  /* Reduce card height on mobile (sermons/ministries only — news uses compact layout) */
   .auto-scroll-sermons a,
-  .auto-scroll-ministries a,
-  .auto-scroll-news a {
+  .auto-scroll-ministries a {
     min-height: 280px !important;
     max-height: 320px !important;
+  }
+  .auto-scroll-news {
+    align-items: flex-start !important;
+  }
+  .auto-scroll-news > a {
+    min-height: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+  .auto-scroll-news > a img,
+  .auto-scroll-news > a .news-card-media {
+    height: 5.5rem !important;
+    min-height: 5.5rem !important;
+    max-height: 5.5rem !important;
+  }
+  .auto-scroll-news > a .news-card-body {
+    padding: 0.625rem 0.75rem !important;
+  }
+  .auto-scroll-news > a .news-card-body p {
+    margin-bottom: 0.375rem !important;
+    -webkit-line-clamp: 2;
   }
   
   /* Text truncation for mobile */
@@ -309,8 +329,7 @@
   }
   
   .auto-scroll-sermons a,
-  .auto-scroll-ministries a,
-  .auto-scroll-news a {
+  .auto-scroll-ministries a {
     min-height: 300px !important;
   }
 }
@@ -326,6 +345,9 @@
     overflow-x: auto !important;
     gap: 1rem !important;
     padding-bottom: 1rem !important;
+  }
+  .auto-scroll-news {
+    align-items: flex-start !important;
   }
   .auto-scroll-sermons > div,
   .auto-scroll-ministries > div,
@@ -359,6 +381,14 @@
   .card-carousel-single > a {
     max-width: 380px !important;
     width: 100% !important;
+  }
+}
+/* Two news cards: compact side-by-side on mobile */
+@media (max-width: 767px) {
+  .card-carousel-duo.auto-scroll-news > a {
+    min-width: 42vw !important;
+    max-width: 46vw !important;
+    width: 44vw !important;
   }
 }
 
@@ -575,6 +605,7 @@
                     <a href="/shop" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Shop</a>
                 {% endif %}
                 <a href="{% url 'church_donation' church.id %}?global=true" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Give</a>
+                <button type="button" data-push-settings-open class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2"><i class="fas fa-bell mr-2"></i>Notification settings</button>
                 <a href="/churches/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Find Other Churches</a>
                 <a href="{% url 'home' %}?global=1" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Global Site</a>
                 <a href="/local-admin/" class="block w-full text-center py-3 hover:bg-white hover:bg-opacity-20 rounded-lg mb-2">Admin</a>
@@ -839,20 +870,20 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if news|length == 1 %} card-carousel-single{% endif %}">
+        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8 items-start{% if news|length == 1 %} card-carousel-single{% elif news|length == 2 %} card-carousel-duo{% endif %}">
             {% for article in news %}
-                <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
+                <a href="{% url 'news_detail' article.id %}" class="news-card-link min-w-[240px] max-w-[260px] md:min-w-0 md:max-w-none bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] shrink-0 md:shrink">
                     {% if article.image %}
-                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="w-full h-32 object-cover">
+                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="news-card-media w-full h-24 md:h-32 object-cover">
                     {% else %}
-                    <div class="h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-                        <i class="fas fa-newspaper text-white text-6xl"></i>
+                    <div class="news-card-media h-24 md:h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                        <i class="fas fa-newspaper text-white text-3xl md:text-6xl"></i>
                     </div>
                     {% endif %}
-                    <div class="p-6 flex flex-col flex-1">
-                        <h3 class="text-xl font-semibold mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ article.content|striptags|truncatewords:15 }}</p>
-                        <span class="text-[#1e3a8a] font-semibold text-sm">{{ article.date|date:"M d, Y" }}</span>
+                    <div class="news-card-body p-4 md:p-6 flex flex-col">
+                        <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
+                        <p class="text-gray-600 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2">{{ article.content|striptags|truncatewords:12 }}</p>
+                        <span class="text-[#1e3a8a] font-semibold text-xs md:text-sm mt-auto">{{ article.date|date:"M d, Y" }}</span>
                     </div>
                 </a>
             {% endfor %}

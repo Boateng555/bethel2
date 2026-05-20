@@ -2,8 +2,13 @@
  * Bethel Web Push — subscribe to church events, news, and sermons on phone.
  */
 (function () {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    return;
+  if (window.__bethelPushLoaded) return;
+  window.__bethelPushLoaded = true;
+
+  var pushSupported = ('serviceWorker' in navigator) && ('PushManager' in window);
+
+  function storageKey(churchId, suffix) {
+    return 'bethel_push_' + suffix + '_' + churchId;
   }
 
   function getCsrfToken() {
@@ -22,6 +27,55 @@
     return output;
   }
 
+  function getBanner(churchId) {
+    return document.querySelector('[data-bethel-push-banner][data-church-id="' + churchId + '"]');
+  }
+
+  function hideBanner(banner) {
+    if (!banner) return;
+    banner.classList.add('hidden');
+    banner.setAttribute('aria-hidden', 'true');
+    banner.setAttribute('hidden', 'hidden');
+    banner.style.display = 'none';
+  }
+
+  function showBanner(banner) {
+    if (!banner) return;
+    banner.classList.remove('hidden');
+    banner.removeAttribute('aria-hidden');
+    banner.removeAttribute('hidden');
+    banner.style.display = '';
+  }
+
+  function isDismissed(churchId) {
+    try {
+      return localStorage.getItem(storageKey(churchId, 'dismissed')) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setDismissed(churchId, dismissed) {
+    try {
+      if (dismissed) {
+        localStorage.setItem(storageKey(churchId, 'dismissed'), '1');
+      } else {
+        localStorage.removeItem(storageKey(churchId, 'dismissed'));
+      }
+    } catch (e) { /* private browsing */ }
+  }
+
+  function setEnabled(churchId, enabled) {
+    try {
+      if (enabled) {
+        localStorage.setItem(storageKey(churchId, 'enabled'), '1');
+        localStorage.removeItem(storageKey(churchId, 'dismissed'));
+      } else {
+        localStorage.removeItem(storageKey(churchId, 'enabled'));
+      }
+    } catch (e) { /* ignore */ }
+  }
+
   function registerServiceWorker() {
     return navigator.serviceWorker.register('/sw.js', { scope: '/' });
   }
@@ -38,6 +92,9 @@
   }
 
   function subscribeUser(churchId) {
+    if (!pushSupported) {
+      return Promise.reject(new Error('Add this site to your Home Screen (iPhone) or use Chrome/Android for notifications.'));
+    }
     return registerServiceWorker()
       .then(function () { return fetchPublicKey(); })
       .then(function (publicKey) {
@@ -71,6 +128,9 @@
   }
 
   function unsubscribeUser() {
+    if (!pushSupported) {
+      return Promise.resolve();
+    }
     return navigator.serviceWorker.ready
       .then(function (reg) { return reg.pushManager.getSubscription(); })
       .then(function (sub) {
@@ -90,62 +150,217 @@
       });
   }
 
-  function initBanner(banner) {
-    var churchId = banner.getAttribute('data-church-id');
-    if (!churchId) return;
+  function hasActiveSubscription() {
+    if (!pushSupported) {
+      return Promise.resolve(false);
+    }
+    return Promise.race([
+      navigator.serviceWorker.ready
+        .then(function (reg) { return reg.pushManager.getSubscription(); })
+        .then(function (sub) { return !!sub; }),
+      new Promise(function (resolve) { setTimeout(function () { resolve(false); }, 2000); }),
+    ]).catch(function () { return false; });
+  }
 
-    var enableBtn = banner.querySelector('[data-push-enable]');
-    var dismissBtn = banner.querySelector('[data-push-dismiss]');
+  function syncSettingsToggle(churchId, on) {
+    var toggle = document.querySelector('[data-push-settings-toggle][data-church-id="' + churchId + '"]');
+    if (toggle) toggle.checked = !!on;
+    var status = document.querySelector('[data-push-settings-status][data-church-id="' + churchId + '"]');
+    if (status) {
+      status.textContent = on
+        ? 'Notifications are on for this church.'
+        : 'Notifications are off.';
+    }
+  }
+
+  function showStatus(churchId, message) {
+    var banner = getBanner(churchId);
+    if (!banner) return;
     var statusEl = banner.querySelector('[data-push-status]');
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.classList.remove('hidden');
+  }
 
-    if (localStorage.getItem('bethel_push_dismissed_' + churchId)) {
-      banner.classList.add('hidden');
+  function dismissBanner(churchId) {
+    setDismissed(churchId, true);
+    hideBanner(getBanner(churchId));
+  }
+
+  function enableBanner(churchId) {
+    var banner = getBanner(churchId);
+    hideBanner(banner);
+    setDismissed(churchId, true);
+
+    var enableBtn = banner && banner.querySelector('[data-push-enable]');
+    if (enableBtn) enableBtn.disabled = true;
+    showStatus(churchId, 'Enabling…');
+
+    return subscribeUser(churchId)
+      .then(function () {
+        setEnabled(churchId, true);
+        syncSettingsToggle(churchId, true);
+        showStatus(churchId, 'Notifications enabled! Open Notification settings to manage.');
+      })
+      .catch(function (err) {
+        if (enableBtn) enableBtn.disabled = false;
+        var msg = err.message || 'Could not enable. Use Notification settings in the menu.';
+        showStatus(churchId, msg);
+        syncSettingsToggle(churchId, false);
+        if (window.alert && !pushSupported) {
+          window.alert(msg);
+        }
+      });
+  }
+
+  function refreshBannerVisibility(churchId) {
+    var banner = getBanner(churchId);
+    if (!banner) return;
+
+    if (isDismissed(churchId)) {
+      hideBanner(banner);
       return;
     }
 
-    registerServiceWorker().catch(function () {});
-
-    navigator.serviceWorker.ready.then(function (reg) {
-      return reg.pushManager.getSubscription();
-    }).then(function (sub) {
-      if (sub) {
-        banner.classList.add('hidden');
+    hasActiveSubscription().then(function (active) {
+      if (isDismissed(churchId)) {
+        hideBanner(banner);
+        return;
       }
-    }).catch(function () {});
+      if (active) {
+        hideBanner(banner);
+        setEnabled(churchId, true);
+      } else {
+        showBanner(banner);
+      }
+    });
+  }
 
-    if (enableBtn) {
-      enableBtn.addEventListener('click', function () {
-        enableBtn.disabled = true;
-        if (statusEl) statusEl.textContent = 'Enabling…';
-        subscribeUser(churchId)
-          .then(function () {
-            if (statusEl) statusEl.textContent = 'Notifications enabled!';
-            banner.classList.add('hidden');
-            localStorage.setItem('bethel_push_enabled_' + churchId, '1');
-          })
-          .catch(function (err) {
-            enableBtn.disabled = false;
-            if (statusEl) {
-              statusEl.textContent = err.message || 'Could not enable. Try again or add site to Home Screen (iPhone).';
-            }
-          });
+  function initBanner(banner) {
+    var churchId = banner.getAttribute('data-church-id');
+    if (!churchId || banner.getAttribute('data-push-init') === '1') return;
+    banner.setAttribute('data-push-init', '1');
+
+    refreshBannerVisibility(churchId);
+
+    if (pushSupported) {
+      registerServiceWorker().catch(function () {});
+    }
+  }
+
+  function initSettingsModal() {
+    var modal = document.getElementById('bethel-push-settings-modal');
+    if (!modal || modal.getAttribute('data-push-init') === '1') return;
+    modal.setAttribute('data-push-init', '1');
+
+    var churchId = modal.getAttribute('data-church-id');
+    if (!churchId) return;
+
+    var openBtns = document.querySelectorAll('[data-push-settings-open]');
+    var closeBtns = modal.querySelectorAll('[data-push-settings-close]');
+    var toggle = modal.querySelector('[data-push-settings-toggle]');
+    var showPromptBtn = modal.querySelector('[data-push-show-prompt]');
+    var statusEl = modal.querySelector('[data-push-settings-status]');
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      modal.style.display = '';
+      document.body.style.overflow = 'hidden';
+      refreshSettingsState();
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function refreshSettingsState() {
+      hasActiveSubscription().then(function (active) {
+        var enabled = active || localStorage.getItem(storageKey(churchId, 'enabled')) === '1';
+        if (toggle) toggle.checked = enabled;
+        if (statusEl) {
+          statusEl.textContent = enabled
+            ? 'You will receive updates about events, sermons, and news.'
+            : 'Turn on to get events, sermons, and news on your phone.';
+        }
       });
     }
 
-    if (dismissBtn) {
-      dismissBtn.addEventListener('click', function () {
-        localStorage.setItem('bethel_push_dismissed_' + churchId, '1');
-        banner.classList.add('hidden');
+    openBtns.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openModal();
+        var mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu) mobileMenu.classList.add('hidden');
+      });
+    });
+
+    closeBtns.forEach(function (btn) {
+      btn.addEventListener('click', closeModal);
+    });
+
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+
+    if (toggle) {
+      toggle.addEventListener('change', function () {
+        if (toggle.checked) {
+          if (statusEl) statusEl.textContent = 'Enabling…';
+          enableBanner(churchId);
+        } else {
+          if (statusEl) statusEl.textContent = 'Turning off…';
+          unsubscribeUser()
+            .then(function () {
+              localStorage.removeItem(storageKey(churchId, 'enabled'));
+              setDismissed(churchId, true);
+              refreshSettingsState();
+              hideBanner(getBanner(churchId));
+            })
+            .catch(function () {
+              toggle.checked = true;
+              if (statusEl) statusEl.textContent = 'Could not turn off. Try again.';
+            });
+        }
+      });
+    }
+
+    if (showPromptBtn) {
+      showPromptBtn.addEventListener('click', function () {
+        setDismissed(churchId, false);
+        refreshBannerVisibility(churchId);
+        closeModal();
       });
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function runInit() {
     document.querySelectorAll('[data-bethel-push-banner]').forEach(initBanner);
-  });
+    initSettingsModal();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runInit);
+  } else {
+    runInit();
+  }
 
   window.BethelPush = {
     subscribe: subscribeUser,
     unsubscribe: unsubscribeUser,
+    dismiss: dismissBanner,
+    enable: enableBanner,
+    showBanner: function (churchId) {
+      setDismissed(churchId, false);
+      refreshBannerVisibility(churchId);
+    },
+    hideBanner: dismissBanner,
+  };
+
+  window.BethelPushUI = {
+    dismiss: dismissBanner,
+    enable: enableBanner,
+    refresh: refreshBannerVisibility,
   };
 })();

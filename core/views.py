@@ -511,6 +511,19 @@ def events(request):
     }
     return render(request, 'core/events.html', context)
 
+def _big_event_hero_context(event):
+    """Hero buttons: Register before start, View Live after start."""
+    now = timezone.now()
+    started = bool(event.start_date and now >= event.start_date)
+    live_watch_url = reverse('church_watch', args=[event.church_id]) + '#live-stream'
+    return {
+        'event_has_started': started,
+        'live_watch_url': live_watch_url,
+        'show_hero_register': bool(event.requires_registration and not started),
+        'show_hero_view_live': started,
+    }
+
+
 def event_detail(request, event_id):
     # Get individual event detail
     event = get_object_or_404(Event.objects.prefetch_related('hero_media'), id=event_id)
@@ -600,6 +613,8 @@ def event_detail(request, event_id):
         'og_description': meta_desc[:160],
         'og_image': og_image,
     }
+    if event.is_big_event:
+        context.update(_big_event_hero_context(event))
     
     # Use big event template if marked as big event
     if event.is_big_event:
@@ -1502,6 +1517,8 @@ def church_event_detail(request, church_id, event_id):
         'user_city': city,
         'nearest_church': nearest_church,
     }
+    if event.is_big_event:
+        context.update(_big_event_hero_context(event))
     
     # Use big event template if marked as big event
     if event.is_big_event:
