@@ -6,48 +6,112 @@
 
 {% block content %}
 <style>
-/* Mobile-first responsive design */
+.church-card-media {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+}
+.church-card-media img {
+  transition: transform 0.3s ease;
+}
+.church-card:hover .church-card-media img {
+  transform: scale(1.03);
+}
+
 @media (max-width: 640px) {
   .church-card {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     width: 100%;
+    min-width: 0;
   }
-  
+
   .church-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 0 0.5rem;
-  }
-  
-  .church-card .p-6 {
-    padding: 1rem;
-  }
-  
-  .church-card .text-xl {
-    font-size: 1.125rem;
-  }
-  
-  .church-card .text-sm {
-    font-size: 0.875rem;
-  }
-  
-  .church-card .flex.gap-3 {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
+    padding: 0;
   }
-  
-  .church-card .flex.gap-3 a {
+
+  .church-card-media {
+    aspect-ratio: 4 / 3;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .church-card-media .fa-church {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .church-card-media .absolute.inset-0.flex.flex-col span {
+    font-size: 0.5rem !important;
+    line-height: 1.2 !important;
+    padding: 0 0.25rem;
+  }
+
+  .church-card-media [class*="top-3 right-3"] {
+    top: 0.25rem !important;
+    right: 0.25rem !important;
+    font-size: 0.5rem !important;
+    padding: 0.125rem 0.375rem !important;
+  }
+
+  .church-card .church-card-body {
+    padding: 0.5rem 0.375rem 0.5rem !important;
+  }
+
+  .church-card .church-card-title {
+    font-size: 0.6875rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.25rem !important;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .church-card .church-card-meta {
+    font-size: 0.5625rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .church-card .church-card-meta svg {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    margin-right: 0.25rem !important;
+  }
+
+  .church-card .church-card-meta .text-sm,
+  .church-card .church-card-meta a {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.2 !important;
+  }
+
+  .church-card .church-card-meta .distance-info {
+    display: none !important;
+  }
+
+  .church-card .church-card-desc {
+    font-size: 0.5625rem !important;
+    -webkit-line-clamp: 2;
+    margin-bottom: 0.375rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .church-card .church-card-actions {
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+  }
+
+  .church-card .church-card-actions a {
+    flex: none;
     width: 100%;
-    text-align: center;
-  }
-  
-  .church-card .h-48 {
-    height: 12rem;
-  }
-  
-  .church-card .min-h-\[400px\] {
-    min-height: auto;
+    padding: 0.375rem 0.25rem !important;
+    font-size: 0.5625rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.375rem !important;
   }
 }
 
@@ -141,94 +205,89 @@
         {% if churches %}
         <div class="church-grid">
             {% for church in churches %}
-            <div class="church-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
-                <!-- Image Section -->
-                {% if church.logo %}
-                <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.get_logo_url }}" 
-                         alt="{{ church.name }} logo" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center" style="display: none;">
-                        <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
+            <div class="church-card relative bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
+                <div class="church-card-media relative bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#3b82f6] overflow-hidden shrink-0">
+                    {% if church.banner_image %}
+                    <img src="{{ church.get_banner_url }}"
+                         alt="{{ church.name }}"
+                         class="absolute inset-0 w-full h-full object-cover"
+                         loading="lazy"
+                         onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
+                    <div class="church-card-media-fallback hidden absolute inset-0 flex flex-col items-center justify-center text-white p-4">
+                        <i class="fas fa-church text-4xl sm:text-5xl opacity-90 mb-2"></i>
+                        <span class="text-xs font-semibold tracking-wide opacity-90 text-center">{{ church.city }}{% if church.country %}, {{ church.country }}{% endif %}</span>
                     </div>
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
-                {% elif church.banner_image %}
-                <div class="relative h-48 overflow-hidden">
-                    <img src="{{ church.get_banner_url }}" 
-                         alt="{{ church.name }} banner" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center" style="display: none;">
-                        <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
+                    {% elif church.logo %}
+                    <img src="{{ church.get_logo_url }}"
+                         alt="{{ church.name }} logo"
+                         class="absolute inset-0 w-full h-full object-contain p-6 sm:p-8"
+                         loading="lazy"
+                         onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
+                    <div class="church-card-media-fallback hidden absolute inset-0 flex flex-col items-center justify-center text-white p-4">
+                        <i class="fas fa-church text-4xl sm:text-5xl opacity-90 mb-2"></i>
+                        <span class="text-xs font-semibold tracking-wide opacity-90 text-center">{{ church.city }}{% if church.country %}, {{ church.country }}{% endif %}</span>
                     </div>
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
-                {% else %}
-                <div class="relative h-48 bg-gradient-to-br from-[#1e3a8a] to-[#1e40af] flex items-center justify-center overflow-hidden">
-                    <span class="text-white text-4xl font-bold">{{ church.name|slice:":2"|upper }}</span>
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
-                {% endif %}
-                
-                <!-- Country Badge -->
-                <div class="absolute top-4 right-4">
-                    <span class="bg-white/90 backdrop-blur-sm text-[#1e3a8a] text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                    {% else %}
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
+                        <i class="fas fa-church text-4xl sm:text-5xl opacity-90 mb-2"></i>
+                        <span class="text-xs sm:text-sm font-semibold tracking-wide opacity-90 text-center">{{ church.city }}{% if church.country %}, {{ church.country }}{% endif %}</span>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none"></div>
+                    {% if church.country %}
+                    <span class="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm text-[#1e3a8a] text-xs font-semibold px-2.5 py-1 rounded-full shadow-md">
                         {{ church.country }}
                     </span>
+                    {% endif %}
                 </div>
-                
-                <!-- Content Section -->
-                <div class="p-6 flex flex-col flex-1">
-                    <!-- Church Name -->
-                    <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1e3a8a] transition duration-200">
+
+                <div class="church-card-body p-5 sm:p-6 flex flex-col flex-1">
+                    <h3 class="church-card-title text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1e3a8a] transition duration-200 line-clamp-2">
                         {{ church.name }}
                     </h3>
-                    
-                    <!-- Location Info -->
-                    <div class="flex items-center text-gray-600 mb-3">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+
+                    <div class="church-card-meta flex items-start text-gray-600 mb-2">
+                        <svg class="w-4 h-4 mr-2 mt-0.5 shrink-0 text-[#1e3a8a]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                             <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                         </svg>
+                        <span class="text-sm leading-snug">
                         {% if church.latitude and church.longitude %}
-                        <a href="https://maps.google.com/?q={{ church.latitude }},{{ church.longitude }}" 
-                           target="_blank" 
-                           class="text-sm text-[#1e3a8a] hover:underline cursor-pointer"
+                        <a href="https://maps.google.com/?q={{ church.latitude }},{{ church.longitude }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="text-[#1e3a8a] hover:underline"
                            title="Open in Google Maps">
                             {{ church.address }}
                         </a>
-                        <span class="text-xs text-[#1e3a8a] ml-2 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}">
+                        <span class="text-xs text-gray-500 block mt-0.5 distance-info" data-lat="{{ church.latitude }}" data-lng="{{ church.longitude }}">
                             <span class="distance-text">Getting distance...</span>
                         </span>
                         {% else %}
-                        {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-sm text-[#1e3a8a] hover:underline" %}
+                        {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-[#1e3a8a] hover:underline" %}
                         {% endif %}
+                        </span>
                     </div>
-                    
-                    <!-- Pastor Info -->
+
                     {% if church.pastor_name %}
-                    <div class="flex items-center text-gray-600 mb-4">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="church-card-meta flex items-center text-gray-600 mb-3">
+                        <svg class="w-4 h-4 mr-2 shrink-0 text-[#1e3a8a]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
                         </svg>
                         <span class="text-sm">{{ church.pastor_name }}</span>
                     </div>
                     {% endif %}
-                    
-                    <!-- Description -->
-                    <p class="text-gray-700 text-sm mb-6 flex-1 leading-relaxed">
+
+                    <p class="church-card-desc text-gray-600 text-sm mb-4 flex-1 leading-relaxed line-clamp-2">
                         {{ church.description|default:"Join us for worship and fellowship."|truncatewords:15 }}
                     </p>
-                    
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3 mt-auto">
-                        <a href="{% url 'church_home' church.id %}" 
-                           class="flex-1 bg-[#1e3a8a] text-white text-sm font-semibold px-4 py-3 rounded-lg hover:bg-[#1e40af] transition duration-200 text-center">
+
+                    <div class="church-card-actions flex gap-2 sm:gap-3 mt-auto">
+                        <a href="{% url 'church_home' church.id %}"
+                           class="flex-1 bg-[#1e3a8a] text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#1e40af] transition duration-200 text-center">
                             Visit Website
                         </a>
-                        <a href="{% url 'church_detail' church.id %}" 
-                           class="flex-1 bg-gray-100 text-[#1e3a8a] text-sm font-semibold px-4 py-3 rounded-lg hover:bg-gray-200 transition duration-200 text-center">
+                        <a href="{% url 'church_detail' church.id %}"
+                           class="flex-1 bg-gray-100 text-[#1e3a8a] text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-gray-200 transition duration-200 text-center">
                             View Details
                         </a>
                     </div>

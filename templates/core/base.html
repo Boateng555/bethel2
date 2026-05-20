@@ -28,6 +28,8 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"{% if global_settings and global_settings.site_name %}{{ global_settings.site_name|escapejs }}{% else %}Bethel Prayer Ministry International{% endif %}","url":"{{ request.scheme }}://{{ request.get_host }}/","description":"{% if global_settings and global_settings.site_description %}{{ global_settings.site_description|truncatechars:200|escapejs }}{% else %}Find a Bethel church near you, events, ministries, sermons, and news. Join us for worship and community.{% endif %}"}</script>
     {% block json_ld_extra %}{% endblock %}
     {% endblock %}
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#1e3a8a">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -275,6 +277,8 @@
             </div>
         </div>
     </div>
+
+    {% include 'core/_push_notifications_banner.html' %}
 
     <!-- Messages -->
     {% if messages %}

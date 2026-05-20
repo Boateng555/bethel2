@@ -27,11 +27,12 @@
 <style>
 /* Mobile-first responsive design */
 @media (max-width: 640px) {
-  /* Hero section fixes */
+  /* Hero section — shorter on phone so content below peeks through */
+  .hero-section-outer,
   section.relative.w-full.h-screen.overflow-hidden {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    max-height: none !important;
+    height: 82vh !important;
+    min-height: 82vh !important;
+    max-height: 82vh !important;
   }
   #hero-media-container,
   .hero-swiper,
@@ -45,8 +46,37 @@
   .hero-main-swiper img,
   .hero-main-swiper video {
     height: 100% !important;
-    min-height: 100vh !important;
-    max-height: none !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+  }
+  .hero-section-outer .church-hero-title {
+    font-size: 1.375rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .hero-section-outer .church-hero-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 1rem !important;
+  }
+  .hero-section-outer .flex.flex-col.sm\:flex-row.gap-4 a {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    font-size: 0.875rem !important;
+  }
+  .hero-scroll-indicator {
+    bottom: 0.5rem !important;
+  }
+  .hero-scroll-indicator span {
+    font-size: 0.625rem !important;
+    margin-bottom: 0.25rem !important;
+    letter-spacing: 0.05em !important;
+  }
+  .hero-scroll-indicator .fa-chevron-down {
+    font-size: 0.875rem !important;
+  }
+  .hero-scroll-indicator .opacity-30 {
+    display: none !important;
   }
   .max-w-5xl.mx-auto.px-6.py-32.flex.flex-col.items-center.text-center {
     padding-top: 2rem !important;
@@ -103,15 +133,23 @@
     max-height: 7rem !important;
   }
   
-  /* Sermon and News card specific fixes */
+  /* Sermon, Ministry and News card specific fixes */
   .auto-scroll-sermons > div,
+  .auto-scroll-ministries > div,
   .auto-scroll-news > div {
     min-width: 260px !important;
     max-width: 280px !important;
   }
+  .card-carousel-single > div,
+  .card-carousel-single > a {
+    min-width: 0 !important;
+    max-width: 340px !important;
+    width: min(100%, 340px) !important;
+  }
   
   /* Reduce card height on mobile */
   .auto-scroll-sermons a,
+  .auto-scroll-ministries a,
   .auto-scroll-news a {
     min-height: 280px !important;
     max-height: 320px !important;
@@ -119,6 +157,7 @@
   
   /* Text truncation for mobile */
   .auto-scroll-sermons .text-xl,
+  .auto-scroll-ministries .text-xl,
   .auto-scroll-news .text-xl {
     font-size: 1rem !important;
     line-height: 1.2 !important;
@@ -126,6 +165,7 @@
   }
   
   .auto-scroll-sermons .text-sm,
+  .auto-scroll-ministries .text-sm,
   .auto-scroll-news .text-sm {
     font-size: 0.75rem !important;
     line-height: 1.3 !important;
@@ -134,6 +174,7 @@
   
   /* Limit text content on mobile */
   .auto-scroll-sermons p,
+  .auto-scroll-ministries p,
   .auto-scroll-news p {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -145,6 +186,7 @@
   
   /* Reduce padding on mobile */
   .auto-scroll-sermons .p-6,
+  .auto-scroll-ministries .p-6,
   .auto-scroll-news .p-6 {
     padding: 0.75rem !important;
   }
@@ -162,6 +204,93 @@
     padding-top: 1.2rem !important;
     padding-bottom: 1.2rem !important;
   }
+  .church-welcome-block.church-section {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  .church-welcome-block .church-welcome-inner > .church-info-card {
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .church-welcome-block .church-section-title {
+    font-size: 1.125rem !important;
+    margin-bottom: 0.25rem !important;
+    line-height: 1.25 !important;
+  }
+  .church-welcome-block .church-section-subtitle {
+    font-size: 0.75rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.35 !important;
+  }
+  .church-quick-info {
+    padding: 0.5rem 0.25rem !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .church-quick-info h3 {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.125rem !important;
+    font-weight: 600 !important;
+  }
+  .church-quick-info p,
+  .church-quick-info a {
+    font-size: 0.625rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0 !important;
+    word-break: break-word;
+  }
+  .church-quick-info .quick-info-icon {
+    font-size: 1.125rem !important;
+    margin-bottom: 0.125rem !important;
+    line-height: 1 !important;
+  }
+  .church-calendar-section.church-section {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  .church-calendar-section .church-calendar-header {
+    padding: 0.75rem 1rem 0.5rem !important;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .church-calendar-section .church-calendar-header .church-section-title {
+    font-size: 1.125rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .church-calendar-section .church-calendar-header .church-section-subtitle {
+    font-size: 0.75rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.35 !important;
+  }
+  .church-calendar-section .church-calendar-cta {
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+  .church-calendar-section .church-calendar-cta .church-section-title {
+    font-size: 1rem !important;
+    margin-bottom: 0 !important;
+  }
+  .church-calendar-section .church-calendar-cta .church-section-subtitle {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.625rem !important;
+    line-height: 1.35 !important;
+    opacity: 0.95;
+  }
+  .church-calendar-section .church-calendar-cta .church-btn {
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.75rem !important;
+    display: inline-block;
+    width: auto;
+  }
+  .church-calendar-section .church-calendar-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+  }
   .church-grid-container {
     max-width: 100% !important;
     width: 100% !important;
@@ -174,43 +303,62 @@
 /* Tablet improvements */
 @media (min-width: 641px) and (max-width: 768px) {
   .auto-scroll-sermons > div,
+  .auto-scroll-ministries > div,
   .auto-scroll-news > div {
     min-width: 300px !important;
   }
   
   .auto-scroll-sermons a,
+  .auto-scroll-ministries a,
   .auto-scroll-news a {
     min-height: 300px !important;
   }
 }
 
-/* Force mobile layout for sermon cards */
+/* Force mobile layout for sermon, ministry, news and event cards */
 @media (max-width: 767px) {
-  .auto-scroll-sermons {
+  .auto-scroll-sermons,
+  .auto-scroll-ministries,
+  .auto-scroll-news,
+  .auto-scroll-events {
     display: flex !important;
     flex-direction: row !important;
     overflow-x: auto !important;
     gap: 1rem !important;
     padding-bottom: 1rem !important;
   }
-  .auto-scroll-sermons > div {
+  .auto-scroll-sermons > div,
+  .auto-scroll-ministries > div,
+  .auto-scroll-news > div,
+  .auto-scroll-news > a,
+  .auto-scroll-events > div {
     min-width: 260px !important;
     flex-shrink: 0 !important;
   }
 }
 
-/* Force mobile layout for news cards */
-@media (max-width: 767px) {
-  .auto-scroll-news {
+/* Center a lone card nicely on phone and desktop */
+.card-carousel-single {
+  justify-content: center !important;
+  overflow-x: visible !important;
+}
+.card-carousel-single > div,
+.card-carousel-single > a {
+  min-width: 0 !important;
+  max-width: 340px !important;
+  width: min(100%, 340px) !important;
+  flex-shrink: 1 !important;
+}
+@media (min-width: 768px) {
+  .card-carousel-single {
     display: flex !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    gap: 1rem !important;
-    padding-bottom: 1rem !important;
+    justify-content: center !important;
+    overflow: visible !important;
   }
-  .auto-scroll-news > div {
-    min-width: 260px !important;
-    flex-shrink: 0 !important;
+  .card-carousel-single > div,
+  .card-carousel-single > a {
+    max-width: 380px !important;
+    width: 100% !important;
   }
 }
 
@@ -434,6 +582,8 @@
         </div>
     </div>
 
+    {% include 'core/_push_notifications_banner.html' %}
+
 <!-- Hero Section -->
 <section class="relative w-full h-screen overflow-hidden hero-section-outer">
     {% if heroes %}
@@ -485,7 +635,7 @@
             <div class="swiper-pagination hero-main-pagination"></div>
         </div>
         <!-- Scroll Down Indicator -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+        <div class="hero-scroll-indicator absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
             <div class="flex flex-col items-center text-white">
                 <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
                 <div class="relative">
@@ -514,7 +664,7 @@
         </div>
         
         <!-- Scroll Down Indicator -->
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+        <div class="hero-scroll-indicator absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
             <div class="flex flex-col items-center text-white">
                 <span class="text-sm font-medium mb-3 tracking-wider drop-shadow-lg">SCROLL DOWN</span>
                 <div class="relative">
@@ -536,45 +686,43 @@
 
 
 
-<!-- Church Info -->
-<div class="container mx-auto px-4 py-12 church-section">
-    <div class="max-w-4xl mx-auto text-center church-info-card">
-        <h2 class="text-3xl font-bold text-gray-900 mb-6 church-section-title">Welcome to {{ church.name }}</h2>
-        <p class="text-lg text-gray-700 leading-relaxed church-section-subtitle">{{ church.description|default:"Join us for worship, fellowship, and spiritual growth." }}</p>
-    </div>
-</div>
-
-<!-- Quick Info -->
-<div class="container mx-auto px-4 pb-12 church-section">
+<!-- Church Welcome & Quick Info -->
+<div class="container mx-auto px-3 py-4 md:px-4 md:py-12 church-section church-welcome-block">
     <div class="max-w-4xl mx-auto">
-        <div class="bg-white rounded-lg shadow-md p-6 text-center church-info-card">
-            <div class="flex flex-col md:flex-row md:justify-around gap-6">
-                <div>
-                    <div class="text-[#1e3a8a] text-3xl mb-2">📍</div>
-                    <h3 class="text-lg font-semibold mb-2">Location</h3>
-                    <p class="text-gray-600">
-                        {% if church.address %}
-                            {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-[#1e3a8a] hover:underline" %}
-                        {% else %}
-                            Contact us for directions
-                        {% endif %}
-                    </p>
-                </div>
-                <div>
-                    <div class="text-[#1e3a8a] text-3xl mb-2">⏰</div>
-                    <h3 class="text-lg font-semibold mb-2">Service Times</h3>
-                    <p class="text-gray-600">
-                        {% if church.service_times %}
-                            {{ church.service_times }}
-                        {% else %}
-                            Sunday 9:00 AM & 11:00 AM
-                        {% endif %}
-                    </p>
-                </div>
-                <div>
-                    <div class="text-[#1e3a8a] text-3xl mb-2">📞</div>
-                    <h3 class="text-lg font-semibold mb-2">Contact</h3>
-                    <p class="text-gray-600">{{ church.phone|default:"Contact us for more information" }}</p>
+        <div class="bg-white rounded-xl shadow-md md:shadow-none md:bg-transparent md:rounded-none overflow-hidden church-welcome-inner">
+            <div class="text-center px-4 pt-4 pb-2 md:px-0 md:pt-0 md:pb-0 md:mb-8 church-info-card">
+                <h2 class="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-6 church-section-title leading-tight">Welcome to {{ church.name }}</h2>
+                <p class="text-xs sm:text-sm md:text-lg text-gray-600 md:text-gray-700 leading-snug md:leading-relaxed church-section-subtitle">{{ church.description|default:"Join us for worship, fellowship, and spiritual growth." }}</p>
+            </div>
+            <div class="border-t border-gray-100 md:border-0 px-2 py-2 md:p-0">
+                <div class="grid grid-cols-3 gap-1 sm:gap-3 md:flex md:flex-row md:justify-around md:gap-6 md:bg-white md:rounded-lg md:shadow-md md:p-6 md:text-center church-quick-info church-info-card">
+                    <div class="quick-info-item text-center px-1 py-1">
+                        <div class="quick-info-icon text-[#1e3a8a] text-lg sm:text-2xl md:text-3xl mb-0.5 md:mb-2">📍</div>
+                        <h3 class="text-[10px] sm:text-xs md:text-lg font-semibold mb-0.5 md:mb-2 text-[#1e3a8a]">Location</h3>
+                        <p class="text-[10px] sm:text-xs md:text-base text-gray-600 leading-tight">
+                            {% if church.address %}
+                                {% include 'core/_maps_link.html' with maps_url=church.maps_url text=church.address link_class="text-[#1e3a8a] hover:underline" %}
+                            {% else %}
+                                Contact us for directions
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="quick-info-item text-center px-1 py-1 border-x border-gray-100 md:border-0">
+                        <div class="quick-info-icon text-[#1e3a8a] text-lg sm:text-2xl md:text-3xl mb-0.5 md:mb-2">⏰</div>
+                        <h3 class="text-[10px] sm:text-xs md:text-lg font-semibold mb-0.5 md:mb-2 text-[#1e3a8a]">Service Times</h3>
+                        <p class="text-[10px] sm:text-xs md:text-base text-gray-600 leading-tight">
+                            {% if church.service_times %}
+                                {{ church.service_times }}
+                            {% else %}
+                                Sunday 9:00 AM & 11:00 AM
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="quick-info-item text-center px-1 py-1">
+                        <div class="quick-info-icon text-[#1e3a8a] text-lg sm:text-2xl md:text-3xl mb-0.5 md:mb-2">📞</div>
+                        <h3 class="text-[10px] sm:text-xs md:text-lg font-semibold mb-0.5 md:mb-2 text-[#1e3a8a]">Contact</h3>
+                        <p class="text-[10px] sm:text-xs md:text-base text-gray-600 leading-tight">{{ church.phone|default:"Contact us for more information" }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -582,25 +730,28 @@
 </div>
 
 <!-- Calendar Section -->
-<section class="bg-white py-16 church-section">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 bg-white rounded-t-xl p-8 church-info-card">
-            <h2 class="text-3xl font-bold text-[#1e3a8a] mb-4 church-section-title">Event Calendar</h2>
-            <p class="text-lg text-gray-700 church-section-subtitle">View all our events in a monthly calendar format</p>
-        </div>
-        <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1e3a8a] rounded-b-xl p-8 text-center church-info-card">
-            <div class="text-[#1e3a8a] text-6xl mb-4">
-                <i class="fas fa-calendar-alt"></i>
+<section class="bg-white py-4 md:py-16 church-section church-calendar-section">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="md:rounded-xl md:overflow-hidden church-calendar-card">
+            <div class="text-center mb-0 md:mb-12 bg-white md:rounded-t-xl p-3 md:p-8 church-info-card church-calendar-header md:shadow-none">
+                <h2 class="text-lg md:text-3xl font-bold text-[#1e3a8a] mb-1 md:mb-4 church-section-title">Event Calendar</h2>
+                <p class="text-xs md:text-lg text-gray-700 church-section-subtitle">View all our events in a monthly calendar format</p>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-4 church-section-title">Stay Connected</h3>
-            <p class="text-white mb-6 church-section-subtitle">Never miss an event! View our complete calendar with all upcoming activities, services, and special events.</p>
-            <div class="space-x-4">
-                <a href="{% url 'church_calendar' church.id %}" class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300 hover:bg-gray-100 church-btn">
-                    <i class="fas fa-calendar-alt"></i> View Calendar
-                </a>
-                <a href="{% url 'church_events' church.id %}" class="bg-white text-[#1e3a8a] px-8 py-3 rounded-lg font-semibold transition duration-300 hover:bg-gray-100 church-btn">
-                    All Events
-                </a>
+            <div class="bg-[#1e3a8a] rounded-xl md:rounded-b-xl p-4 md:p-8 text-center church-info-card church-calendar-cta">
+                <div class="flex items-center justify-center gap-2 mb-2 md:mb-4">
+                    <i class="fas fa-calendar-alt text-white text-xl md:text-6xl"></i>
+                    <h3 class="text-base md:text-2xl font-bold text-white church-section-title md:hidden">Stay Connected</h3>
+                </div>
+                <h3 class="hidden md:block text-2xl font-bold text-white mb-4 church-section-title">Stay Connected</h3>
+                <p class="text-white text-xs md:text-base mb-3 md:mb-6 church-section-subtitle leading-snug">Never miss an event! View our complete calendar with all upcoming activities, services, and special events.</p>
+                <div class="church-calendar-actions flex flex-col sm:flex-row gap-2 sm:gap-4 sm:justify-center md:space-x-4">
+                    <a href="{% url 'church_calendar' church.id %}" class="bg-white text-[#1e3a8a] px-4 py-2 md:px-8 md:py-3 rounded-lg font-semibold text-sm md:text-base transition duration-300 hover:bg-gray-100 church-btn">
+                        <i class="fas fa-calendar-alt"></i> View Calendar
+                    </a>
+                    <a href="{% url 'church_events' church.id %}" class="bg-white text-[#1e3a8a] px-4 py-2 md:px-8 md:py-3 rounded-lg font-semibold text-sm md:text-base transition duration-300 hover:bg-gray-100 church-btn">
+                        All Events
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -614,7 +765,7 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
         </div>
-        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+        <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if events|length == 1 %} card-carousel-single{% endif %}">
             {% for event in events %}
                 <div class="min-w-[280px] md:min-w-0">{% include 'core/_event_card.html' with event=event church=church %}</div>
             {% endfor %}
@@ -648,22 +799,9 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Our Ministries</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Discover ways to get involved and grow in your faith</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6">
+        <div class="auto-scroll-ministries flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if ministries|length == 1 %} card-carousel-single{% endif %}">
             {% for ministry in ministries %}
-            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition flex flex-col min-h-[280px] md:min-h-[340px] h-full">
-                {% if ministry.image %}
-                <img src="{{ ministry.get_image_url }}" alt="{{ ministry.name }}" class="w-full h-32 object-cover">
-                {% else %}
-                <div class="h-32 bg-gradient-to-br from-[#6366f1] to-[#1e3a8a] flex items-center justify-center">
-                    <i class="fas fa-hands-helping text-white text-6xl"></i>
-                </div>
-                {% endif %}
-                <div class="p-4 md:p-6 flex flex-col flex-1">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-2">{{ ministry.name }}</h3>
-                    <p class="text-gray-700 text-sm mb-3 md:mb-4 line-clamp-2">{{ ministry.description }}</p>
-                    <a href="{% url 'church_ministry_detail' church.id ministry.id %}" class="text-[#1e3a8a] hover:text-[#1e3a8a] font-semibold mt-auto">Learn More →</a>
-                </div>
-            </div>
+                <div class="min-w-[280px] md:min-w-0">{% include 'core/_ministry_card.html' with ministry=ministry church=church %}</div>
             {% endfor %}
         </div>
         <div class="text-center mt-8">
@@ -681,7 +819,7 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest Sermons</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Listen to inspiring messages from our pastors</p>
         </div>
-        <div class="auto-scroll-sermons flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+        <div class="auto-scroll-sermons flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if sermons|length == 1 %} card-carousel-single{% endif %}">
             {% for sermon in sermons|slice:':3' %}
                 <div class="min-w-[280px] md:min-w-0">{% include 'core/_sermon_card.html' with sermon=sermon church=church %}</div>
             {% endfor %}
@@ -701,7 +839,7 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8">
+        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if news|length == 1 %} card-carousel-single{% endif %}">
             {% for article in news %}
                 <a href="{% url 'news_detail' article.id %}" class="min-w-[280px] md:min-w-0 bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if article.image %}
@@ -805,7 +943,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto-scroll script for carousels
         function autoScrollCarousel(selector, interval = 2000) {
             const container = document.querySelector(selector);
-            if (!container) return;
+            if (!container || container.classList.contains('card-carousel-single')) return;
             let scrollAmount = 0;
             let maxScroll = container.scrollWidth - container.clientWidth;
             let direction = 1;
@@ -823,6 +961,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('DOMContentLoaded', function() {
             autoScrollCarousel('.auto-scroll-events');
             autoScrollCarousel('.auto-scroll-sermons');
+            autoScrollCarousel('.auto-scroll-ministries');
             autoScrollCarousel('.auto-scroll-news');
         });
     </script>

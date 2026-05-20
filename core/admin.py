@@ -13,6 +13,7 @@ from .models import (
     Church, ChurchAdmin, Event, Ministry, News, Sermon, 
     DonationMethod, Convention,
     NewsletterSignup, Hero, LocalHero, ChurchApplication, GlobalFeatureRequest, Testimony, AboutPage, LeadershipPage, LocalLeadershipPage, LocalAboutPage, MinistryJoinRequest,
+    PushSubscription,
     EventRegistration, EventHighlight, EventSpeaker, EventScheduleItem, EventHeroMedia, HeroMedia, GlobalSettings, LiveStreamSettings
 )
 from .analytics_models import VisitorSession, PageView, AnalyticsSettings
@@ -2272,9 +2273,12 @@ class AnalyticsSettingsAdmin(admin.ModelAdmin):
         return False  # Don't allow deletion of settings
 
 
-
-
-
+@admin.register(PushSubscription)
+class PushSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('church', 'is_active', 'notify_events', 'notify_news', 'notify_sermons', 'created_at')
+    list_filter = ('is_active', 'church', 'notify_events', 'notify_news', 'notify_sermons')
+    search_fields = ('endpoint', 'church__name')
+    readonly_fields = ('endpoint', 'p256dh_key', 'auth_key', 'user_agent', 'created_at', 'updated_at')
 
 
 

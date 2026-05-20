@@ -902,6 +902,37 @@ class NewsletterSignup(models.Model):
             return f"{self.email} - {self.church.name}"
         return f"{self.email} - Global"
 
+
+class PushSubscription(models.Model):
+    """Browser Web Push subscription for church updates (events, news, sermons)."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    church = models.ForeignKey(
+        Church,
+        on_delete=models.CASCADE,
+        related_name='push_subscriptions',
+    )
+    endpoint = models.TextField(unique=True)
+    p256dh_key = models.TextField()
+    auth_key = models.TextField()
+    user_agent = models.CharField(max_length=500, blank=True)
+    notify_events = models.BooleanField(default=True)
+    notify_news = models.BooleanField(default=True)
+    notify_sermons = models.BooleanField(default=True)
+    notify_live = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['church', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"Push — {self.church.name} ({'active' if self.is_active else 'inactive'})"
+
+
 def notify_global_admins_of_request(feature_request):
     """Send email to all global admins when a new global feature request is made."""
     from .models import ChurchAdmin

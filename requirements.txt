@@ -15,4 +15,5 @@ user-agents==2.2.0
 geoip2==4.7.0
 django-otp==1.7.0
 pyotp==2.9.0
+pywebpush==1.14.0
  

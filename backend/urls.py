@@ -34,6 +34,7 @@ from core.sitemaps import (
     NewsSitemap,
 )
 from core.views import church_detail_by_location, custom_error_500, custom_error_404, custom_error_403, custom_error_400
+from core.views_push import service_worker_js, web_app_manifest
 
 # Sitemaps for SEO (churches/events/ministries/news included; new churches appear automatically)
 sitemaps = {
@@ -92,6 +93,8 @@ def sitemap_with_canonical_domain(request, **kwargs):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sw.js', service_worker_js, name='service_worker'),
+    path('manifest.webmanifest', web_app_manifest, name='web_app_manifest'),
     path('robots.txt', robots_txt),
     path('sitemap.xml', sitemap_with_canonical_domain, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     # Location-based church URL (e.g. /churches/germany/hamburg/) – before core.urls so it matches

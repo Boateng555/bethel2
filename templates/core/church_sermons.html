@@ -68,20 +68,63 @@
             <!-- Sermon thumbnail or fallback banner -->
             {% if sermon.thumbnail %}
             <div class="h-48 bg-cover bg-center relative" style="background-image: url('{{ sermon.get_thumbnail_url }}');">
-                <div class="h-full bg-black bg-opacity-20 flex items-center justify-center">
-                    <i class="fas fa-play-circle text-white text-4xl opacity-80"></i>
+                <div class="h-full bg-black bg-opacity-20 relative">
+                    {% if sermon.video_file %}
+                    <a href="{{ sermon.get_video_url }}" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                        <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                            <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                        </span>
+                    </a>
+                    {% elif sermon.audio_file %}
+                    <a href="{{ sermon.get_audio_url }}" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                        <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                            <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                        </span>
+                    </a>
+                    {% elif sermon.link %}
+                    <a href="{{ sermon.link }}" target="_blank" rel="noopener noreferrer" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                        <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                            <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                        </span>
+                    </a>
+                    {% else %}
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="w-14 h-14 rounded-full bg-white/50 flex items-center justify-center cursor-not-allowed">
+                            <i class="fas fa-play text-gray-400 text-lg ml-0.5"></i>
+                        </span>
+                    </div>
+                    {% endif %}
                 </div>
-                <!-- Favorite button overlay -->
-                <button class="favorite-btn absolute top-3 right-3 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
+                <button type="button" class="favorite-btn absolute top-3 right-3 z-20 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
                     <i class="far fa-heart text-gray-600 hover:text-red-500 transition-colors"></i>
                 </button>
             </div>
             {% else %}
-            <!-- Blue gradient banner with icon (fallback) -->
-            <div class="h-32 bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center relative">
-                <i class="fas fa-volume-up text-white text-6xl"></i>
-                <!-- Favorite button overlay -->
-                <button class="favorite-btn absolute top-3 right-3 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
+            <div class="h-48 bg-gradient-to-r from-blue-600 to-blue-400 relative">
+                {% if sermon.video_file %}
+                <a href="{{ sermon.get_video_url }}" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                    <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                        <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                    </span>
+                </a>
+                {% elif sermon.audio_file %}
+                <a href="{{ sermon.get_audio_url }}" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                    <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                        <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                    </span>
+                </a>
+                {% elif sermon.link %}
+                <a href="{{ sermon.link }}" target="_blank" rel="noopener noreferrer" class="sermon-play-btn absolute inset-0 z-10 flex items-center justify-center group" aria-label="Play sermon">
+                    <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                        <i class="fas fa-play text-[#1e3a8a] text-lg ml-0.5"></i>
+                    </span>
+                </a>
+                {% else %}
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-volume-up text-white text-6xl opacity-80"></i>
+                </div>
+                {% endif %}
+                <button type="button" class="favorite-btn absolute top-3 right-3 z-20 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200" data-sermon-id="{{ sermon.id }}">
                     <i class="far fa-heart text-gray-600 hover:text-red-500 transition-colors"></i>
                 </button>
             </div>
@@ -102,32 +145,7 @@
                 
                 <!-- Title and description -->
                 <h3 class="text-xl font-bold text-gray-900 mb-2">{{ sermon.title }}</h3>
-                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ sermon.description|truncatewords:15 }}</p>
-                
-                <!-- Action buttons -->
-                <div class="flex space-x-2">
-                    {% if sermon.video_file %}
-                    <a href="{{ sermon.get_video_url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
-                        <i class="fas fa-video mr-1"></i>
-                        Watch
-                    </a>
-                    {% elif sermon.audio_file %}
-                    <a href="{{ sermon.get_audio_url }}" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
-                        <i class="fas fa-play mr-1"></i>
-                        Listen
-                    </a>
-                    {% elif sermon.link %}
-                    <a href="{{ sermon.link }}" target="_blank" class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center">
-                        <i class="fas fa-external-link-alt mr-1"></i>
-                        Watch
-                    </a>
-                    {% else %}
-                    <button class="bg-[#1e3a8a] text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center opacity-75 cursor-not-allowed">
-                        <i class="fas fa-video mr-1"></i>
-                        Watch
-                    </button>
-                    {% endif %}
-                </div>
+                <p class="text-gray-600 text-sm line-clamp-2">{{ sermon.description|truncatewords:15 }}</p>
             </div>
         </div>
         {% endfor %}

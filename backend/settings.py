@@ -294,5 +294,13 @@ REST_FRAMEWORK = {
 # OTP / MFA (TOTP) for local admin
 OTP_TOTP_ISSUER = os.environ.get('OTP_TOTP_ISSUER', 'Bethel Church Admin')
 
+# Web Push (phone/browser notifications) — run: python manage.py generate_vapid_keys
+WEBPUSH_VAPID_PUBLIC_KEY = os.environ.get('WEBPUSH_VAPID_PUBLIC_KEY', '').strip()
+WEBPUSH_VAPID_PRIVATE_KEY = os.environ.get('WEBPUSH_VAPID_PRIVATE_KEY', '').strip().replace('\\n', '\n')
+WEBPUSH_VAPID_ADMIN_EMAIL = os.environ.get(
+    'WEBPUSH_VAPID_ADMIN_EMAIL',
+    'admin@bethelprayerministryinternational.com',
+).strip()
+
 # Local storage initialization completed
 print("Local Django file storage configured")
