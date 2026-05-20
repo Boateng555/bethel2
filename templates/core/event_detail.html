@@ -241,7 +241,7 @@
                 <div class="md:col-span-2 lg:col-span-2">
                     <h2 class="text-3xl font-bold text-deep-blue mb-8">Event Details</h2>
                     <div class="prose prose-lg max-w-none text-gray-700">
-                        <p class="text-xl leading-relaxed">{{ event.description }}</p>
+                        <p class="text-xl leading-relaxed">{{ event.details|default:event.description|linebreaksbr }}</p>
                     </div>
                     
                     {% if event.address or event.location %}

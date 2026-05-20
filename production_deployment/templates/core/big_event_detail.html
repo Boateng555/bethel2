@@ -587,12 +587,24 @@
                             <div class="text-[#1e3a8a] font-bold">{{ item.title }}</div>
                             <div class="text-gray-600 text-sm">{{ item.description }}</div>
                         </div>
-                        {% if item.speaker %}
-                        <div class="mt-2 md:mt-0 md:ml-6 flex items-center">
-                            {% if item.speaker.photo %}
-                            <img src="{{ item.speaker.photo.url }}" alt="{{ item.speaker.name }}" class="w-10 h-10 rounded-full mr-2 object-cover">
+                        {% if item.speaker or item.speaker_2 %}
+                        <div class="mt-2 md:mt-0 md:ml-6 flex items-center gap-4 flex-wrap">
+                            {% if item.speaker %}
+                            <div class="flex items-center">
+                                {% if item.speaker.photo %}
+                                <img src="{{ item.speaker.photo.url }}" alt="{{ item.speaker.name }}" class="w-10 h-10 rounded-full mr-2 object-cover">
+                                {% endif %}
+                                <span class="font-semibold text-gray-800">{{ item.speaker.name }}</span>
+                            </div>
                             {% endif %}
-                            <span class="font-semibold text-gray-800">{{ item.speaker.name }}</span>
+                            {% if item.speaker_2 %}
+                            <div class="flex items-center">
+                                {% if item.speaker_2.photo %}
+                                <img src="{{ item.speaker_2.photo.url }}" alt="{{ item.speaker_2.name }}" class="w-10 h-10 rounded-full mr-2 object-cover">
+                                {% endif %}
+                                <span class="font-semibold text-gray-800">{{ item.speaker_2.name }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
                         {% if item.location %}

@@ -532,6 +532,7 @@ class Event(models.Model):
     
     title = models.CharField(max_length=200)
     description = models.TextField()
+    details = models.TextField(blank=True, help_text="Full event details (shown in the Event Details section). If empty, the short description is used.")
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     location = models.CharField(max_length=200, blank=True, null=True)
@@ -1498,6 +1499,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -2284,6 +2286,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -3070,6 +3073,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -3856,6 +3860,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -4642,6 +4647,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -5428,6 +5434,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -6214,6 +6221,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property
@@ -7000,6 +7008,7 @@ class EventScheduleItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     speaker = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items')
+    speaker_2 = models.ForeignKey(EventSpeaker, on_delete=models.SET_NULL, null=True, blank=True, related_name='schedule_items_secondary')
     location = models.CharField(max_length=200, blank=True)
 
     @property

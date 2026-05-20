@@ -216,13 +216,14 @@ class LocalAdminEventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = [
-            'title', 'description', 'start_date', 'end_date', 'location', 'address',
+            'title', 'description', 'details', 'start_date', 'end_date', 'location', 'address',
             'event_type', 'requires_registration', 'registration_url', 'max_attendees', 'registration_deadline', 'registration_fee',
             'is_featured', 'is_public', 'is_big_event', 'show_qr_code'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Event title'}),
             'description': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 4}),
+            'details': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 10, 'placeholder': 'Write the full event details here. This is the long text on the event page.'}),
             'start_date': forms.DateTimeInput(attrs={'class': INPUT_CLASS, 'type': 'datetime-local'}),
             'end_date': forms.DateTimeInput(attrs={'class': INPUT_CLASS, 'type': 'datetime-local'}),
             'location': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'e.g. Main Auditorium or City, Country'}),
@@ -241,6 +242,7 @@ class LocalAdminEventForm(forms.ModelForm):
         labels = {
             'title': 'Event title',
             'description': 'Description (short summary for cards and hero)',
+            'details': 'Event Details (full description)',
             'start_date': 'Start date & time',
             'end_date': 'End date & time',
             'location': 'Location (name or venue)',
@@ -323,7 +325,7 @@ class LocalAdminEventSpeakerForm(forms.ModelForm):
 class LocalAdminEventScheduleItemForm(forms.ModelForm):
     class Meta:
         model = EventScheduleItem
-        fields = ('day', 'start_time', 'end_time', 'title', 'description', 'speaker', 'location')
+        fields = ('day', 'start_time', 'end_time', 'title', 'description', 'speaker', 'speaker_2', 'location')
         widgets = {
             'day': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'e.g. Day 1 or Sunday'}),
             'start_time': forms.TimeInput(attrs={'class': INPUT_CLASS, 'type': 'time'}),
@@ -331,13 +333,18 @@ class LocalAdminEventScheduleItemForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Session title'}),
             'description': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 2}),
             'speaker': forms.Select(attrs={'class': INPUT_CLASS}),
+            'speaker_2': forms.Select(attrs={'class': INPUT_CLASS}),
             'location': forms.TextInput(attrs={'class': INPUT_CLASS}),
         }
 
     def __init__(self, *args, event=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if event is not None and 'speaker' in self.fields:
-            self.fields['speaker'].queryset = EventSpeaker.objects.filter(event=event).order_by('name')
+        if event is not None:
+            qs = EventSpeaker.objects.filter(event=event).order_by('name')
+            if 'speaker' in self.fields:
+                self.fields['speaker'].queryset = qs
+            if 'speaker_2' in self.fields:
+                self.fields['speaker_2'].queryset = qs
 
 
 class LocalAdminMinistryForm(forms.ModelForm):
