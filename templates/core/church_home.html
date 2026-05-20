@@ -137,7 +137,7 @@
   .auto-scroll-sermons > div,
   .auto-scroll-ministries > div,
   .auto-scroll-news > div {
-    min-width: 260px !important;
+    min-width: 280px !important;
     max-width: 280px !important;
   }
   .card-carousel-single > div,
@@ -147,32 +147,15 @@
     width: min(100%, 340px) !important;
   }
   
-  /* Reduce card height on mobile (sermons/ministries only — news uses compact layout) */
+  /* Same card height on mobile for sermons, ministries, and news */
   .auto-scroll-sermons a,
-  .auto-scroll-ministries a {
+  .auto-scroll-ministries a,
+  .auto-scroll-news a {
     min-height: 280px !important;
     max-height: 320px !important;
   }
   .auto-scroll-news {
-    align-items: flex-start !important;
-  }
-  .auto-scroll-news > a {
-    min-height: 0 !important;
-    max-height: none !important;
-    height: auto !important;
-  }
-  .auto-scroll-news > a img,
-  .auto-scroll-news > a .news-card-media {
-    height: 5.5rem !important;
-    min-height: 5.5rem !important;
-    max-height: 5.5rem !important;
-  }
-  .auto-scroll-news > a .news-card-body {
-    padding: 0.625rem 0.75rem !important;
-  }
-  .auto-scroll-news > a .news-card-body p {
-    margin-bottom: 0.375rem !important;
-    -webkit-line-clamp: 2;
+    align-items: stretch !important;
   }
   
   /* Text truncation for mobile */
@@ -346,15 +329,11 @@
     gap: 1rem !important;
     padding-bottom: 1rem !important;
   }
-  .auto-scroll-news {
-    align-items: flex-start !important;
-  }
   .auto-scroll-sermons > div,
   .auto-scroll-ministries > div,
   .auto-scroll-news > div,
-  .auto-scroll-news > a,
   .auto-scroll-events > div {
-    min-width: 260px !important;
+    min-width: 280px !important;
     flex-shrink: 0 !important;
   }
 }
@@ -383,15 +362,6 @@
     width: 100% !important;
   }
 }
-/* Two news cards: compact side-by-side on mobile */
-@media (max-width: 767px) {
-  .card-carousel-duo.auto-scroll-news > a {
-    min-width: 42vw !important;
-    max-width: 46vw !important;
-    width: 44vw !important;
-  }
-}
-
 /* Ensure content doesn't interfere with swipe navigation */
 .relative.z-10 {
   z-index: 10 !important; /* Lower than swipe area */
@@ -870,22 +840,24 @@
             <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
-        <div class="auto-scroll-news flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8 items-start{% if news|length == 1 %} card-carousel-single{% elif news|length == 2 %} card-carousel-duo{% endif %}">
+        <div class="auto-scroll-news flex space-x-4 overflow-x-auto scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8 items-stretch{% if news|length == 1 %} card-carousel-single{% endif %}">
             {% for article in news %}
-                <a href="{% url 'news_detail' article.id %}" class="news-card-link min-w-[240px] max-w-[260px] md:min-w-0 md:max-w-none bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] shrink-0 md:shrink">
+                <div class="min-w-[280px] md:min-w-0 shrink-0 h-full">
+                <a href="{% url 'news_detail' article.id %}" class="news-card-link block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-lg transition flex flex-col h-full min-h-[280px] focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]">
                     {% if article.image %}
-                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="news-card-media w-full h-24 md:h-32 object-cover">
+                    <img src="{{ article.get_image_url }}" alt="{{ article.title }}" class="news-card-media w-full h-32 object-cover shrink-0">
                     {% else %}
-                    <div class="news-card-media h-24 md:h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-                        <i class="fas fa-newspaper text-white text-3xl md:text-6xl"></i>
+                    <div class="news-card-media h-32 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center shrink-0">
+                        <i class="fas fa-newspaper text-white text-6xl"></i>
                     </div>
                     {% endif %}
-                    <div class="news-card-body p-4 md:p-6 flex flex-col">
-                        <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
-                        <p class="text-gray-600 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2">{{ article.content|striptags|truncatewords:12 }}</p>
-                        <span class="text-[#1e3a8a] font-semibold text-xs md:text-sm mt-auto">{{ article.date|date:"M d, Y" }}</span>
+                    <div class="news-card-body p-6 flex flex-col flex-1">
+                        <h3 class="text-xl font-semibold mb-2 text-deep-blue line-clamp-2">{{ article.title }}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ article.content|striptags|truncatewords:15 }}</p>
+                        <span class="text-[#1e3a8a] font-semibold text-sm mt-auto">{{ article.date|date:"M d, Y" }}</span>
                     </div>
                 </a>
+                </div>
             {% endfor %}
         </div>
         <div class="text-center mt-8">
@@ -972,22 +944,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
         // Auto-scroll script for carousels
-        function autoScrollCarousel(selector, interval = 2000) {
+        function autoScrollCarousel(selector, interval = 3500) {
             const container = document.querySelector(selector);
             if (!container || container.classList.contains('card-carousel-single')) return;
-            let scrollAmount = 0;
-            let maxScroll = container.scrollWidth - container.clientWidth;
-            let direction = 1;
-            setInterval(() => {
-                if (window.innerWidth >= 768) return; // Only auto-scroll on mobile
-                if (container.scrollLeft >= maxScroll) {
-                    direction = -1;
-                } else if (container.scrollLeft <= 0) {
-                    direction = 1;
+
+            function getStep() {
+                const first = container.querySelector(':scope > div, :scope > a');
+                if (!first) return 296;
+                const gap = parseFloat(getComputedStyle(container).columnGap || getComputedStyle(container).gap) || 16;
+                return first.offsetWidth + gap;
+            }
+
+            function tick() {
+                if (window.innerWidth >= 768) return;
+                const maxScroll = container.scrollWidth - container.clientWidth;
+                if (maxScroll <= 8) return;
+
+                const step = getStep();
+                if (container.scrollLeft >= maxScroll - 4) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    container.scrollTo({ left: container.scrollLeft + step, behavior: 'smooth' });
                 }
-                scrollAmount = direction === 1 ? container.scrollLeft + 300 : container.scrollLeft - 300;
-                container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-            }, interval);
+            }
+
+            setInterval(tick, interval);
         }
         document.addEventListener('DOMContentLoaded', function() {
             autoScrollCarousel('.auto-scroll-events');
