@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ event.title }} - {{ event.church.name }}</title>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Event","name":"{{ event.title|escapejs }}","description":"{{ event.description|default:event.title|truncatechars:300|escapejs }}","startDate":"{{ event.start_date|date:'c' }}","endDate":"{{ event.end_date|date:'c' }}"{% if event.location %},"location":{"@type":"Place","name":"{{ event.location|escapejs }}"{% if event.address %},"address":"{{ event.address|escapejs }}"{% endif %}}{% endif %}{% if event.church %},"organizer":{"@type":"Organization","name":"{{ event.church.name|escapejs }}"}{% endif %}{% if og_image %},"image":"{{ og_image }}"{% endif %}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Event","name":"{{ event.title|escapejs }}","description":"{{ event.description|default:event.title|truncatechars:300|escapejs }}","startDate":"{{ event.start_date|date:'c' }}","endDate":"{{ event.end_date|date:'c' }}","url":"{{ request.build_absolute_uri }}"{% if event.location %},"location":{"@type":"Place","name":"{{ event.location|escapejs }}"{% if event.address %},"address":"{{ event.address|escapejs }}"{% endif %}}{% endif %}{% if event.church %},"organizer":{"@type":"Organization","name":"{{ event.church.name|escapejs }}"}{% endif %}{% if og_image %},"image":"{{ og_image }}"{% endif %}}</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -473,6 +473,7 @@
                 <a href="#about" class="hero-action-btn inline-block bg-white/20 border border-white text-white text-sm px-4 py-2 rounded-lg font-semibold hover:bg-white/30 transition">
                     Event Details
                 </a>
+                {% include 'core/_event_add_to_calendar.html' with button_class='hero-action-btn inline-flex items-center gap-2 bg-white/20 border border-white text-white text-sm px-4 py-2 rounded-lg font-semibold hover:bg-white/30 transition' %}
             </div>
             
             <!-- Countdown Section -->
@@ -584,6 +585,11 @@
                                 {% endif %}
                                 </div>
                             {% endif %}
+                            <div class="pt-4 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-900 mb-3">Add to Calendar</h4>
+                                {% include 'core/_event_add_to_calendar.html' with button_class='inline-flex items-center gap-2 w-full justify-center bg-[#1e3a8a] text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-[#1e40af] transition' %}
+                            </div>
+
                             <!-- Share Buttons -->
                             <div class="pt-4 border-t border-gray-200">
                                 <h4 class="font-semibold text-gray-900 mb-3">Share This Event</h4>
@@ -669,6 +675,9 @@
                 <div class="text-lg font-semibold">Location</div>
                 {% include 'core/_event_location_block.html' with event=event wrapper_class="text-gray-700 text-center" %}
             </div>
+        </div>
+        <div class="text-center mb-6">
+            {% include 'core/_event_add_to_calendar.html' with button_class='inline-flex items-center gap-2 bg-[#1e3a8a] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#1e40af] transition' %}
         </div>
         {% if event.theme %}
         <div class="bg-[#1e3a8a] rounded-lg p-6 mb-6">

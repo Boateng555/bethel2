@@ -991,38 +991,13 @@ def calendar_view(request):
     return render(request, 'core/calendar.html', context)
 
 def event_ics(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-    
-    # Convert date to datetime for ICS format
-    start_datetime = datetime.combine(event.start_date, time(9, 0))  # Default to 9 AM
-    end_datetime = datetime.combine(event.end_date, time(17, 0))    # Default to 5 PM
-    
-    # Format datetimes for ICS
-    start = start_datetime.strftime('%Y%m%dT%H%M%SZ')
-    end = end_datetime.strftime('%Y%m%dT%H%M%SZ')
-    
-    # Clean description for ICS format (remove special characters)
-    description = event.description.replace('\n', '\\n').replace('\r', '\\r')
-    
-    # Include location if available
-    location_line = f"LOCATION:{event.location}" if event.location else ""
-    
-    ics_content = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Bethel Prayer Ministry//EN
-BEGIN:VEVENT
-UID:{event.id}@bethelprayerministry.com
-DTSTAMP:{start}
-DTSTART:{start}
-DTEND:{end}
-SUMMARY:{event.title}
-DESCRIPTION:{description}
-{location_line}
-END:VEVENT
-END:VCALENDAR
-"""
-    response = HttpResponse(ics_content, content_type='text/calendar')
-    response['Content-Disposition'] = f'attachment; filename=event_{event.id}.ics'
+    from .calendar_utils import build_event_ics
+
+    event = get_object_or_404(Event, id=event_id, is_public=True)
+    ics_content = build_event_ics(event, request)
+    safe_name = ''.join(c if c.isalnum() or c in '-_' else '_' for c in event.title)[:40]
+    response = HttpResponse(ics_content, content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{safe_name or "event"}.ics"'
     return response
 
 def haversine_distance(lat1, lon1, lat2, lon2):

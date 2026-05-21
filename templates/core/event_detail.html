@@ -300,6 +300,11 @@
                             </div>
                             {% endif %}
                             
+                            <div class="pt-4 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-900 mb-3">Add to Calendar</h4>
+                                {% include 'core/_event_add_to_calendar.html' with button_class='inline-flex items-center gap-2 w-full justify-center bg-[#1e3a8a] text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-[#1e40af] transition' %}
+                            </div>
+
                             <!-- Share Buttons -->
                             <div class="pt-4 border-t border-gray-200">
                                 <h4 class="font-semibold text-gray-900 mb-3">Share This Event</h4>

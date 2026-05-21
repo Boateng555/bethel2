@@ -217,7 +217,7 @@
                                                 {% if event.location %} @ {{ event.location }}{% endif %}
                                             </div>
                                         {% endif %}
-                                        <a href="/events/{{ event.id }}/add-to-calendar/" class="inline-block mt-1 px-3 py-1 bg-[#1e3a8a] text-white text-xs rounded hover:bg-[#1e3a8a] transition">Add to Calendar</a>
+                                        <a href="{% url 'event_ics' event.id %}" class="inline-block mt-1 px-3 py-1 bg-[#1e3a8a] text-white text-xs rounded hover:bg-[#1e3a8a] transition">Add to Calendar</a>
                                     </div>
                                 {% endfor %}
                             </div>
