@@ -35,7 +35,7 @@ from .views import (
     health_check, startup_health_check, static_fallback, clear_redirect_notification,
     analytics_dashboard,
 )
-from .views_push import push_vapid_public_key, push_subscribe, push_unsubscribe
+from .views_push import push_notifications_js, push_vapid_public_key, push_subscribe, push_unsubscribe
 from .sitemaps import (
     StaticViewSitemap,
     ChurchSitemap,
@@ -202,6 +202,7 @@ urlpatterns = [
     path('startup-health/', startup_health_check, name='startup_health_check'),
     path('fallback/', static_fallback, name='static_fallback'),
     path('clear-redirect-notification/', clear_redirect_notification, name='clear_redirect_notification'),
+    path('api/push/notifications.js', push_notifications_js, name='push_notifications_js'),
     path('api/push/vapid-public-key/', push_vapid_public_key, name='push_vapid_public_key'),
     path('api/push/subscribe/', push_subscribe, name='push_subscribe'),
     path('api/push/unsubscribe/', push_unsubscribe, name='push_unsubscribe'),

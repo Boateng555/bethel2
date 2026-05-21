@@ -461,17 +461,26 @@
     }, true);
   }
 
-  window.bethelPushEnableClick = function (churchId, evt) {
-    if (evt && evt.preventDefault) evt.preventDefault();
+  window.bethelOnPushEnable = function (churchId, evt) {
+    if (evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
     enableBanner(churchId);
     return false;
   };
 
-  window.bethelPushDismissClick = function (churchId, evt) {
-    if (evt && evt.preventDefault) evt.preventDefault();
+  window.bethelOnPushDismiss = function (churchId, evt) {
+    if (evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
     dismissBanner(churchId);
     return false;
   };
+
+  window.bethelPushEnableClick = window.bethelOnPushEnable;
+  window.bethelPushDismissClick = window.bethelOnPushDismiss;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runInit);

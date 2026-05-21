@@ -1,4 +1,3 @@
-{% load static %}
 {% if church %}
 <div data-bethel-push-banner data-church-id="{{ church.id }}"
      class="bethel-push-banner relative z-[200] isolate bg-[#1e3a8a] text-white px-4 py-3 shadow-md border-b border-[#1e40af]"
@@ -11,65 +10,22 @@
             <div class="min-w-0 overflow-hidden">
                 <p class="font-semibold text-sm sm:text-base">Get updates on your phone</p>
                 <p class="text-xs sm:text-sm text-white/85 mt-0.5">New events, sermons, and news from {{ church.name }}</p>
-                <p class="text-xs text-white/80 mt-1 leading-relaxed">
-                    <strong>iPhone:</strong> Share → Add to Home Screen, then open the <strong>Bethel</strong> icon on your home screen (not Safari) and tap Enable.
-                </p>
-                <p data-push-status class="text-xs text-yellow-200 mt-1 min-h-[1rem]">{% if not webpush_enabled %}Notifications are being activated on our server — try again soon.{% endif %}</p>
+                <p data-push-status class="text-xs text-yellow-200 mt-1 empty:hidden"></p>
             </div>
         </div>
         <div class="relative shrink-0 flex gap-2" style="z-index: 201; pointer-events: auto;">
             <button type="button" data-push-enable data-church-id="{{ church.id }}"
-                    onclick="window.bethelOnPushEnable && window.bethelOnPushEnable('{{ church.id }}', event); return false;"
-                    class="bg-white text-[#1e3a8a] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition cursor-pointer"
-                    style="pointer-events: auto; position: relative; z-index: 202;">
+                    class="bg-white text-[#1e3a8a] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition cursor-pointer">
                 Enable
             </button>
             <button type="button" data-push-dismiss data-church-id="{{ church.id }}"
-                    onclick="window.bethelOnPushDismiss && window.bethelOnPushDismiss('{{ church.id }}', event); return false;"
                     class="text-white/90 px-3 py-2 text-sm hover:text-white transition cursor-pointer"
-                    style="pointer-events: auto; position: relative; z-index: 202;"
                     aria-label="Dismiss">
                 Not now
             </button>
         </div>
     </div>
 </div>
-<script>
-window.bethelOnPushEnable = function (churchId, evt) {
-  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
-  var status = document.querySelector('[data-bethel-push-banner][data-church-id="' + churchId + '"] [data-push-status]');
-  if (window.BethelPush && window.BethelPush.enable) {
-    window.BethelPush.enable(churchId);
-    return false;
-  }
-  if (status) status.textContent = 'Starting…';
-  var tries = 0;
-  var t = setInterval(function () {
-    tries++;
-    if (window.BethelPush && window.BethelPush.enable) {
-      clearInterval(t);
-      window.BethelPush.enable(churchId);
-    } else if (tries > 20 && status) {
-      clearInterval(t);
-      status.textContent = 'Could not load notifications. Press Ctrl+F5 to refresh.';
-    }
-  }, 100);
-  return false;
-};
-window.bethelOnPushDismiss = function (churchId, evt) {
-  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
-  if (window.BethelPush && window.BethelPush.dismiss) {
-    window.BethelPush.dismiss(churchId);
-    return false;
-  }
-  var banner = document.querySelector('[data-bethel-push-banner][data-church-id="' + churchId + '"]');
-  if (banner) {
-    banner.style.display = 'none';
-    try { localStorage.setItem('bethel_push_dismissed_' + churchId, '1'); } catch (e) {}
-  }
-  return false;
-};
-</script>
-<script src="{% static 'js/push-notifications.js' %}?v=6" defer></script>
+<script src="{% url 'push_notifications_js' %}?v=7"></script>
 {% include 'core/_push_notification_settings.html' %}
 {% endif %}

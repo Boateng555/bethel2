@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
@@ -7,6 +8,19 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .models import Church, PushSubscription
 from .push_notifications import webpush_enabled
+
+
+@require_GET
+def push_notifications_js(request):
+    """Serve push-notifications.js via Django so Enable works even if /static/ is misconfigured."""
+    js_path = Path(settings.BASE_DIR) / 'static' / 'js' / 'push-notifications.js'
+    try:
+        content = js_path.read_text(encoding='utf-8')
+    except OSError:
+        return HttpResponse('// push-notifications.js not found', status=404, content_type='application/javascript')
+    response = HttpResponse(content, content_type='application/javascript; charset=utf-8')
+    response['Cache-Control'] = 'public, max-age=300'
+    return response
 
 
 @require_GET
