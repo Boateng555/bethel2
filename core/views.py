@@ -759,19 +759,19 @@ def watch(request):
     # Global Watch Online: show only the church whose "Request global live" was approved (everyone gets that same stream)
     live_stream_settings = None
     featured_church = None
-    try:
-        approved = LiveStreamSettings.objects.filter(
-            church__isnull=False,
-            global_feature_status='approved'
-        ).select_related('church').order_by('-id').first()
-        if approved:
-            live_stream_settings = approved
-            featured_church = approved.church
-        is_live = live_stream_settings.get_live_status() if live_stream_settings else False
-        next_service = live_stream_settings.get_next_service_time() if live_stream_settings else "No upcoming services"
-    except Exception:
-        is_live = False
-        next_service = "No upcoming services"
+    approved = LiveStreamSettings.objects.filter(
+        church__isnull=False,
+        global_feature_status='approved'
+    ).select_related('church').order_by('-id').first()
+    if approved:
+        live_stream_settings = approved
+        featured_church = approved.church
+    is_live = live_stream_settings.get_live_status() if live_stream_settings else False
+    next_service = (
+        live_stream_settings.get_next_service_time()
+        if live_stream_settings
+        else "No upcoming services"
+    )
 
     context = {
         'sermons': sermons,
@@ -816,14 +816,13 @@ def church_watch(request, church_id):
     featured_sermons = sermons.filter(is_featured=True)[:3]
     preachers = Sermon.objects.filter(church=church, is_public=True).values_list('preacher', flat=True).distinct()
 
-    try:
-        live_stream_settings = LiveStreamSettings.objects.filter(church=church).first()
-        is_live = live_stream_settings.get_live_status() if live_stream_settings else False
-        next_service = live_stream_settings.get_next_service_time() if live_stream_settings else "No upcoming services"
-    except Exception:
-        live_stream_settings = None
-        is_live = False
-        next_service = "No upcoming services"
+    live_stream_settings = LiveStreamSettings.objects.filter(church=church).first()
+    is_live = live_stream_settings.get_live_status() if live_stream_settings else False
+    next_service = (
+        live_stream_settings.get_next_service_time()
+        if live_stream_settings
+        else "No upcoming services"
+    )
 
     all_events = Event.objects.filter(church=church, is_public=True)
     all_ministries = Ministry.objects.filter(church=church, is_active=True)

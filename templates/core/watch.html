@@ -64,11 +64,15 @@
                 <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
                     <iframe 
                         class="w-full h-full"
-                        src="{{ live_stream_settings.facebook_live_url }}"
+                        src="{{ live_stream_settings.facebook_embed_url }}"
                         frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>
                 </div>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    <a href="{{ live_stream_settings.facebook_live_url }}" target="_blank" rel="noopener noreferrer" class="text-[#1e3a8a] hover:underline">Open on Facebook</a> if the player does not load here.
+                </p>
             {% elif live_stream_settings and live_stream_settings.platform == 'red5' and live_stream_settings.red5_stream_url %}
                 <!-- Red5 Embed -->
                 <div class="relative aspect-video bg-black rounded-lg overflow-hidden">

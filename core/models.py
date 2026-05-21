@@ -2087,7 +2087,88 @@ class LiveStreamSettings(models.Model):
     
     def __str__(self):
         return f"Live Stream Settings - {self.church.name if self.church else 'Global'}"
-    
+
+    @property
+    def facebook_embed_url(self):
+        """Facebook iframe src — converts watch/live page URLs to plugin embed URLs."""
+        from .livestream_utils import facebook_embed_url_from_input
+        return facebook_embed_url_from_input(
+            self.facebook_live_url,
+            width=max(self.embed_width * 8, 560) if self.embed_width else 1280,
+            height=self.embed_height or 720,
+        )
+
+    def has_configured_player(self):
+        """True when Watch page can show an embed for the selected platform."""
+        if self.platform == 'youtube':
+            return bool(self.youtube_channel_id)
+        if self.platform == 'facebook':
+            return bool(self.facebook_live_url)
+        if self.platform == 'red5':
+            return bool(self.red5_stream_url)
+        return False
+
+    def get_live_status(self):
+        """Whether the public Watch page should show LIVE NOW."""
+        if self.is_live:
+            return True
+        if not self.auto_detect_live:
+            return False
+        from django.utils import timezone
+        now = timezone.localtime()
+        weekday = now.weekday()
+        current = now.time()
+
+        def near_service(service_time, window_minutes=150):
+            if not service_time:
+                return False
+            from datetime import datetime, timedelta
+            today = now.date()
+            start = timezone.make_aware(datetime.combine(today, service_time))
+            if timezone.is_aware(now):
+                start = timezone.localtime(start)
+            delta = abs((now - start).total_seconds())
+            return delta <= window_minutes * 60
+
+        schedule = {
+            6: [self.sunday_morning_time, self.sunday_evening_time],
+            2: [self.wednesday_time],
+            4: [self.friday_time],
+        }
+        for service_time in schedule.get(weekday, []):
+            if near_service(service_time):
+                return True
+        return False
+
+    def get_next_service_time(self):
+        """Human-readable next service label for the Watch page."""
+        from django.utils import timezone
+        from datetime import datetime, timedelta
+
+        now = timezone.localtime()
+        services = [
+            (6, self.sunday_morning_time, 'Sunday morning'),
+            (6, self.sunday_evening_time, 'Sunday evening'),
+            (2, self.wednesday_time, 'Wednesday'),
+            (4, self.friday_time, 'Friday'),
+        ]
+        candidates = []
+        for weekday, service_time, label in services:
+            if not service_time:
+                continue
+            days_ahead = (weekday - now.weekday()) % 7
+            service_dt = datetime.combine(now.date(), service_time)
+            candidate = timezone.make_aware(service_dt) + timedelta(days=days_ahead)
+            if timezone.is_aware(now):
+                candidate = timezone.localtime(candidate)
+            if candidate <= now:
+                candidate += timedelta(days=7)
+            candidates.append((candidate, label, service_time))
+        if not candidates:
+            return 'No upcoming services'
+        candidate, label, service_time = min(candidates, key=lambda item: item[0])
+        return f'{label} at {service_time.strftime("%I:%M %p").lstrip("0")}'
+
     def get_embed_code(self):
         """Generate embed code based on platform"""
         if self.platform == 'youtube' and self.youtube_channel_id:
@@ -2101,13 +2182,14 @@ class LiveStreamSettings(models.Model):
     allowfullscreen>
 </iframe>
             """.strip()
-        elif self.platform == 'facebook' and self.facebook_live_url:
+        elif self.platform == 'facebook' and self.facebook_embed_url:
             return f"""
 <iframe 
     width="{self.embed_width}%" 
     height="{self.embed_height}" 
-    src="{self.facebook_live_url}"
+    src="{self.facebook_embed_url}"
     frameborder="0" 
+    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
     allowfullscreen>
 </iframe>
             """.strip()
