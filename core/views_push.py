@@ -8,6 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .models import Church, PushSubscription
 from .push_notifications import webpush_enabled
+from .pwa_utils import public_static_url
 
 
 @require_GET
@@ -157,11 +158,38 @@ def web_app_manifest(request):
         'theme_color': '#1e3a8a',
         'icons': [
             {
-                'src': '/static/img/bethel_logo.png',
+                'src': public_static_url('/static/img/icon-192.png', cache_bust=''),
                 'sizes': '192x192',
+                'type': 'image/png',
+                'purpose': 'any',
+            },
+            {
+                'src': public_static_url('/static/img/icon-512.png', cache_bust=''),
+                'sizes': '512x512',
+                'type': 'image/png',
+                'purpose': 'any',
+            },
+            {
+                'src': public_static_url('/static/img/apple-touch-icon.png', cache_bust=''),
+                'sizes': '180x180',
                 'type': 'image/png',
                 'purpose': 'any',
             },
         ],
     }
     return JsonResponse(manifest)
+
+
+@require_GET
+def apple_touch_icon(request):
+    """iOS looks for /apple-touch-icon.png at the site root."""
+    from pathlib import Path
+
+    icon_path = Path(settings.BASE_DIR) / 'static' / 'img' / 'apple-touch-icon.png'
+    try:
+        data = icon_path.read_bytes()
+    except OSError:
+        return HttpResponse(status=404)
+    response = HttpResponse(data, content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response

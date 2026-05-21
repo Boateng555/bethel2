@@ -1,6 +1,7 @@
 from django.conf import settings as django_settings
 from .models import GlobalSettings
 from .push_notifications import webpush_enabled
+from .pwa_utils import public_static_url
 
 # Default SEO description used when a page doesn't set meta_description
 DEFAULT_META_DESCRIPTION = (
@@ -50,6 +51,8 @@ def global_settings(request):
         meta_desc = DEFAULT_META_DESCRIPTION
         global_nav_logo_url = ""
     google_site_verification = getattr(django_settings, "GOOGLE_SITE_VERIFICATION", None) or ""
+    if not global_nav_logo_url:
+        global_nav_logo_url = public_static_url('/static/img/bethel_logo.png')
     return {
         "global_settings": gs,
         "meta_description": meta_desc,
@@ -58,4 +61,8 @@ def global_settings(request):
         "global_nav_logo_url": global_nav_logo_url,
         "google_site_verification": google_site_verification,
         "webpush_enabled": webpush_enabled(),
+        "pwa_apple_touch_icon": public_static_url('/static/img/apple-touch-icon.png'),
+        "pwa_favicon": public_static_url('/static/img/favicon-32.png'),
+        "pwa_icon_192": public_static_url('/static/img/icon-192.png'),
+        "pwa_icon_512": public_static_url('/static/img/icon-512.png'),
     } 
