@@ -219,14 +219,35 @@
     }
   }
 
-  function showStatus(churchId, message, isError) {
+  function getStatusEl(churchId) {
     var banner = getBanner(churchId);
-    if (!banner) return;
+    if (!banner) return null;
     var statusEl = banner.querySelector('[data-push-status]');
+    if (!statusEl) {
+      statusEl = document.createElement('p');
+      statusEl.setAttribute('data-push-status', '');
+      statusEl.className = 'text-xs mt-1 text-yellow-200 min-h-[1rem]';
+      var textBlock = banner.querySelector('.min-w-0');
+      if (textBlock) textBlock.appendChild(statusEl);
+    }
+    return statusEl;
+  }
+
+  function showStatus(churchId, message, isError) {
+    var statusEl = getStatusEl(churchId);
     if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.classList.remove('hidden');
-    statusEl.className = 'text-xs mt-1 ' + (isError ? 'text-yellow-200' : 'text-green-200');
+    statusEl.className = 'text-xs mt-1 min-h-[1rem] ' + (isError ? 'text-yellow-200' : 'text-green-200');
+  }
+
+  function syncEnableButton(churchId) {
+    var banner = getBanner(churchId);
+    if (!banner) return;
+    var enableBtn = banner.querySelector('[data-push-enable]');
+    if (!enableBtn) return;
+    enableBtn.disabled = false;
+    enableBtn.removeAttribute('aria-disabled');
   }
 
   function dismissBanner(churchId) {
@@ -235,6 +256,12 @@
   }
 
   function enableBanner(churchId) {
+    var setupMsg = pushSetupMessage();
+    if (setupMsg) {
+      showStatus(churchId, setupMsg, true);
+      return Promise.resolve();
+    }
+
     var banner = getBanner(churchId);
     var enableBtn = banner && banner.querySelector('[data-push-enable]');
     if (enableBtn) enableBtn.disabled = true;
@@ -264,6 +291,7 @@
       return;
     }
 
+    syncEnableButton(churchId);
     var setupMsg = pushSetupMessage();
     if (setupMsg) {
       showBanner(banner);
@@ -294,10 +322,12 @@
       .then(function (r) { return r.json(); })
       .then(function (data) {
         window.__bethelWebpushEnabled = !!data.enabled;
+        syncEnableButton(churchId);
         refreshBannerVisibility(churchId);
       })
       .catch(function () {
         window.__bethelWebpushEnabled = false;
+        syncEnableButton(churchId);
         refreshBannerVisibility(churchId);
       });
 
@@ -402,27 +432,38 @@
   function runInit() {
     document.querySelectorAll('[data-bethel-push-banner]').forEach(initBanner);
     initSettingsModal();
+
+    document.addEventListener('click', function (e) {
+      var enableBtn = e.target.closest('[data-push-enable]');
+      if (enableBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var churchId = enableBtn.getAttribute('data-church-id')
+          || (enableBtn.closest('[data-bethel-push-banner]') || {}).getAttribute('data-church-id');
+        if (!churchId) return;
+        enableBanner(churchId);
+        return;
+      }
+      var dismissBtn = e.target.closest('[data-push-dismiss]');
+      if (dismissBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var dismissId = dismissBtn.getAttribute('data-church-id')
+          || (dismissBtn.closest('[data-bethel-push-banner]') || {}).getAttribute('data-church-id');
+        if (dismissId) dismissBanner(dismissId);
+      }
+    }, true);
   }
 
   window.bethelPushEnableClick = function (churchId, evt) {
     if (evt && evt.preventDefault) evt.preventDefault();
-    if (window.BethelPush && window.BethelPush.enable) {
-      window.BethelPush.enable(churchId);
-      return false;
-    }
-    setTimeout(function () {
-      if (window.BethelPush && window.BethelPush.enable) {
-        window.BethelPush.enable(churchId);
-      }
-    }, 300);
+    enableBanner(churchId);
     return false;
   };
 
   window.bethelPushDismissClick = function (churchId, evt) {
     if (evt && evt.preventDefault) evt.preventDefault();
-    if (window.BethelPush && window.BethelPush.dismiss) {
-      window.BethelPush.dismiss(churchId);
-    }
+    dismissBanner(churchId);
     return false;
   };
 
