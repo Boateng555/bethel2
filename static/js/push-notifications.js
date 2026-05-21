@@ -351,17 +351,23 @@
     var statusEl = modal.querySelector('[data-push-settings-status]');
 
     function openModal() {
-      modal.classList.remove('hidden');
-      modal.style.display = '';
+      modal.style.display = 'flex';
+      modal.classList.add('flex', 'pointer-events-auto');
+      modal.classList.remove('pointer-events-none');
+      modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
       refreshSettingsState();
     }
 
     function closeModal() {
-      modal.classList.add('hidden');
       modal.style.display = 'none';
+      modal.classList.remove('flex', 'pointer-events-auto');
+      modal.classList.add('pointer-events-none');
+      modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
     }
+
+    closeModal();
 
     function refreshSettingsState() {
       var setupMsg = pushSetupMessage();

@@ -1,8 +1,10 @@
 {% if church %}
 <div id="bethel-push-settings-modal" data-church-id="{{ church.id }}"
-     class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-4"
+     class="fixed inset-0 z-[60] items-end sm:items-center justify-center bg-black/50 p-4 pointer-events-none"
+     style="display: none;"
+     aria-hidden="true"
      role="dialog" aria-labelledby="bethel-push-settings-title" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto pointer-events-auto">
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
             <h2 id="bethel-push-settings-title" class="text-lg font-semibold text-gray-900">Notification settings</h2>
             <button type="button" data-push-settings-close
