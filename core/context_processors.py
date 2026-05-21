@@ -1,5 +1,6 @@
 from django.conf import settings as django_settings
 from .models import GlobalSettings
+from .push_notifications import webpush_enabled
 
 # Default SEO description used when a page doesn't set meta_description
 DEFAULT_META_DESCRIPTION = (
@@ -56,4 +57,5 @@ def global_settings(request):
         "footer_links": footer_links,
         "global_nav_logo_url": global_nav_logo_url,
         "google_site_verification": google_site_verification,
+        "webpush_enabled": webpush_enabled(),
     } 

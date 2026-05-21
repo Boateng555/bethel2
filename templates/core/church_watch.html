@@ -36,7 +36,11 @@
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
                     <div class="w-3 h-3 {% if is_live %}bg-red-500 animate-pulse{% else %}bg-gray-400{% endif %} rounded-full"></div>
-                    <span class="text-lg font-semibold text-gray-900">{% if is_live %}LIVE NOW{% else %}OFFLINE{% endif %}</span>
+                    <span class="text-lg font-semibold text-gray-900">
+                        {% if is_manual_live %}LIVE NOW
+                        {% elif is_scheduled_slot %}SERVICE TIME
+                        {% else %}OFFLINE{% endif %}
+                    </span>
                 </div>
                 <div class="text-sm text-gray-500">
                     {{ next_service }}
@@ -54,7 +58,7 @@
                         allowfullscreen>
                     </iframe>
                 </div>
-            {% elif live_stream_settings and live_stream_settings.platform == 'facebook' and live_stream_settings.facebook_live_url %}
+            {% elif live_stream_settings and live_stream_settings.platform == 'facebook' and live_stream_settings.has_configured_player %}
                 <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
                     <iframe 
                         class="w-full h-full"
@@ -64,8 +68,14 @@
                         allowfullscreen>
                     </iframe>
                 </div>
+                {% if is_scheduled_slot and not is_manual_live %}
+                <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3 text-center">
+                    It is your scheduled service time. The player only works while you are actually live on Facebook.
+                    In admin, check <strong>We are live now</strong> when broadcasting, and use your Page <strong>/live</strong> link (not an old video link).
+                </p>
+                {% endif %}
                 <p class="text-xs text-gray-500 mt-2 text-center">
-                    <a href="{{ live_stream_settings.facebook_live_url }}" target="_blank" rel="noopener noreferrer" class="text-[#1e3a8a] hover:underline">Open on Facebook</a> if the player does not load here.
+                    <a href="{{ live_stream_settings.get_facebook_source_url }}" target="_blank" rel="noopener noreferrer" class="text-[#1e3a8a] hover:underline">Open on Facebook</a> if the player says &quot;Video unavailable&quot;.
                 </p>
             {% elif live_stream_settings and live_stream_settings.platform == 'red5' and live_stream_settings.red5_stream_url %}
                 <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
@@ -94,7 +104,11 @@
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-gray-900">Status</div>
-                    <div class="text-lg text-gray-600">{% if is_live %}🟢 Live{% else %}🔴 Offline{% endif %}</div>
+                    <div class="text-lg text-gray-600">
+                        {% if is_manual_live %}🟢 Broadcasting
+                        {% elif is_scheduled_slot %}🟡 Scheduled
+                        {% else %}🔴 Offline{% endif %}
+                    </div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-gray-900">Platform</div>

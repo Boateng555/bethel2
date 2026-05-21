@@ -5,7 +5,19 @@
   if (window.__bethelPushLoaded) return;
   window.__bethelPushLoaded = true;
 
-  var pushSupported = ('serviceWorker' in navigator) && ('PushManager' in window);
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isStandalonePWA() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+
+  function hasPushAPI() {
+    return ('serviceWorker' in navigator) && ('PushManager' in window);
+  }
 
   function storageKey(churchId, suffix) {
     return 'bethel_push_' + suffix + '_' + churchId;
@@ -47,6 +59,19 @@
     banner.style.display = '';
   }
 
+  function pushSetupMessage() {
+    if (window.__bethelWebpushEnabled === false) {
+      return 'Phone notifications are not set up on the server yet. Please try again later.';
+    }
+    if (isIOS() && !isStandalonePWA()) {
+      return 'On iPhone: add this site to your Home Screen (Share → Add to Home Screen), open that app icon, then tap Enable here.';
+    }
+    if (!hasPushAPI()) {
+      return 'This browser does not support notifications. Use Chrome/Android, or open from your iPhone Home Screen app.';
+    }
+    return '';
+  }
+
   function isDismissed(churchId) {
     try {
       return localStorage.getItem(storageKey(churchId, 'dismissed')) === '1';
@@ -84,18 +109,39 @@
     return fetch('/api/push/vapid-public-key/')
       .then(function (r) { return r.json(); })
       .then(function (data) {
+        window.__bethelWebpushEnabled = !!data.enabled;
         if (!data.enabled || !data.publicKey) {
-          throw new Error('Push not configured on server');
+          throw new Error(pushSetupMessage() || 'Push not configured on server');
         }
         return data.publicKey;
       });
   }
 
-  function subscribeUser(churchId) {
-    if (!pushSupported) {
-      return Promise.reject(new Error('Add this site to your Home Screen (iPhone) or use Chrome/Android for notifications.'));
+  function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      return Promise.resolve('default');
     }
-    return registerServiceWorker()
+    if (Notification.permission === 'granted' || Notification.permission === 'denied') {
+      return Promise.resolve(Notification.permission);
+    }
+    return Notification.requestPermission();
+  }
+
+  function subscribeUser(churchId) {
+    var setupMsg = pushSetupMessage();
+    if (setupMsg) {
+      return Promise.reject(new Error(setupMsg));
+    }
+    return requestNotificationPermission()
+      .then(function (perm) {
+        if (perm === 'denied') {
+          throw new Error('Notifications are blocked. In iPhone Settings → Notifications, allow alerts for Bethel.');
+        }
+        if (perm !== 'granted') {
+          throw new Error('Tap Allow when your phone asks for notification permission.');
+        }
+        return registerServiceWorker();
+      })
       .then(function () { return fetchPublicKey(); })
       .then(function (publicKey) {
         return navigator.serviceWorker.ready.then(function (reg) {
@@ -122,13 +168,13 @@
         });
       })
       .then(function (r) {
-        if (!r.ok) throw new Error('Subscribe failed');
+        if (!r.ok) throw new Error('Could not save subscription. Refresh and try again.');
         return r.json();
       });
   }
 
   function unsubscribeUser() {
-    if (!pushSupported) {
+    if (!hasPushAPI()) {
       return Promise.resolve();
     }
     return navigator.serviceWorker.ready
@@ -151,7 +197,7 @@
   }
 
   function hasActiveSubscription() {
-    if (!pushSupported) {
+    if (!hasPushAPI()) {
       return Promise.resolve(false);
     }
     return Promise.race([
@@ -173,13 +219,14 @@
     }
   }
 
-  function showStatus(churchId, message) {
+  function showStatus(churchId, message, isError) {
     var banner = getBanner(churchId);
     if (!banner) return;
     var statusEl = banner.querySelector('[data-push-status]');
     if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.classList.remove('hidden');
+    statusEl.className = 'text-xs mt-1 ' + (isError ? 'text-yellow-200' : 'text-green-200');
   }
 
   function dismissBanner(churchId) {
@@ -189,27 +236,22 @@
 
   function enableBanner(churchId) {
     var banner = getBanner(churchId);
-    hideBanner(banner);
-    setDismissed(churchId, true);
-
     var enableBtn = banner && banner.querySelector('[data-push-enable]');
     if (enableBtn) enableBtn.disabled = true;
-    showStatus(churchId, 'Enabling…');
+    showStatus(churchId, 'Enabling…', false);
 
     return subscribeUser(churchId)
       .then(function () {
         setEnabled(churchId, true);
         syncSettingsToggle(churchId, true);
-        showStatus(churchId, 'Notifications enabled! Open Notification settings to manage.');
+        hideBanner(banner);
       })
       .catch(function (err) {
         if (enableBtn) enableBtn.disabled = false;
-        var msg = err.message || 'Could not enable. Use Notification settings in the menu.';
-        showStatus(churchId, msg);
+        showBanner(banner);
+        var msg = (err && err.message) ? err.message : 'Could not enable notifications.';
+        showStatus(churchId, msg, true);
         syncSettingsToggle(churchId, false);
-        if (window.alert && !pushSupported) {
-          window.alert(msg);
-        }
       });
   }
 
@@ -219,6 +261,13 @@
 
     if (isDismissed(churchId)) {
       hideBanner(banner);
+      return;
+    }
+
+    var setupMsg = pushSetupMessage();
+    if (setupMsg) {
+      showBanner(banner);
+      showStatus(churchId, setupMsg, true);
       return;
     }
 
@@ -241,9 +290,18 @@
     if (!churchId || banner.getAttribute('data-push-init') === '1') return;
     banner.setAttribute('data-push-init', '1');
 
-    refreshBannerVisibility(churchId);
+    fetch('/api/push/vapid-public-key/')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        window.__bethelWebpushEnabled = !!data.enabled;
+        refreshBannerVisibility(churchId);
+      })
+      .catch(function () {
+        window.__bethelWebpushEnabled = false;
+        refreshBannerVisibility(churchId);
+      });
 
-    if (pushSupported) {
+    if (hasPushAPI()) {
       registerServiceWorker().catch(function () {});
     }
   }
@@ -276,6 +334,12 @@
     }
 
     function refreshSettingsState() {
+      var setupMsg = pushSetupMessage();
+      if (setupMsg && statusEl) {
+        statusEl.textContent = setupMsg;
+        if (toggle) toggle.checked = false;
+        return;
+      }
       hasActiveSubscription().then(function (active) {
         var enabled = active || localStorage.getItem(storageKey(churchId, 'enabled')) === '1';
         if (toggle) toggle.checked = enabled;
@@ -339,6 +403,28 @@
     document.querySelectorAll('[data-bethel-push-banner]').forEach(initBanner);
     initSettingsModal();
   }
+
+  window.bethelPushEnableClick = function (churchId, evt) {
+    if (evt && evt.preventDefault) evt.preventDefault();
+    if (window.BethelPush && window.BethelPush.enable) {
+      window.BethelPush.enable(churchId);
+      return false;
+    }
+    setTimeout(function () {
+      if (window.BethelPush && window.BethelPush.enable) {
+        window.BethelPush.enable(churchId);
+      }
+    }, 300);
+    return false;
+  };
+
+  window.bethelPushDismissClick = function (churchId, evt) {
+    if (evt && evt.preventDefault) evt.preventDefault();
+    if (window.BethelPush && window.BethelPush.dismiss) {
+      window.BethelPush.dismiss(churchId);
+    }
+    return false;
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runInit);

@@ -44,12 +44,22 @@
 
             <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Facebook Live</h3>
+                <div class="mb-4">
+                    <label for="facebook_page_id" class="block text-sm font-medium text-gray-700 mb-2">Facebook Page name or ID</label>
+                    <input type="text" id="facebook_page_id" name="facebook_page_id" value="{{ settings.facebook_page_id|default:'' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900"
+                           placeholder="e.g. BethelPrayerMinistryDusseldorf">
+                    <p class="text-xs text-gray-500 mt-1">Your Page username from the Facebook URL (recommended). Used for <code>/live</code> embed when no link is pasted.</p>
+                </div>
                 <div>
-                    <label for="facebook_live_url" class="block text-sm font-medium text-gray-700 mb-2">Facebook live or video link</label>
+                    <label for="facebook_live_url" class="block text-sm font-medium text-gray-700 mb-2">Facebook live link (while streaming)</label>
                     <input type="url" id="facebook_live_url" name="facebook_live_url" value="{{ settings.facebook_live_url|default:'' }}"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] text-gray-900"
-                           placeholder="https://www.facebook.com/watch?v=... or your Page /live link">
-                    <p class="text-xs text-gray-500 mt-1">Paste the normal Facebook link from your browser (watch, video, or Page live). The site converts it automatically for the Watch page.</p>
+                           placeholder="https://www.facebook.com/YourPage/live">
+                    <p class="text-xs text-gray-500 mt-1">
+                        Best: your Page <strong>/live</strong> link while you are broadcasting.
+                        Old <code>watch?v=</code> links stop working after the stream ends and show &quot;Video unavailable&quot; on the website.
+                    </p>
                     {% if settings.facebook_embed_url %}
                     <p class="text-xs text-green-700 mt-1">Preview embed URL is ready. Save and open <strong>Preview Watch Online page</strong> to test.</p>
                     {% endif %}

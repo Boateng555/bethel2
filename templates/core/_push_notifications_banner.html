@@ -10,62 +10,30 @@
             <div class="min-w-0">
                 <p class="font-semibold text-sm sm:text-base">Get updates on your phone</p>
                 <p class="text-xs sm:text-sm text-white/85 mt-0.5">New events, sermons, and news from {{ church.name }}</p>
-                <p class="text-xs text-white/70 mt-1 hidden sm:block">On iPhone: tap Share → Add to Home Screen for best results.</p>
+                <p class="text-xs text-white/80 mt-1 leading-relaxed">
+                    <strong>iPhone:</strong> Share → Add to Home Screen, then open the <strong>Bethel</strong> icon on your home screen (not Safari) and tap Enable.
+                </p>
+                {% if not webpush_enabled %}
+                <p class="text-xs text-yellow-200 mt-1">Notifications are being activated on our server — try again soon.</p>
+                {% else %}
                 <p data-push-status class="text-xs text-yellow-200 mt-1"></p>
+                {% endif %}
             </div>
         </div>
         <div class="flex gap-2 shrink-0">
             <button type="button" data-push-enable
-                    onclick="window.BethelPushUI && window.BethelPushUI.enable('{{ church.id }}'); return false;"
+                    onclick="return bethelPushEnableClick('{{ church.id }}', event);"
                     class="bg-white text-[#1e3a8a] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition">
                 Enable
             </button>
             <button type="button" data-push-dismiss
-                    onclick="window.BethelPushUI && window.BethelPushUI.dismiss('{{ church.id }}'); return false;"
+                    onclick="return bethelPushDismissClick('{{ church.id }}', event);"
                     class="text-white/90 px-3 py-2 text-sm hover:text-white transition" aria-label="Dismiss">
                 Not now
             </button>
         </div>
     </div>
 </div>
-<script>
-(function (churchId) {
-  var keyDismissed = 'bethel_push_dismissed_' + churchId;
-
-  function hideNow() {
-    var el = document.querySelector('[data-bethel-push-banner][data-church-id="' + churchId + '"]');
-    if (!el) return;
-    el.style.display = 'none';
-    el.setAttribute('hidden', 'hidden');
-    el.classList.add('hidden');
-  }
-
-  function dismissNow() {
-    try { localStorage.setItem(keyDismissed, '1'); } catch (e) {}
-    hideNow();
-  }
-
-  window.BethelPushUI = window.BethelPushUI || {};
-  window.BethelPushUI.dismiss = window.BethelPushUI.dismiss || function (id) {
-    try { localStorage.setItem('bethel_push_dismissed_' + id, '1'); } catch (e) {}
-    var el = document.querySelector('[data-bethel-push-banner][data-church-id="' + id + '"]');
-    if (el) { el.style.display = 'none'; el.setAttribute('hidden', 'hidden'); el.classList.add('hidden'); }
-  };
-  window.BethelPushUI.enable = window.BethelPushUI.enable || function (id) {
-    window.BethelPushUI.dismiss(id);
-    if (window.BethelPush && window.BethelPush.enable) {
-      window.BethelPush.enable(id);
-    } else {
-      window.alert('To get phone notifications, open the menu → Notification settings, or add this site to your Home Screen (iPhone).');
-    }
-  };
-  window.BethelPushUI.refresh = window.BethelPushUI.refresh || function () {};
-
-  try {
-    if (localStorage.getItem(keyDismissed) === '1') hideNow();
-  } catch (e) {}
-})('{{ church.id }}');
-</script>
+<script src="{% static 'js/push-notifications.js' %}?v=4"></script>
 {% include 'core/_push_notification_settings.html' %}
-<script src="{% static 'js/push-notifications.js' %}?v=3"></script>
 {% endif %}

@@ -818,6 +818,8 @@ def church_watch(request, church_id):
 
     live_stream_settings = LiveStreamSettings.objects.filter(church=church).first()
     is_live = live_stream_settings.get_live_status() if live_stream_settings else False
+    is_manual_live = bool(live_stream_settings and live_stream_settings.is_live)
+    is_scheduled_slot = bool(is_live and not is_manual_live)
     next_service = (
         live_stream_settings.get_next_service_time()
         if live_stream_settings
@@ -834,6 +836,8 @@ def church_watch(request, church_id):
         'preachers': preachers,
         'live_stream_settings': live_stream_settings,
         'is_live': is_live,
+        'is_manual_live': is_manual_live,
+        'is_scheduled_slot': is_scheduled_slot,
         'next_service': next_service,
         'keyword': keyword,
         'preacher': preacher,
@@ -2482,6 +2486,7 @@ def local_admin_live_stream(request):
             return redirect('local_admin_live_stream')
         settings_obj.platform = request.POST.get('platform', 'youtube')
         settings_obj.youtube_channel_id = (request.POST.get('youtube_channel_id') or '').strip()
+        settings_obj.facebook_page_id = (request.POST.get('facebook_page_id') or '').strip()
         settings_obj.facebook_live_url = (request.POST.get('facebook_live_url') or '').strip()
         settings_obj.red5_stream_url = (request.POST.get('red5_stream_url') or '').strip()
         settings_obj.is_live = request.POST.get('is_live') == 'on'

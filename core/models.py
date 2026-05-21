@@ -2088,12 +2088,24 @@ class LiveStreamSettings(models.Model):
     def __str__(self):
         return f"Live Stream Settings - {self.church.name if self.church else 'Global'}"
 
+    def get_facebook_source_url(self):
+        """URL passed to Facebook's embed plugin (live page preferred over old video links)."""
+        from .livestream_utils import facebook_page_live_url, normalize_facebook_url
+
+        url = (self.facebook_live_url or '').strip()
+        if url:
+            return normalize_facebook_url(url)
+        if self.facebook_page_id:
+            return facebook_page_live_url(self.facebook_page_id)
+        return ''
+
     @property
     def facebook_embed_url(self):
         """Facebook iframe src — converts watch/live page URLs to plugin embed URLs."""
         from .livestream_utils import facebook_embed_url_from_input
+        source = self.get_facebook_source_url()
         return facebook_embed_url_from_input(
-            self.facebook_live_url,
+            source,
             width=max(self.embed_width * 8, 560) if self.embed_width else 1280,
             height=self.embed_height or 720,
         )
@@ -2103,7 +2115,7 @@ class LiveStreamSettings(models.Model):
         if self.platform == 'youtube':
             return bool(self.youtube_channel_id)
         if self.platform == 'facebook':
-            return bool(self.facebook_live_url)
+            return bool(self.facebook_live_url or self.facebook_page_id)
         if self.platform == 'red5':
             return bool(self.red5_stream_url)
         return False

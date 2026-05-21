@@ -1,11 +1,20 @@
 """Helpers for live stream embed URLs (YouTube, Facebook, etc.)."""
-from urllib.parse import quote
+import re
+from urllib.parse import quote, urlparse, urlunparse
+
+
+def facebook_page_live_url(page_id_or_slug: str) -> str:
+    """Build a Facebook Page /live URL from admin page ID or username."""
+    raw = (page_id_or_slug or '').strip().strip('/')
+    if not raw:
+        return ''
+    if raw.isdigit():
+        return f'https://www.facebook.com/profile.php?id={raw}&sk=live'
+    return f'https://www.facebook.com/{raw}/live'
 
 
 def normalize_facebook_url(url: str) -> str:
     """Normalize common Facebook URL variants."""
-    from urllib.parse import urlparse, urlunparse
-
     url = (url or '').strip()
     if not url:
         return ''
@@ -18,8 +27,14 @@ def normalize_facebook_url(url: str) -> str:
     url = url.replace('://facebook.com/', '://www.facebook.com/')
 
     parsed = urlparse(url)
-    if '/videos/' in parsed.path or '/watch' in parsed.path:
-        url = urlunparse((parsed.scheme, parsed.netloc, parsed.path.rstrip('/'), '', '', ''))
+    path = parsed.path.rstrip('/')
+    if '/videos/' in path or '/watch' in path:
+        url = urlunparse((parsed.scheme, parsed.netloc, path, '', '', ''))
+        return url
+
+    # Page home link (facebook.com/YourPage) — use /live for embeds
+    if re.match(r'^/[^/]+$', path) and path.lower() not in ('/watch', '/share', '/login'):
+        url = urlunparse((parsed.scheme, parsed.netloc, path + '/live', '', '', ''))
     return url
 
 

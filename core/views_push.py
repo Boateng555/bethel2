@@ -6,12 +6,13 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Church, PushSubscription
+from .push_notifications import webpush_enabled
 
 
 @require_GET
 def push_vapid_public_key(request):
     key = getattr(settings, 'WEBPUSH_VAPID_PUBLIC_KEY', '')
-    return JsonResponse({'publicKey': key, 'enabled': bool(key)})
+    return JsonResponse({'publicKey': key, 'enabled': webpush_enabled()})
 
 
 @require_POST
@@ -128,11 +129,15 @@ def web_app_manifest(request):
     except Exception:
         pass
 
+    start_url = request.GET.get('start', '/').strip()
+    if not start_url.startswith('/'):
+        start_url = '/'
+
     manifest = {
         'name': site_name,
         'short_name': 'Bethel',
         'description': 'Events, sermons, and news from your Bethel church',
-        'start_url': '/',
+        'start_url': start_url,
         'display': 'standalone',
         'background_color': '#1e3a8a',
         'theme_color': '#1e3a8a',
