@@ -201,6 +201,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 SITE_ID = 1
 # Set SITE_DOMAIN in .env to your production domain (e.g. www.bethel.org) for sitemap/SEO
 SITE_DOMAIN = os.environ.get('SITE_DOMAIN', '').strip()
+# Public links in emails, calendar .ics, push — always use the live site visitors use
+CANONICAL_PUBLIC_DOMAIN = (
+    os.environ.get('CANONICAL_PUBLIC_DOMAIN', '').strip()
+    or 'bethelprayerministryinternational.com'
+)
 # Optional: from Google Search Console → Add property → Verify → HTML tag (content="...")
 GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '').strip() or None
 
@@ -271,6 +276,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://your-domain.com",
     "https://bethelprayerministryinternational.com",
     "https://www.bethelprayerministryinternational.com",
+    "https://bethel-prayer-ministry-international.com",
+    "https://www.bethel-prayer-ministry-international.com",
     "https://91.99.232.214",
     "http://91.99.232.214:8000",
     "http://localhost:8000",
