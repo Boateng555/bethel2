@@ -11,7 +11,7 @@
 <body class="min-h-screen bg-[#1e3a8a] text-white flex flex-col items-center justify-center px-6 text-center">
     <img src="{% static 'img/bethel_logo.png' %}" alt="" class="w-16 h-16 rounded-full mb-6" width="64" height="64">
     <h1 class="text-xl font-semibold mb-2">Finding your Bethel church</h1>
-    <p id="status" class="text-blue-100 text-sm max-w-sm">Using your location so we open the right city for you…</p>
+    <p id="status" class="text-blue-100 text-sm max-w-sm">Please allow location access so we open <strong>Düsseldorf</strong> (not Frankfurt or Hamburg).</p>
     <div class="mt-8 w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true"></div>
     <p class="mt-8 text-xs text-blue-200">
         <a href="{% url 'church_list' %}?choose_church=1" class="underline">Pick church manually</a>

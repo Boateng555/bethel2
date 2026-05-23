@@ -69,6 +69,7 @@ from .location_utils import (
     city_names_for_slug,
     cities_match,
     churches_for_location_json,
+    needs_browser_location,
 )
 
 def robots_txt(request):
@@ -118,6 +119,15 @@ def smart_home(request):
         # If user explicitly wants global site, redirect to global home
         if go_global:
             return redirect('home')
+
+        if request.GET.get('reset_location'):
+            for key in (
+                'user_church_id', 'user_lat', 'user_lon', 'user_city', 'user_country',
+                'user_gps_confirmed', 'user_church_manual', 'local_church_redirect',
+                'redirected_church',
+            ):
+                request.session.pop(key, None)
+            request.session.modified = True
         
         # Test parameter for manual testing
         test_location = request.GET.get('test_location')
@@ -167,6 +177,12 @@ def smart_home(request):
             return redirect('church_home', church_id=church.id)
         
         print(f"DEBUG: User location - Country: {country}, City: {city}, lat: {user_lat}, lon: {user_lon}")
+
+        if needs_browser_location(request, country):
+            print("DEBUG: Multi-church region without GPS — asking phone location")
+            return render(request, 'core/location_detect.html', {
+                'churches_json': churches_for_location_json(),
+            })
 
         nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         if nearest_church:
@@ -4192,7 +4208,11 @@ def save_my_church(request):
         except (TypeError, ValueError):
             pass
 
-    save_user_location_session(request, church, lat, lon, gps_confirmed=gps_confirmed)
+    save_user_location_session(
+        request, church, lat, lon,
+        gps_confirmed=gps_confirmed,
+        manual=not gps_confirmed,
+    )
     return JsonResponse({'ok': True, 'redirect': church_location_redirect(church)})
 
 
