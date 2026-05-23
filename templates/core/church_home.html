@@ -7,7 +7,7 @@
     <link rel="manifest" href="/manifest.webmanifest?start={{ request.path|urlencode }}">
     {% include 'core/_pwa_head.html' %}
     <meta name="theme-color" content="#1e3a8a">
-    <title>{{ church.name }} - Home</title>
+    <title>{{ church.display_name }} - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -525,13 +525,13 @@
             {% if global_nav_logo_url %}
                 <img src="{{ global_nav_logo_url }}" alt="Bethel Logo" class="w-8 h-8 rounded-full object-cover shrink-0" width="32" height="32" onerror="this.onerror=null; this.src='{% static 'img/bethel_logo.png' %}';">
             {% elif church.nav_logo %}
-                <img src="{{ church.get_nav_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
+                <img src="{{ church.get_nav_logo_url }}" alt="{{ church.display_name }} Logo" class="w-7 h-7 rounded-full object-cover">
             {% elif church.logo %}
-                <img src="{{ church.get_logo_url }}" alt="{{ church.name }} Logo" class="w-7 h-7 rounded-full object-cover">
+                <img src="{{ church.get_logo_url }}" alt="{{ church.display_name }} Logo" class="w-7 h-7 rounded-full object-cover">
             {% else %}
                 <img src="{% static 'img/bethel_logo.png' %}" alt="Bethel Logo" class="w-8 h-8 rounded-full">
             {% endif %}
-            <span class="text-sm font-semibold">{{ church.name }}</span>
+            <span class="text-sm font-semibold">{{ church.display_name }}</span>
         </div>
         <!-- Desktop Nav (hidden on mobile) -->
         <nav class="hidden md:flex items-center space-x-4 text-sm">
@@ -659,7 +659,7 @@
         <!-- Fallback hero (only when no hero content is set in Church Hero for this local church) -->
         <div class="absolute inset-0 bg-deep-blue"></div>
         <div class="relative z-10 max-w-5xl mx-auto px-6 py-32 flex flex-col items-center text-center church-hero-section">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white church-hero-title">Welcome to {{ church.name }}</h1>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white church-hero-title">Welcome to {{ church.display_name }}</h1>
             <p class="text-xl md:text-2xl mb-8 text-white max-w-3xl church-hero-subtitle">Join us in worship and community as we grow together in faith.</p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="{% url 'church_list' %}" class="bg-[#1e3a8a] hover:bg-white text-white px-8 py-3 rounded-lg font-semibold transition duration-300">Find Nearest Church</a>
@@ -696,7 +696,7 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-xl shadow-md md:shadow-none md:bg-transparent md:rounded-none overflow-hidden church-welcome-inner">
             <div class="text-center px-4 pt-4 pb-2 md:px-0 md:pt-0 md:pb-0 md:mb-8 church-info-card">
-                <h2 class="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-6 church-section-title leading-tight">Welcome to {{ church.name }}</h2>
+                <h2 class="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-6 church-section-title leading-tight">Welcome to {{ church.display_name }}</h2>
                 <p class="text-xs sm:text-sm md:text-lg text-gray-600 md:text-gray-700 leading-snug md:leading-relaxed church-section-subtitle">{{ church.description|default:"Join us for worship, fellowship, and spiritual growth." }}</p>
             </div>
             <div class="border-t border-gray-100 md:border-0 px-2 py-2 md:p-0">
@@ -767,7 +767,7 @@
 <section class="bg-gray-50 py-16 church-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Upcoming Events at {{ church.display_name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
         </div>
         <div class="auto-scroll-events flex space-x-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8{% if events|length == 1 %} card-carousel-single{% endif %}">
@@ -784,7 +784,7 @@
 <section class="bg-white py-16 church-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-[#1e3a8a] mb-4 church-section-title">Upcoming Events at {{ church.name }}</h2>
+            <h2 class="text-3xl font-bold text-[#1e3a8a] mb-4 church-section-title">Upcoming Events at {{ church.display_name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Join us for these special gatherings and celebrations</p>
         </div>
         <div class="flex justify-center">
@@ -841,7 +841,7 @@
 <section class="bg-gray-50 py-16 church-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 church-grid-container">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.name }}</h2>
+            <h2 class="text-3xl font-bold text-deep-blue mb-4 church-section-title">Latest News from {{ church.display_name }}</h2>
             <p class="text-lg text-gray-600 church-section-subtitle">Stay updated with the latest happenings in our church community</p>
         </div>
         <div class="auto-scroll-news flex space-x-4 overflow-x-auto scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-3 md:space-x-0 md:gap-8 items-stretch{% if news|length == 1 %} card-carousel-single{% endif %}">

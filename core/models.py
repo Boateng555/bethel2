@@ -19,6 +19,23 @@ def get_image_utils():
 
 # Create your models here.
 
+
+def clean_church_name(name: str) -> str:
+    """Remove accidental duplicate words (e.g. 'Assembly Assembly')."""
+    if not name or not str(name).strip():
+        return name
+    text = ' '.join(str(name).split())
+    changed = True
+    while changed:
+        changed = False
+        parts = text.split()
+        if len(parts) >= 2 and parts[-1].lower() == parts[-2].lower():
+            parts.pop()
+            text = ' '.join(parts)
+            changed = True
+    return text
+
+
 class Church(models.Model):
     """Represents a Bethel church location"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -86,8 +103,12 @@ class Church(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.name} - {self.city}, {self.country}"
-    
+        return f"{self.display_name} - {self.city}, {self.country}"
+
+    @property
+    def display_name(self):
+        return clean_church_name(self.name)
+
     def get_full_address(self):
         parts = [self.address, self.city]
         if self.state_province:
@@ -453,6 +474,7 @@ class Church(models.Model):
         return True
 
     def save(self, *args, **kwargs):
+        self.name = clean_church_name(self.name)
         # Auto-geocode if lat/lon missing and address/city/country present
         if (not self.latitude or not self.longitude) and (self.address and self.city and self.country):
             try:
