@@ -202,6 +202,8 @@
         <p class="text-lg text-gray-600">{% if page_title_override %}Bethel churches in this country{% else %}Discover Bethel churches around the world{% endif %}</p>
     </div>
 
+    {% include 'core/_church_location_picker.html' %}
+
     <!-- Search and Filter Section -->
     <div class="church-list-search-box bg-white rounded-lg shadow-md p-6 mb-8">
         <form method="GET" class="space-y-4">
@@ -268,7 +270,8 @@
         {% if churches %}
         <div class="church-grid">
             {% for church in churches %}
-            <div class="church-card relative bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
+            <div class="church-card relative bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group"
+                 {% if church.latitude and church.longitude %}data-lat="{{ church.latitude }}" data-lon="{{ church.longitude }}"{% endif %}>
                 <!-- Image / banner (even height, sermon-style) -->
                 <div class="church-card-media relative bg-gradient-to-br from-[#1e3a8a] via-[#2563eb] to-[#3b82f6] overflow-hidden shrink-0">
                     {% if church.banner_image and church.banner_url_absolute %}

@@ -1,0 +1,82 @@
+{% if choose_church and all_churches_for_picker %}
+<div id="choose-church-banner" class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg" role="region" aria-label="Choose your church">
+    <h2 class="text-lg font-semibold text-amber-900 mb-1">Which Bethel church is yours?</h2>
+    <p class="text-sm text-amber-800 mb-3">We could not tell your city automatically. Pick your location so we open the right site next time (e.g. Düsseldorf, not Hamburg).</p>
+    <div class="flex flex-wrap gap-2">
+        {% for c in all_churches_for_picker %}
+        <button type="button"
+                class="choose-church-btn px-4 py-2 rounded-lg bg-white border border-amber-300 text-amber-900 text-sm font-medium hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                data-church-id="{{ c.id }}">
+            {{ c.city }}{% if c.country %}, {{ c.country }}{% endif %}
+        </button>
+        {% endfor %}
+    </div>
+    <p class="text-xs text-amber-700 mt-3">
+        <button type="button" id="use-my-location-btn" class="underline font-medium hover:text-amber-900">Use my phone location</button>
+        for a more accurate match.
+    </p>
+</div>
+<script>
+(function() {
+    function getCookie(name) {
+        var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+    function saveChurch(churchId, lat, lon) {
+        var body = new URLSearchParams({ church_id: churchId });
+        if (lat != null && lon != null) {
+            body.set('lat', lat);
+            body.set('lon', lon);
+        }
+        return fetch('{% url "save_my_church" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+            credentials: 'same-origin',
+        }).then(function(r) { return r.json(); });
+    }
+    document.querySelectorAll('.choose-church-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            btn.disabled = true;
+            saveChurch(btn.getAttribute('data-church-id')).then(function(data) {
+                if (data.ok && data.redirect) window.location.href = data.redirect;
+                else btn.disabled = false;
+            }).catch(function() { btn.disabled = false; });
+        });
+    });
+    var locBtn = document.getElementById('use-my-location-btn');
+    if (locBtn && navigator.geolocation) {
+        locBtn.addEventListener('click', function() {
+            locBtn.textContent = 'Getting location…';
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude;
+                var lon = pos.coords.longitude;
+                var buttons = document.querySelectorAll('.choose-church-btn');
+                if (!buttons.length) return;
+                var best = buttons[0];
+                var bestDist = Infinity;
+                buttons.forEach(function(b) {
+                    var card = b.closest('.church-card');
+                    if (!card) return;
+                    var clat = parseFloat(card.getAttribute('data-lat'));
+                    var clon = parseFloat(card.getAttribute('data-lon'));
+                    if (isNaN(clat) || isNaN(clon)) return;
+                    var d = Math.hypot(clat - lat, clon - lon);
+                    if (d < bestDist) { bestDist = d; best = b; }
+                });
+                saveChurch(best.getAttribute('data-church-id'), lat, lon).then(function(data) {
+                    if (data.ok && data.redirect) window.location.href = data.redirect;
+                });
+            }, function() {
+                locBtn.textContent = 'Location blocked — pick your city above';
+            }, { enableHighAccuracy: true, timeout: 15000 });
+        });
+    } else if (locBtn) {
+        locBtn.style.display = 'none';
+    }
+})();
+</script>
+{% endif %}

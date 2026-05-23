@@ -429,6 +429,7 @@
     })();
     </script>
     {% endif %}
+    {% include 'core/_church_switch_banner.html' %}
     <!-- Local Church Redirect Notification (auto-hides in 1 second) -->
     {% if request.session.local_church_redirect %}
     <div id="local-church-redirect-banner" class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 transition-all duration-300 ease-out">

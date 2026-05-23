@@ -1,0 +1,37 @@
+{% if suggest_church_switch and nearest_church %}
+<div id="church-switch-banner" class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-900 text-center" role="alert">
+    <p class="text-sm sm:text-base">
+        This page is for <strong>{{ church.city }}</strong>.
+        Based on your location, your church may be
+        <strong>{{ nearest_church.name }}</strong> ({{ nearest_church.city }}).
+        <button type="button" id="switch-to-nearest-church" class="ml-1 font-semibold underline text-amber-800 hover:text-amber-950"
+                data-church-id="{{ nearest_church.id }}">
+            Switch to {{ nearest_church.city }}
+        </button>
+    </p>
+</div>
+<script>
+(function() {
+    var btn = document.getElementById('switch-to-nearest-church');
+    if (!btn) return;
+    function getCookie(name) {
+        var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+    btn.addEventListener('click', function() {
+        var body = new URLSearchParams({ church_id: btn.getAttribute('data-church-id') });
+        fetch('{% url "save_my_church" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+            credentials: 'same-origin',
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok && data.redirect) window.location.href = data.redirect;
+        });
+    });
+})();
+</script>
+{% endif %}

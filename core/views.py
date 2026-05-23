@@ -61,138 +61,15 @@ import json
 
 # Create your views here.
 
-def get_user_location(request):
-    """
-    Get user's location based on IP address
-    Returns: (country, city) or (None, None) if unable to determine
-    """
-    try:
-        # Get client IP
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        
-        print(f"DEBUG: User IP: {ip}")
-        
-        # Try ipapi.co first
-        try:
-            response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                country = data.get('country_name')
-                city = data.get('city')
-                print(f"DEBUG: ipapi.co result - Country: {country}, City: {city}")
-                return country, city
-            else:
-                print(f"DEBUG: ipapi.co failed with status {response.status_code}")
-        except Exception as e:
-            print(f"DEBUG: ipapi.co error: {e}")
-        
-        # Fallback: Try ip-api.com
-        try:
-            response = requests.get(f'http://ip-api.com/json/{ip}', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('status') == 'success':
-                    country = data.get('country')
-                    city = data.get('city')
-                    print(f"DEBUG: ip-api.com result - Country: {country}, City: {city}")
-                    return country, city
-                else:
-                    print(f"DEBUG: ip-api.com failed with status: {data.get('status')}")
-        except Exception as e:
-            print(f"DEBUG: ip-api.com error: {e}")
-        
-        # For testing: If localhost, return Germany/Hamburg
-        if ip in ['127.0.0.1', 'localhost', '::1']:
-            print("DEBUG: Localhost detected, returning Germany/Hamburg for testing")
-            return 'Germany', 'Hamburg'
-            
-    except Exception as e:
-        print(f"DEBUG: Error getting location: {e}")
-    
-    return None, None
-
-def find_nearest_church(country, city):
-    """
-    Find the nearest church based on country and city
-    Returns: Church object or None if no suitable match found
-    """
-    if not country:
-        return None
-    
-    # Get configuration from GlobalSettings (same instance as full-admin edit)
-    try:
-        global_settings = GlobalSettings.get_settings()
-        min_score = getattr(global_settings, 'local_church_redirect_min_score', 100)
-        max_distance_km = getattr(global_settings, 'local_church_redirect_max_distance_km', None)
-    except Exception as e:
-        print(f"DEBUG: Error getting global settings in find_nearest_church: {e}")
-        from django.conf import settings
-        min_score = getattr(settings, 'LOCAL_CHURCH_REDIRECT_MIN_SCORE', 100)
-        max_distance_km = None
-    
-    # Get all active and approved churches
-    churches = Church.objects.filter(is_active=True, is_approved=True)
-    
-    if not churches.exists():
-        return None
-    
-    # If only one church exists, return it
-    if churches.count() == 1:
-        return churches.first()
-    
-    # Score churches based on location match
-    church_scores = []
-    
-    for church in churches:
-        score = 0
-        
-        # Exact country match (highest priority)
-        if church.country and country.lower() in church.country.lower():
-            score += 100
-        # Partial country match
-        elif church.country and country.split()[0].lower() in church.country.lower():
-            score += 50
-        
-        # Exact city match (very high priority)
-        if city and church.city and city.lower() in church.city.lower():
-            score += 200
-        # Partial city match
-        elif city and church.city and city.split()[0].lower() in church.city.lower():
-            score += 100
-        
-        # If we have coordinates for the church, we could add distance calculation here
-        # max_distance_km from GlobalSettings can be used to filter by distance when user coords available
-        church_scores.append((church, score))
-    
-    # Sort by score (highest first)
-    church_scores.sort(key=lambda x: x[1], reverse=True)
-    
-    # Only return a church if it has a reasonable match score
-    # Use the configured minimum score (and max_distance_km when distance logic is used)
-    if church_scores and church_scores[0][1] >= min_score:
-        best_church = church_scores[0][0]
-        best_score = church_scores[0][1]
-        
-        # Additional check: If we have multiple churches with the same score,
-        # prefer the one with better city match
-        if best_score >= 100:  # At least partial country match
-            # Look for churches with city match
-            city_matches = [c for c, s in church_scores if s >= 200]  # Exact city match
-            if city_matches:
-                return city_matches[0]
-            
-            partial_city_matches = [c for c, s in church_scores if s >= 150]  # Partial city match
-            if partial_city_matches:
-                return partial_city_matches[0]
-        
-        return best_church
-    
-    # If no good match found, return None instead of forcing a redirect
-    return None
+from .location_utils import (
+    find_nearest_church,
+    get_user_location,
+    church_location_redirect,
+    save_user_location_session,
+    city_names_for_slug,
+    cities_match,
+    churches_for_location_json,
+)
 
 def robots_txt(request):
     """Serve robots.txt allowing crawlers and pointing to sitemap (used in core/urls.py for all deployments)."""
@@ -253,8 +130,9 @@ def smart_home(request):
             else:
                 country = test_location.strip()
                 city = None
+            user_lat, user_lon = None, None
         else:
-            country, city = get_user_location(request)
+            country, city, user_lat, user_lon = get_user_location(request)
         
         # Check database availability without blocking
         db_available, db_error = get_database_status()
@@ -288,63 +166,25 @@ def smart_home(request):
                 return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
             return redirect('church_home', church_id=church.id)
         
-        print(f"DEBUG: User location detected - Country: {country}, City: {city}")
-        
-        if country:
-            # Try to find nearest church based on location
-            nearest_church = find_nearest_church(country, city)
-            if nearest_church:
-                print(f"DEBUG: Found nearest church: {nearest_church.name} in {nearest_church.city}, {nearest_church.country}")
-                
-                # Additional check: Only redirect if the match is strong enough
-                # This prevents redirecting to churches that are too far away
-                match_quality = "good"
-                
-                # If we have city information, check if it's a strong match
-                if city and nearest_church.city:
-                    if city.lower() in nearest_church.city.lower() or nearest_church.city.lower() in city.lower():
-                        match_quality = "excellent"
-                    elif city.split()[0].lower() in nearest_church.city.lower():
-                        match_quality = "good"
-                    else:
-                        match_quality = "country_only"
-                
-                # Only redirect for good or excellent matches, and only if score meets minimum
-                if match_quality in ["good", "excellent"]:
-                    print(f"DEBUG: Match quality: {match_quality}, redirecting to {nearest_church.name}")
-                    request.session['local_church_redirect'] = True
-                    request.session['redirected_church'] = nearest_church.name
-                    request.session.modified = True
-                    cslug, cityslug = _location_slugs(nearest_church)
-                    if cslug and cityslug:
-                        return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
-                    return redirect('church_home', church_id=nearest_church.id)
-                else:
-                    print(f"DEBUG: Match quality too low ({match_quality}), showing church list instead")
-            else:
-                print(f"DEBUG: No suitable church found for location: {city}, {country}")
-        else:
-            print("DEBUG: Could not determine user location")
-        
-        # Try to redirect to main global church as fallback (same instance as full-admin edit)
-        try:
-            global_settings = GlobalSettings.get_settings()
-            if global_settings.main_global_church:
-                print(f"DEBUG: No local church found, redirecting to main global church: {global_settings.main_global_church.name}")
-                request.session['global_church_fallback'] = True
-                request.session['redirected_church'] = global_settings.main_global_church.name
-                request.session.modified = True
-                ch = global_settings.main_global_church
-                cslug, cityslug = _location_slugs(ch)
-                if cslug and cityslug:
-                    return redirect('church_detail_by_location', country_slug=cslug, city_slug=cityslug)
-                return redirect('church_home', church_id=ch.id)
-            else:
-                print("DEBUG: No main global church configured, showing church list")
-                return redirect('church_list')
-        except Exception as e:
-            print(f"DEBUG: Error getting main global church: {e}")
-            return redirect('church_list')
+        print(f"DEBUG: User location - Country: {country}, City: {city}, lat: {user_lat}, lon: {user_lon}")
+
+        nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
+        if nearest_church:
+            print(f"DEBUG: Redirecting to {nearest_church.name} ({nearest_church.city})")
+            gps_confirmed = bool(request.session.get('user_gps_confirmed'))
+            save_user_location_session(
+                request, nearest_church, user_lat, user_lon,
+                gps_confirmed=gps_confirmed,
+            )
+            request.session['local_church_redirect'] = True
+            request.session['redirected_church'] = nearest_church.name
+            request.session.modified = True
+            return redirect(church_location_redirect(nearest_church))
+
+        print("DEBUG: No server-side match — browser GPS detection")
+        return render(request, 'core/location_detect.html', {
+            'churches_json': churches_for_location_json(),
+        })
         
     except Exception as e:
         print(f"DEBUG: Unexpected error in smart_home: {e}")
@@ -447,11 +287,11 @@ def home(request):
         latest_sermons = []
     
     # Get user location for display
-    country, city = get_user_location(request)
+    country, city, user_lat, user_lon = get_user_location(request)
     nearest_church = None
     if country:
         try:
-            nearest_church = find_nearest_church(country, city)
+            nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         except Exception as e:
             print(f"DEBUG: Error finding nearest church: {e}")
     
@@ -1038,12 +878,10 @@ def church_list(request):
     if city_filter:
         churches = churches.filter(city__icontains=city_filter)
     
-    # Hardcode user location for testing (Hamburg, Germany)
-    user_lat, user_lon = 53.5511, 9.9937
-    
+    user_country, user_city, user_lat, user_lon = get_user_location(request)
+
     church_distances_dict = {}
-    # If we have user lat/lon, order churches by distance
-    if user_lat and user_lon:
+    if user_lat is not None and user_lon is not None:
         church_distances = []
         for church in churches:
             if church.latitude and church.longitude:
@@ -1094,6 +932,8 @@ def church_list(request):
         'all_ministries': all_ministries,
         'church_distances': church_distances_dict,
         'show_logout_success': request.GET.get('logged_out') == '1',
+        'choose_church': request.GET.get('choose_church') == '1',
+        'all_churches_for_picker': list(Church.objects.filter(is_approved=True, is_active=True).order_by('country', 'city')),
     }
     return render(request, 'core/church_list.html', context)
 
@@ -1169,7 +1009,7 @@ def church_detail_by_location(request, country_slug, city_slug):
     """
     # Convert slug to display name (e.g. "ghana" -> "Ghana", "new-york" -> "New York")
     country_name = country_slug.replace('-', ' ').title()
-    city_name = city_slug.replace('-', ' ').title()
+    city_names = city_names_for_slug(city_slug)
 
     def query_churches(country_filter, city_filter):
         return Church.objects.filter(
@@ -1179,29 +1019,35 @@ def church_detail_by_location(request, country_slug, city_slug):
             **city_filter,
         ).order_by('name')
 
-    # 1) Try exact country + city
-    churches = query_churches(
-        {'country__iexact': country_name},
-        {'city__iexact': city_name},
-    )
+    churches = Church.objects.none()
+    for city_name in city_names:
+        churches = query_churches(
+            {'country__iexact': country_name},
+            {'city__iexact': city_name},
+        )
+        if churches.exists():
+            break
 
-    # 2) If no match, try country alternatives (e.g. germany -> Deutschland)
     if not churches.exists() and country_slug.lower() in COUNTRY_SLUG_ALTERNATIVES:
         for alt in COUNTRY_SLUG_ALTERNATIVES[country_slug.lower()]:
-            churches = query_churches(
-                {'country__iexact': alt},
-                {'city__iexact': city_name},
-            )
+            for city_name in city_names:
+                churches = query_churches(
+                    {'country__iexact': alt},
+                    {'city__iexact': city_name},
+                )
+                if churches.exists():
+                    break
             if churches.exists():
                 break
 
-    # 3) Fallback: match by city only (so e.g. Hamburg works even if country differs)
     if not churches.exists():
+        city_q = models.Q()
+        for city_name in city_names:
+            city_q |= models.Q(city__iexact=city_name)
         churches = Church.objects.filter(
             is_active=True,
             is_approved=True,
-            city__iexact=city_name,
-        ).order_by('name')
+        ).filter(city_q).order_by('name')
 
     if not churches.exists():
         raise Http404("No church found for this location.")
@@ -1227,11 +1073,11 @@ def church_detail_by_location(request, country_slug, city_slug):
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     news = News.objects.filter(church=church, is_public=True)[:3]
     sermons = Sermon.objects.filter(church=church, is_featured=True, is_public=True)[:3]
-    country, city = get_user_location(request)
+    country, city, user_lat, user_lon = get_user_location(request)
     nearest_church = None
     if country:
         try:
-            nearest_church = find_nearest_church(country, city)
+            nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         except Exception:
             pass
     if request.session.get('local_church_redirect'):
@@ -1251,6 +1097,11 @@ def church_detail_by_location(request, country_slug, city_slug):
         'user_country': country,
         'user_city': city,
         'nearest_church': nearest_church,
+        'suggest_church_switch': (
+            nearest_church is not None
+            and str(nearest_church.id) != str(church.id)
+            and request.session.get('user_church_id') != str(nearest_church.id)
+        ),
         'show_logout_success': request.GET.get('logged_out') == '1',
     }
     return render(request, 'core/church_home.html', context)
@@ -1347,11 +1198,11 @@ def church_home(request, church_id):
     sermons = Sermon.objects.filter(church=church, is_featured=True, is_public=True)[:3]
     
     # Get user location for location detection banner
-    country, city = get_user_location(request)
+    country, city, user_lat, user_lon = get_user_location(request)
     nearest_church = None
     if country:
         try:
-            nearest_church = find_nearest_church(country, city)
+            nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         except Exception as e:
             print(f"DEBUG: Error finding nearest church: {e}")
     
@@ -1374,6 +1225,11 @@ def church_home(request, church_id):
         'user_country': country,
         'user_city': city,
         'nearest_church': nearest_church,
+        'suggest_church_switch': (
+            nearest_church is not None
+            and str(nearest_church.id) != str(church.id)
+            and request.session.get('user_church_id') != str(nearest_church.id)
+        ),
         'show_logout_success': request.GET.get('logged_out') == '1',
     }
     return render(request, 'core/church_home.html', context)
@@ -1386,11 +1242,11 @@ def church_events(request, church_id):
     all_ministries = Ministry.objects.filter(church=church, is_active=True)
     
     # Get user location for location detection banner
-    country, city = get_user_location(request)
+    country, city, user_lat, user_lon = get_user_location(request)
     nearest_church = None
     if country:
         try:
-            nearest_church = find_nearest_church(country, city)
+            nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         except Exception as e:
             print(f"DEBUG: Error finding nearest church: {e}")
     
@@ -1472,11 +1328,11 @@ def church_event_detail(request, church_id, event_id):
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
     # Get user location for location detection banner
-    country, city = get_user_location(request)
+    country, city, user_lat, user_lon = get_user_location(request)
     nearest_church = None
     if country:
         try:
-            nearest_church = find_nearest_church(country, city)
+            nearest_church = find_nearest_church(country, city, user_lat, user_lon, request=request)
         except Exception as e:
             print(f"DEBUG: Error finding nearest church: {e}")
     
@@ -4314,6 +4170,31 @@ def get_database_status():
         return status == 'success', error
     except queue.Empty:
         return False, "Database check failed"
+
+@require_POST
+def save_my_church(request):
+    """Remember the visitor's church (and optional GPS) for future visits."""
+    church_id = request.POST.get('church_id')
+    if not church_id:
+        return JsonResponse({'ok': False, 'error': 'church_id required'}, status=400)
+    try:
+        church = Church.objects.get(pk=church_id, is_active=True, is_approved=True)
+    except (Church.DoesNotExist, ValueError):
+        return JsonResponse({'ok': False, 'error': 'church not found'}, status=404)
+
+    lat = lon = None
+    gps_confirmed = False
+    if request.POST.get('lat') and request.POST.get('lon'):
+        try:
+            lat = float(request.POST['lat'])
+            lon = float(request.POST['lon'])
+            gps_confirmed = True
+        except (TypeError, ValueError):
+            pass
+
+    save_user_location_session(request, church, lat, lon, gps_confirmed=gps_confirmed)
+    return JsonResponse({'ok': True, 'redirect': church_location_redirect(church)})
+
 
 @require_POST
 def clear_redirect_notification(request):
